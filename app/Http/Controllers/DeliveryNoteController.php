@@ -1,0 +1,271 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Client;
+use App\Models\DeliveryNote;
+use App\Models\DeliveryNoteItem;
+use App\Models\Driver;
+use App\Models\Item;
+use App\Models\Vehicle;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+
+class DeliveryNoteController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $deliveryNotes = DeliveryNote::with(['client', 'driver', 'vehicle', 'creator'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+        
+        return Inertia::render('DeliveryNotes/Index', [
+            'deliveryNotes' => $deliveryNotes
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $clients = Client::orderBy('name')->get();
+        $items = Item::orderBy('name')->get();
+        $drivers = Driver::orderBy('name')->get();
+        $vehicles = Vehicle::orderBy('license_plate')->get();
+
+        return Inertia::render('DeliveryNotes/Create', [
+            'clients' => $clients,
+            'items' => $items,
+            'drivers' => $drivers,
+            'vehicles' => $vehicles,
+        ]);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'client_id' => 'required|exists:clients,id',
+            'driver_id' => 'nullable|exists:drivers,id',
+            'vehicle_id' => 'nullable|exists:vehicles,id',
+            'delivery_date' => 'required|date',
+            'pricing_type' => 'required|in:regular,credit',
+            'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.item_id' => 'required|exists:items,id',
+            'items.*.item_type' => 'required|in:material,service',
+            'items.*.quantity_kg' => 'nullable|numeric|min:0',
+            'items.*.quantity_bags' => 'nullable|numeric|min:0',
+            'items.*.quantity_tons' => 'nullable|numeric|min:0',
+            'items.*.quantity_units' => 'nullable|numeric|min:0',
+            'items.*.unit_multiplier' => 'nullable|numeric|min:0',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.total_price' => 'required|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Calculate totals
+            $totalWeight = 0;
+            $totalAmount = 0;
+
+            foreach ($validated['items'] as $item) {
+                $totalAmount += $item['total_price'];
+                
+                // Calculate weight for materials
+                if ($item['item_type'] === 'material') {
+                    if (isset($item['quantity_kg'])) {
+                        $totalWeight += $item['quantity_kg'];
+                    } elseif (isset($item['quantity_bags'])) {
+                        $itemModel = Item::find($item['item_id']);
+                        $totalWeight += $item['quantity_bags'] * $itemModel->kg_per_bag_conversion;
+                    }
+                }
+            }
+
+            // Create delivery note
+            $deliveryNote = DeliveryNote::create([
+                'client_id' => $validated['client_id'],
+                'driver_id' => $validated['driver_id'],
+                'vehicle_id' => $validated['vehicle_id'],
+                'created_by' => Auth::id(),
+                'delivery_date' => $validated['delivery_date'],
+                'pricing_type' => $validated['pricing_type'],
+                'total_weight' => $totalWeight,
+                'total_amount' => $totalAmount,
+                'notes' => $validated['notes'],
+            ]);
+
+            // Create delivery note items
+            foreach ($validated['items'] as $item) {
+                DeliveryNoteItem::create([
+                    'delivery_note_id' => $deliveryNote->id,
+                    'item_id' => $item['item_id'],
+                    'item_type' => $item['item_type'],
+                    'quantity_kg' => $item['quantity_kg'] ?? null,
+                    'quantity_bags' => $item['quantity_bags'] ?? null,
+                    'quantity_tons' => $item['quantity_tons'] ?? null,
+                    'quantity_units' => $item['quantity_units'] ?? null,
+                    'unit_multiplier' => $item['unit_multiplier'] ?? 1,
+                    'unit_price' => $item['unit_price'],
+                    'total_price' => $item['total_price'],
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('delivery-notes.index')
+                ->with('success', 'ใบส่งของถูกสร้างเรียบร้อยแล้ว');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'เกิดข้อผิดพลาดในการสร้างใบส่งของ');
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(DeliveryNote $deliveryNote)
+    {
+        $deliveryNote->load(['client', 'driver', 'vehicle', 'creator', 'items.item']);
+
+        return Inertia::render('DeliveryNotes/Show', [
+            'deliveryNote' => $deliveryNote
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(DeliveryNote $deliveryNote)
+    {
+        $deliveryNote->load('items');
+        $clients = Client::orderBy('name')->get();
+        $items = Item::orderBy('name')->get();
+        $drivers = Driver::orderBy('name')->get();
+        $vehicles = Vehicle::orderBy('license_plate')->get();
+
+        return Inertia::render('DeliveryNotes/Edit', [
+            'deliveryNote' => $deliveryNote,
+            'clients' => $clients,
+            'items' => $items,
+            'drivers' => $drivers,
+            'vehicles' => $vehicles,
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, DeliveryNote $deliveryNote)
+    {
+        $validated = $request->validate([
+            'client_id' => 'required|exists:clients,id',
+            'driver_id' => 'nullable|exists:drivers,id',
+            'vehicle_id' => 'nullable|exists:vehicles,id',
+            'delivery_date' => 'required|date',
+            'pricing_type' => 'required|in:regular,credit',
+            'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.item_id' => 'required|exists:items,id',
+            'items.*.item_type' => 'required|in:material,service',
+            'items.*.quantity_kg' => 'nullable|numeric|min:0',
+            'items.*.quantity_bags' => 'nullable|numeric|min:0',
+            'items.*.quantity_tons' => 'nullable|numeric|min:0',
+            'items.*.quantity_units' => 'nullable|numeric|min:0',
+            'items.*.unit_multiplier' => 'nullable|numeric|min:0',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.total_price' => 'required|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Calculate totals
+            $totalWeight = 0;
+            $totalAmount = 0;
+
+            foreach ($validated['items'] as $item) {
+                $totalAmount += $item['total_price'];
+                
+                // Calculate weight for materials
+                if ($item['item_type'] === 'material') {
+                    if (isset($item['quantity_kg'])) {
+                        $totalWeight += $item['quantity_kg'];
+                    } elseif (isset($item['quantity_bags'])) {
+                        $itemModel = Item::find($item['item_id']);
+                        $totalWeight += $item['quantity_bags'] * $itemModel->kg_per_bag_conversion;
+                    }
+                }
+            }
+
+            // Update delivery note
+            $deliveryNote->update([
+                'client_id' => $validated['client_id'],
+                'driver_id' => $validated['driver_id'],
+                'vehicle_id' => $validated['vehicle_id'],
+                'delivery_date' => $validated['delivery_date'],
+                'pricing_type' => $validated['pricing_type'],
+                'total_weight' => $totalWeight,
+                'total_amount' => $totalAmount,
+                'notes' => $validated['notes'],
+            ]);
+
+            // Delete old items and create new ones
+            $deliveryNote->items()->delete();
+
+            foreach ($validated['items'] as $item) {
+                DeliveryNoteItem::create([
+                    'delivery_note_id' => $deliveryNote->id,
+                    'item_id' => $item['item_id'],
+                    'item_type' => $item['item_type'],
+                    'quantity_kg' => $item['quantity_kg'] ?? null,
+                    'quantity_bags' => $item['quantity_bags'] ?? null,
+                    'quantity_tons' => $item['quantity_tons'] ?? null,
+                    'quantity_units' => $item['quantity_units'] ?? null,
+                    'unit_multiplier' => $item['unit_multiplier'] ?? 1,
+                    'unit_price' => $item['unit_price'],
+                    'total_price' => $item['total_price'],
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('delivery-notes.index')
+                ->with('success', 'ใบส่งของถูกอัปเดตเรียบร้อยแล้ว');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'เกิดข้อผิดพลาดในการอัปเดตใบส่งของ');
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(DeliveryNote $deliveryNote)
+    {
+        $deliveryNote->delete();
+
+        return redirect()->route('delivery-notes.index')
+            ->with('success', 'ใบส่งของถูกลบเรียบร้อยแล้ว');
+    }
+
+    /**
+     * Display print view for delivery note
+     */
+    public function print(DeliveryNote $deliveryNote)
+    {
+        $deliveryNote->load(['client', 'driver', 'vehicle', 'creator', 'items.item']);
+
+        return Inertia::render('DeliveryNotes/Print', [
+            'deliveryNote' => $deliveryNote
+        ]);
+    }
+}
