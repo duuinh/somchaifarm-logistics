@@ -19,7 +19,6 @@ interface Client {
 interface Item {
     id: number;
     name: string;
-    item_type: 'material' | 'service';
     regular_price_per_kg?: number;
     regular_price_per_bag?: number;
     credit_price_per_kg?: number;
@@ -40,7 +39,6 @@ interface Vehicle {
 interface DeliveryNoteItem {
     id?: number;
     item_id: number;
-    item_type: 'material' | 'service';
     quantity_kg?: number;
     quantity_bags?: number;
     quantity_tons?: number;
@@ -59,6 +57,7 @@ interface DeliveryNote {
     delivery_date: string;
     pricing_type: 'regular' | 'credit';
     notes?: string;
+    service_fee?: number;
     items: DeliveryNoteItem[];
 }
 
@@ -68,6 +67,7 @@ interface Props {
     items: Item[];
     drivers: Driver[];
     vehicles: Vehicle[];
+    defaultServiceFee: number;
 }
 
 const props = defineProps<Props>();
@@ -94,10 +94,10 @@ const form = useForm({
     delivery_date: props.deliveryNote.delivery_date,
     pricing_type: props.deliveryNote.pricing_type,
     notes: props.deliveryNote.notes || '',
+    service_fee: props.deliveryNote.service_fee || props.defaultServiceFee,
     items: props.deliveryNote.items.map(item => ({
         id: item.id,
         item_id: item.item_id,
-        item_type: item.item_type,
         quantity_kg: item.quantity_kg,
         quantity_bags: item.quantity_bags,
         quantity_tons: item.quantity_tons,
@@ -159,7 +159,6 @@ const addItem = () => {
 
     form.items.push({
         item_id: item.id,
-        item_type: item.item_type,
         quantity_kg: newQuantityKg.value,
         quantity_bags: newQuantityBags.value,
         quantity_tons: null,
@@ -179,21 +178,21 @@ const removeItem = (index: number) => {
     form.items.splice(index, 1);
 };
 
+
 const totalAmount = computed(() => {
-    return form.items.reduce((total, item) => total + item.total_price, 0);
+    const itemsTotal = form.items.reduce((total, item) => total + item.total_price, 0);
+    return itemsTotal + (form.service_fee || 0);
 });
 
 const totalWeight = computed(() => {
     const weight = form.items.reduce((total, item) => {
         let itemWeight = 0;
-        if (item.item_type === 'material') {
-            if (item.quantity_kg && !isNaN(Number(item.quantity_kg))) {
-                itemWeight += Number(item.quantity_kg);
-            }
-            if (item.quantity_bags && !isNaN(Number(item.quantity_bags))) {
-                const itemData = props.items.find(i => i.id === item.item_id);
-                itemWeight += Number(item.quantity_bags) * (itemData?.kg_per_bag_conversion || 25);
-            }
+        if (item.quantity_kg && !isNaN(Number(item.quantity_kg))) {
+            itemWeight += Number(item.quantity_kg);
+        }
+        if (item.quantity_bags && !isNaN(Number(item.quantity_bags))) {
+            const itemData = props.items.find(i => i.id === item.item_id);
+            itemWeight += Number(item.quantity_bags) * (itemData?.kg_per_bag_conversion || 25);
         }
         return total + itemWeight;
     }, 0);
@@ -318,6 +317,18 @@ const getItemName = (itemId: number) => {
                                 </select>
                             </div>
 
+                            <!-- Service Fee -->
+                            <div class="space-y-2">
+                                <Label for="service_fee">ค่าผสม (บาท)</Label>
+                                <Input
+                                    id="service_fee"
+                                    v-model="form.service_fee"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                />
+                            </div>
+
                             <!-- Notes -->
                             <div class="space-y-2 md:col-span-2">
                                 <Label for="notes">หมายเหตุ</Label>
@@ -414,12 +425,22 @@ const getItemName = (itemId: number) => {
 
                             <!-- Summary -->
                             <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p class="font-medium">น้ำหนักรวม: {{ Number(totalWeight).toFixed(2) }} กก.</p>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="font-medium">น้ำหนักรวม:</span>
+                                        <span>{{ Number(totalWeight).toFixed(2) }} กก.</span>
                                     </div>
-                                    <div class="text-right">
-                                        <p class="font-medium text-lg">รวมทั้งหมด: {{ totalAmount.toLocaleString() }} บาท</p>
+                                    <div class="flex justify-between">
+                                        <span>รวมค่าสินค้า:</span>
+                                        <span>{{ form.items.reduce((total, item) => total + item.total_price, 0).toLocaleString() }} บาท</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>ค่าผสม:</span>
+                                        <span>{{ (form.service_fee || 0).toLocaleString() }} บาท</span>
+                                    </div>
+                                    <div class="border-t pt-2 flex justify-between">
+                                        <span class="font-medium text-lg">รวมทั้งหมด:</span>
+                                        <span class="font-medium text-lg">{{ totalAmount.toLocaleString() }} บาท</span>
                                     </div>
                                 </div>
                             </div>

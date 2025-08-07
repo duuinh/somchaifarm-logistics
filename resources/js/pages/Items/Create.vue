@@ -25,7 +25,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const form = useForm({
     name: '',
-    item_type: 'material' as 'material' | 'service',
     unit_type: 'both' as string,
     regular_price_per_kg: '',
     regular_price_per_bag: '',
@@ -44,7 +43,7 @@ const submit = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
-            <Card class="max-w-4xl mx-auto">
+            <Card class="w-full max-w-4xl mx-auto">
                 <CardHeader>
                     <div class="flex items-center gap-4">
                         <Link :href="route('items.index')">
@@ -54,7 +53,7 @@ const submit = () => {
                         </Link>
                         <div>
                             <CardTitle>เพิ่มรายการใหม่</CardTitle>
-                            <CardDescription>เพิ่มสินค้าหรือบริการใหม่</CardDescription>
+                            <CardDescription>เพิ่มสินค้าใหม่</CardDescription>
                         </div>
                     </div>
                 </CardHeader>
@@ -62,7 +61,7 @@ const submit = () => {
                     <form @submit.prevent="submit" class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-2">
-                                <Label for="name">ชื่อสินค้า/บริการ *</Label>
+                                <Label for="name">ชื่อสินค้า *</Label>
                                 <Input
                                     id="name"
                                     v-model="form.name"
@@ -74,18 +73,6 @@ const submit = () => {
                                 </div>
                             </div>
 
-                            <div class="space-y-2">
-                                <Label for="item_type">ประเภท *</Label>
-                                <select 
-                                    id="item_type"
-                                    v-model="form.item_type"
-                                    class="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                    required
-                                >
-                                    <option value="material">วัตถุดิบ</option>
-                                    <option value="service">บริการ</option>
-                                </select>
-                            </div>
 
                             <div class="space-y-2">
                                 <Label for="regular_price_per_kg">ราคาปกติ ต่อ กก. (บาท)</Label>

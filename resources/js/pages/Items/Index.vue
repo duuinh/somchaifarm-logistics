@@ -13,7 +13,6 @@ import { PlusCircle, Pencil, Trash2, Eye } from 'lucide-vue-next';
 interface Item {
     id: number;
     name: string;
-    item_type: 'material' | 'service';
     unit_type: string;
     regular_price_per_kg: number;
     regular_price_per_bag: number;
@@ -52,13 +51,6 @@ const filteredItems = computed(() => {
     );
 });
 
-const getItemTypeBadge = (type: string) => {
-    const badges = {
-        material: { label: 'วัตถุดิบ', class: 'bg-blue-100 text-blue-800 hover:bg-blue-100' },
-        service: { label: 'บริการ', class: 'bg-green-100 text-green-800 hover:bg-green-100' },
-    };
-    return badges[type as keyof typeof badges] || badges.material;
-};
 
 const deleteItem = (id: number) => {
     if (confirm('คุณแน่ใจหรือไม่ที่จะลบรายการนี้?')) {
@@ -100,7 +92,6 @@ const deleteItem = (id: number) => {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>ชื่อ</TableHead>
-                                    <TableHead>ประเภท</TableHead>
                                     <TableHead>หน่วย</TableHead>
                                     <TableHead>ราคาปกติ (กก.)</TableHead>
                                     <TableHead>ราคาเครดิต (กก.)</TableHead>
@@ -110,11 +101,6 @@ const deleteItem = (id: number) => {
                             <TableBody>
                                 <TableRow v-for="item in filteredItems" :key="item.id">
                                     <TableCell class="font-medium">{{ item.name }}</TableCell>
-                                    <TableCell>
-                                        <Badge :class="getItemTypeBadge(item.item_type).class">
-                                            {{ getItemTypeBadge(item.item_type).label }}
-                                        </Badge>
-                                    </TableCell>
                                     <TableCell>{{ item.unit_type }}</TableCell>
                                     <TableCell>{{ item.regular_price_per_kg?.toLocaleString() || '-' }} บาท</TableCell>
                                     <TableCell>{{ item.credit_price_per_kg?.toLocaleString() || '-' }} บาท</TableCell>

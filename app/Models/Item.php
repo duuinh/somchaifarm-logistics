@@ -9,7 +9,6 @@ class Item extends Model
 {
     protected $fillable = [
         'name',
-        'item_type',
         'unit_type',
         'regular_price_per_kg',
         'regular_price_per_bag',
@@ -23,7 +22,6 @@ class Item extends Model
     ];
 
     protected $casts = [
-        'item_type' => 'string',
         'unit_type' => 'string',
         'regular_price_per_kg' => 'decimal:2',
         'regular_price_per_bag' => 'decimal:2',

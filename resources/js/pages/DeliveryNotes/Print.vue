@@ -9,7 +9,6 @@ import { Printer, RotateCcw, X } from 'lucide-vue-next';
 interface Item {
     id: number;
     name: string;
-    item_type: 'material' | 'service';
 }
 
 interface DeliveryNoteItem {
@@ -20,7 +19,6 @@ interface DeliveryNoteItem {
     unit_multiplier: number;
     unit_price: number;
     total_price: number;
-    item_type: 'material' | 'service';
     item: Item;
 }
 
@@ -54,6 +52,8 @@ interface DeliveryNote {
     pricing_type: 'regular' | 'credit';
     total_weight?: number;
     total_amount?: number;
+    service_fee?: number;
+    service_fee_per_ton?: number;
     notes?: string;
     client: Client;
     driver?: Driver;
@@ -199,7 +199,7 @@ onMounted(() => {
                     <tr v-for="item in deliveryNote.items" :key="item.id">
                         <td>
                             {{ item.item.name }}
-                            <span v-if="item.item_type === 'service' && item.unit_multiplier > 1">
+                            <span v-if="item.unit_multiplier > 1">
                                 (x{{ item.unit_multiplier }})
                             </span>
                         </td>
@@ -218,6 +218,12 @@ onMounted(() => {
             <div class="summary-section">
                 <div v-if="deliveryNote.total_weight" class="mb-2">
                     <strong>น้ำหนักรวม:</strong> {{ deliveryNote.total_weight.toLocaleString() }} กิโลกรัม
+                </div>
+                <div class="mb-2">
+                    <strong>รวมค่าสินค้า:</strong> {{ deliveryNote.items.reduce((total, item) => total + item.total_price, 0).toLocaleString() }} บาท
+                </div>
+                <div v-if="deliveryNote.service_fee" class="mb-2">
+                    <strong>ค่าผสม:</strong> {{ deliveryNote.service_fee.toLocaleString() }} บาท
                 </div>
                 <div class="font-bold" style="font-size: 14px;">
                     <strong>รวมทั้งหมด: {{ deliveryNote.total_amount?.toLocaleString() }} บาท</strong>

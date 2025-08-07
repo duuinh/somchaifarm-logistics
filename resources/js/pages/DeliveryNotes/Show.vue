@@ -35,7 +35,6 @@ interface Vehicle {
 interface Item {
     id: number;
     name: string;
-    item_type: 'material' | 'service';
 }
 
 interface DeliveryNoteItem {
@@ -46,7 +45,6 @@ interface DeliveryNoteItem {
     unit_multiplier: number;
     unit_price: number;
     total_price: number;
-    item_type: 'material' | 'service';
     item: Item;
 }
 
@@ -56,6 +54,8 @@ interface DeliveryNote {
     pricing_type: 'regular' | 'credit';
     total_weight?: number;
     total_amount?: number;
+    service_fee?: number;
+    service_fee_per_ton?: number;
     notes?: string;
     client: Client;
     driver?: Driver;
@@ -257,7 +257,7 @@ const shouldShowDriverVehicle = () => {
                                         <TableCell>
                                             <div>
                                                 {{ item.item.name }}
-                                                <span v-if="item.item_type === 'service' && item.unit_multiplier > 1" class="text-muted-foreground">
+                                                <span v-if="item.unit_multiplier > 1" class="text-muted-foreground">
                                                     (x{{ item.unit_multiplier }})
                                                 </span>
                                             </div>
@@ -278,14 +278,26 @@ const shouldShowDriverVehicle = () => {
 
                         <!-- Summary -->
                         <div class="mt-6 bg-gray-50 p-4 rounded-lg">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="text-sm text-muted-foreground">น้ำหนักรวมทั้งหมด</p>
-                                    <p class="font-medium">{{ deliveryNote.total_weight?.toLocaleString() || '0' }} กิโลกรัม</p>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-muted-foreground">น้ำหนักรวมทั้งหมด</span>
+                                    <span class="font-medium">{{ deliveryNote.total_weight?.toLocaleString() || '0' }} กิโลกรัม</span>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-sm text-muted-foreground">ยอดรวมทั้งหมด</p>
-                                    <p class="text-2xl font-bold text-primary">{{ deliveryNote.total_amount?.toLocaleString() || '0' }} บาท</p>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-muted-foreground">รวมค่าสินค้า</span>
+                                    <span>{{ deliveryNote.items.reduce((total, item) => total + item.total_price, 0).toLocaleString() }} บาท</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-muted-foreground">ค่าผสม</span>
+                                    <span>{{ deliveryNote.service_fee?.toLocaleString() || '0' }} บาท</span>
+                                </div>
+                                <div v-if="deliveryNote.service_fee_per_ton" class="flex justify-between">
+                                    <span class="text-sm text-muted-foreground">ค่าผสมต่อตัน</span>
+                                    <span>{{ deliveryNote.service_fee_per_ton?.toLocaleString() || '0' }} บาท</span>
+                                </div>
+                                <div class="border-t pt-3 flex justify-between items-center">
+                                    <span class="text-sm text-muted-foreground">ยอดรวมทั้งหมด</span>
+                                    <span class="text-2xl font-bold text-primary">{{ deliveryNote.total_amount?.toLocaleString() || '0' }} บาท</span>
                                 </div>
                             </div>
                         </div>

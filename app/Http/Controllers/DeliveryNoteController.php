@@ -7,6 +7,7 @@ use App\Models\DeliveryNote;
 use App\Models\DeliveryNoteItem;
 use App\Models\Driver;
 use App\Models\Item;
+use App\Models\Setting;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,6 +45,7 @@ class DeliveryNoteController extends Controller
             'items' => $items,
             'drivers' => $drivers,
             'vehicles' => $vehicles,
+            'defaultServiceFee' => Setting::get('default_service_fee', 0),
         ]);
     }
 
@@ -59,9 +61,9 @@ class DeliveryNoteController extends Controller
             'delivery_date' => 'required|date',
             'pricing_type' => 'required|in:regular,credit',
             'notes' => 'nullable|string',
+            'service_fee' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required|exists:items,id',
-            'items.*.item_type' => 'required|in:material,service',
             'items.*.quantity_kg' => 'nullable|numeric|min:0',
             'items.*.quantity_bags' => 'nullable|numeric|min:0',
             'items.*.quantity_tons' => 'nullable|numeric|min:0',
@@ -80,16 +82,18 @@ class DeliveryNoteController extends Controller
             foreach ($validated['items'] as $item) {
                 $totalAmount += $item['total_price'];
                 
-                // Calculate weight for materials
-                if ($item['item_type'] === 'material') {
-                    if (isset($item['quantity_kg'])) {
-                        $totalWeight += $item['quantity_kg'];
-                    } elseif (isset($item['quantity_bags'])) {
-                        $itemModel = Item::find($item['item_id']);
-                        $totalWeight += $item['quantity_bags'] * $itemModel->kg_per_bag_conversion;
-                    }
+                // Calculate weight (all items are now materials)
+                if (isset($item['quantity_kg'])) {
+                    $totalWeight += $item['quantity_kg'];
+                } elseif (isset($item['quantity_bags'])) {
+                    $itemModel = Item::find($item['item_id']);
+                    $totalWeight += $item['quantity_bags'] * $itemModel->kg_per_bag_conversion;
                 }
             }
+
+            // Handle service fee
+            $serviceFee = $validated['service_fee'] ?? 0;
+            $totalAmount += $serviceFee;
 
             // Create delivery note
             $deliveryNote = DeliveryNote::create([
@@ -101,6 +105,7 @@ class DeliveryNoteController extends Controller
                 'pricing_type' => $validated['pricing_type'],
                 'total_weight' => $totalWeight,
                 'total_amount' => $totalAmount,
+                'service_fee' => $serviceFee,
                 'notes' => $validated['notes'],
             ]);
 
@@ -109,7 +114,6 @@ class DeliveryNoteController extends Controller
                 DeliveryNoteItem::create([
                     'delivery_note_id' => $deliveryNote->id,
                     'item_id' => $item['item_id'],
-                    'item_type' => $item['item_type'],
                     'quantity_kg' => $item['quantity_kg'] ?? null,
                     'quantity_bags' => $item['quantity_bags'] ?? null,
                     'quantity_tons' => $item['quantity_tons'] ?? null,
@@ -159,6 +163,7 @@ class DeliveryNoteController extends Controller
             'items' => $items,
             'drivers' => $drivers,
             'vehicles' => $vehicles,
+            'defaultServiceFee' => Setting::get('default_service_fee', 0),
         ]);
     }
 
@@ -174,9 +179,9 @@ class DeliveryNoteController extends Controller
             'delivery_date' => 'required|date',
             'pricing_type' => 'required|in:regular,credit',
             'notes' => 'nullable|string',
+            'service_fee' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required|exists:items,id',
-            'items.*.item_type' => 'required|in:material,service',
             'items.*.quantity_kg' => 'nullable|numeric|min:0',
             'items.*.quantity_bags' => 'nullable|numeric|min:0',
             'items.*.quantity_tons' => 'nullable|numeric|min:0',
@@ -195,16 +200,18 @@ class DeliveryNoteController extends Controller
             foreach ($validated['items'] as $item) {
                 $totalAmount += $item['total_price'];
                 
-                // Calculate weight for materials
-                if ($item['item_type'] === 'material') {
-                    if (isset($item['quantity_kg'])) {
-                        $totalWeight += $item['quantity_kg'];
-                    } elseif (isset($item['quantity_bags'])) {
-                        $itemModel = Item::find($item['item_id']);
-                        $totalWeight += $item['quantity_bags'] * $itemModel->kg_per_bag_conversion;
-                    }
+                // Calculate weight (all items are now materials)
+                if (isset($item['quantity_kg'])) {
+                    $totalWeight += $item['quantity_kg'];
+                } elseif (isset($item['quantity_bags'])) {
+                    $itemModel = Item::find($item['item_id']);
+                    $totalWeight += $item['quantity_bags'] * $itemModel->kg_per_bag_conversion;
                 }
             }
+
+            // Handle service fee
+            $serviceFee = $validated['service_fee'] ?? 0;
+            $totalAmount += $serviceFee;
 
             // Update delivery note
             $deliveryNote->update([
@@ -215,6 +222,7 @@ class DeliveryNoteController extends Controller
                 'pricing_type' => $validated['pricing_type'],
                 'total_weight' => $totalWeight,
                 'total_amount' => $totalAmount,
+                'service_fee' => $serviceFee,
                 'notes' => $validated['notes'],
             ]);
 
@@ -225,7 +233,6 @@ class DeliveryNoteController extends Controller
                 DeliveryNoteItem::create([
                     'delivery_note_id' => $deliveryNote->id,
                     'item_id' => $item['item_id'],
-                    'item_type' => $item['item_type'],
                     'quantity_kg' => $item['quantity_kg'] ?? null,
                     'quantity_bags' => $item['quantity_bags'] ?? null,
                     'quantity_tons' => $item['quantity_tons'] ?? null,

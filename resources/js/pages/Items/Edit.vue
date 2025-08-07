@@ -11,7 +11,6 @@ import { ArrowLeft, Save } from 'lucide-vue-next';
 interface Item {
     id: number;
     name: string;
-    item_type: 'material';
     unit_type: string;
     regular_price_per_kg: number;
     regular_price_per_bag: number;
@@ -47,7 +46,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const form = useForm({
     name: props.item.name,
-    item_type: 'material' as 'material',
     unit_type: props.item.unit_type,
     regular_price_per_kg: props.item.regular_price_per_kg?.toString() || '',
     regular_price_per_bag: props.item.regular_price_per_bag?.toString() || '',
@@ -100,15 +98,6 @@ const submit = () => {
                                 </div>
                             </div>
 
-                            <div class="space-y-2">
-                                <Label for="item_type">ประเภท *</Label>
-                                <Input
-                                    id="item_type"
-                                    value="วัตถุดิบ"
-                                    readonly
-                                    class="bg-muted"
-                                />
-                            </div>
 
                             <div class="space-y-2">
                                 <Label for="unit_type">หน่วย *</Label>

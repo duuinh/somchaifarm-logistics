@@ -17,6 +17,8 @@ class DeliveryNote extends Model
         'pricing_type',
         'total_weight',
         'total_amount',
+        'service_fee_per_ton',
+        'service_fee',
         'notes',
     ];
 
@@ -25,6 +27,8 @@ class DeliveryNote extends Model
         'pricing_type' => 'string',
         'total_weight' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'service_fee_per_ton' => 'decimal:2',
+        'service_fee' => 'decimal:2',
     ];
 
     public function client(): BelongsTo

@@ -35,7 +35,6 @@ class ItemController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'item_type' => 'required|in:material,service',
             'unit_type' => 'required|in:kg,bags,ton,unit,both',
             'regular_price_per_kg' => 'nullable|numeric|min:0',
             'regular_price_per_bag' => 'nullable|numeric|min:0',
@@ -81,7 +80,6 @@ class ItemController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'item_type' => 'required|in:material,service',
             'unit_type' => 'required|in:kg,bags,ton,unit,both',
             'regular_price_per_kg' => 'nullable|numeric|min:0',
             'regular_price_per_bag' => 'nullable|numeric|min:0',

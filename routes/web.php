@@ -4,6 +4,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DeliveryNoteController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\VehicleController;
 use App\Models\Client;
 use App\Models\DeliveryNote;
@@ -56,6 +57,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('delivery-notes', DeliveryNoteController::class);
     Route::get('delivery-notes/{delivery_note}/print', [DeliveryNoteController::class, 'print'])
         ->name('delivery-notes.print');
+        
+    // Business Settings routes
+    Route::get('business-settings', [SettingController::class, 'index'])->name('business-settings.index');
+    Route::put('business-settings', [SettingController::class, 'update'])->name('business-settings.update');
+    Route::get('api/settings/{key}', [SettingController::class, 'getValue'])->name('settings.get');
 });
 
 require __DIR__.'/settings.php';

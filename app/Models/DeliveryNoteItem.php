@@ -10,7 +10,6 @@ class DeliveryNoteItem extends Model
     protected $fillable = [
         'delivery_note_id',
         'item_id',
-        'item_type',
         'quantity_kg',
         'quantity_bags',
         'quantity_tons',
@@ -21,7 +20,6 @@ class DeliveryNoteItem extends Model
     ];
 
     protected $casts = [
-        'item_type' => 'string',
         'quantity_kg' => 'decimal:2',
         'quantity_bags' => 'decimal:2',
         'quantity_tons' => 'decimal:2',

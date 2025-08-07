@@ -28,7 +28,6 @@ interface DeliveryNoteItem {
 interface Item {
     id: number;
     name: string;
-    item_type: 'material';
     unit_type: string;
     regular_price_per_kg: number;
     regular_price_per_bag: number;
@@ -63,9 +62,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const getItemTypeBadge = () => {
-    return { label: 'วัตถุดิบ', class: 'bg-blue-100 text-blue-800 hover:bg-blue-100' };
-};
 </script>
 
 <template>
@@ -102,12 +98,6 @@ const getItemTypeBadge = () => {
                             <div>
                                 <h3 class="text-sm font-medium text-muted-foreground mb-1">ชื่อ</h3>
                                 <p class="text-sm">{{ item.name }}</p>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-medium text-muted-foreground mb-1">ประเภท</h3>
-                                <Badge :class="getItemTypeBadge().class">
-                                    {{ getItemTypeBadge().label }}
-                                </Badge>
                             </div>
                             <div>
                                 <h3 class="text-sm font-medium text-muted-foreground mb-1">หน่วย</h3>
