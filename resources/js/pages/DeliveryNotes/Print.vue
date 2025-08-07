@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Printer, RotateCcw, X } from 'lucide-vue-next';
 
 interface Item {
     id: number;
@@ -24,7 +29,7 @@ interface Client {
     name: string;
     address?: string;
     phone?: string;
-    customer_type: 'regular' | 'credit' | 'special';
+    customer_type: 'regular' | 'credit';
 }
 
 interface Driver {
@@ -65,6 +70,26 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const isFlipped = ref(false);
+
+const toggleFlip = () => {
+    isFlipped.value = !isFlipped.value;
+};
+
+const handlePrint = () => {
+    window.print();
+};
+
+const handleClose = () => {
+    // Try to close the window (works if opened by script)
+    if (window.opener) {
+        window.close();
+    } else {
+        // Navigate back or to delivery notes list
+        window.location.href = route('delivery-notes.index');
+    }
+};
+
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('th-TH', {
         year: 'numeric',
@@ -82,9 +107,8 @@ const getPricingTypeLabel = (type: string) => {
 };
 
 const shouldShowDriverVehicle = () => {
-    // Show driver/vehicle info for special customers or if explicitly set
-    return props.deliveryNote.client.customer_type === 'special' || 
-           (props.deliveryNote.driver && props.deliveryNote.vehicle);
+    // Show driver/vehicle info if explicitly set
+    return (props.deliveryNote.driver && props.deliveryNote.vehicle);
 };
 
 // Auto-print when page loads
@@ -99,131 +123,39 @@ onMounted(() => {
 <template>
     <Head :title="`ใบส่งของ #${deliveryNote.id}`" />
 
-    <div class="print-container">
-        <!-- Print Styles -->
-        <style>
-            @media print {
-                body {
-                    font-family: 'Sarabun', 'Arial', sans-serif;
-                    margin: 0;
-                    padding: 0;
-                    font-size: 12px;
-                }
-                .print-container {
-                    width: 148mm; /* Half A4 width */
-                    height: 210mm; /* A4 height */
-                    margin: 0;
-                    padding: 8mm;
-                    box-sizing: border-box;
-                }
-                .no-print {
-                    display: none;
-                }
-                .page-break {
-                    page-break-after: always;
-                }
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                }
-                table, th, td {
-                    border: 1px solid #000;
-                }
-                th, td {
-                    padding: 4px;
-                    text-align: left;
-                    font-size: 11px;
-                }
-                .text-center { text-align: center; }
-                .text-right { text-align: right; }
-                .font-bold { font-weight: bold; }
-                .mb-1 { margin-bottom: 2px; }
-                .mb-2 { margin-bottom: 4px; }
-                .mb-4 { margin-bottom: 8px; }
-                .mt-4 { margin-top: 8px; }
-            }
+    <!-- Print Controls (hidden in print) -->
+    <div class="no-print mb-6 max-w-4xl mx-auto">
+        <Card>
+            <CardContent class="pt-6">
+                <div class="flex flex-col items-center space-y-4">
+                    <h2 class="text-lg font-semibold text-center">ตัวอย่างการพิมพ์ใบส่งของ #{{ deliveryNote.id }}</h2>
+                    <Separator />
+                    <div class="flex items-center space-x-2">
+                        <Button @click="handlePrint" class="flex items-center space-x-2">
+                            <Printer class="h-4 w-4" />
+                            <span>พิมพ์ใบส่งของ</span>
+                        </Button>
+                        <Button @click="toggleFlip" variant="outline" class="flex items-center space-x-2">
+                            <RotateCcw class="h-4 w-4" />
+                            <span>{{ isFlipped ? 'แนวตั้ง' : 'แนวนอน' }}</span>
+                        </Button>
+                        <Button @click="handleClose" variant="ghost" class="flex items-center space-x-2">
+                            <X class="h-4 w-4" />
+                            <span>ปิด</span>
+                        </Button>
+                    </div>
+                    <p class="text-sm text-muted-foreground text-center">
+                        {{ isFlipped ? 'แสดงในแนวนอน (90°)' : 'แสดงในแนวตั้ง' }} • พิมพ์บนกระดาษต่อเนื่อง
+                    </p>
+                </div>
+            </CardContent>
+        </Card>
+    </div>
 
-            @media screen {
-                .print-container {
-                    max-width: 148mm;
-                    margin: 20px auto;
-                    padding: 8mm;
-                    border: 1px solid #ccc;
-                    background: white;
-                    font-family: 'Sarabun', 'Arial', sans-serif;
-                    font-size: 12px;
-                }
-            }
-
-            .header-title {
-                font-size: 18px;
-                font-weight: bold;
-                text-align: center;
-                margin-bottom: 8px;
-            }
-
-            .info-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-                margin-bottom: 12px;
-            }
-
-            .info-item {
-                margin-bottom: 4px;
-            }
-
-            .items-table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 12px;
-            }
-
-            .items-table th,
-            .items-table td {
-                border: 1px solid #000;
-                padding: 4px;
-                font-size: 11px;
-            }
-
-            .items-table th {
-                background-color: #f5f5f5;
-                font-weight: bold;
-                text-align: center;
-            }
-
-            .summary-section {
-                margin-top: 12px;
-                text-align: right;
-            }
-
-            .signature-section {
-                margin-top: 20px;
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 20px;
-            }
-
-            .signature-box {
-                text-align: center;
-                padding-top: 30px;
-                border-top: 1px solid #000;
-                margin-top: 20px;
-            }
-        </style>
-
-        <!-- Print Button (hidden in print) -->
-        <div class="no-print mb-4 text-center">
-            <button onclick="window.print()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                พิมพ์ใบส่งของ
-            </button>
-            <button onclick="window.close()" class="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
-                ปิด
-            </button>
-        </div>
+    <div class="print-container" :class="{ 'landscape': isFlipped }">
 
         <!-- Delivery Note Content -->
-        <div class="delivery-note">
+        <div class="delivery-note" :class="{ 'flipped': isFlipped }">
             <!-- Header -->
             <div class="header-title">ใบส่งของ</div>
             <div class="text-center mb-4">เลขที่: #{{ deliveryNote.id }}</div>
@@ -337,3 +269,157 @@ onMounted(() => {
         </div>
     </div>
 </template>
+
+<style>
+@media print {
+    body {
+        font-family: 'Sarabun', 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        font-size: 12px;
+    }
+    .print-container {
+        width: 210mm; /* Always A4 width */
+        height: 148mm; /* Top half of A4 */
+        margin: 0;
+        padding: 4mm;
+        box-sizing: border-box;
+    }
+    .no-print {
+        display: none;
+    }
+    .page-break {
+        page-break-after: always;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    table, th, td {
+        border: 1px solid #000;
+    }
+    th, td {
+        padding: 4px;
+        text-align: left;
+        font-size: 11px;
+    }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: bold; }
+    .mb-1 { margin-bottom: 2px; }
+    .mb-2 { margin-bottom: 4px; }
+    .mb-4 { margin-bottom: 8px; }
+    .mt-4 { margin-top: 8px; }
+}
+
+@media screen {
+    .print-container {
+        width: 210mm; /* A4 width */
+        height: 148mm; /* Top half of A4 */
+        margin: 20px auto;
+        padding: 4mm;
+        border: 1px solid hsl(var(--border));
+        background: white;
+        font-family: 'Sarabun', 'Arial', sans-serif;
+        font-size: 12px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        border-radius: 8px;
+    }
+}
+
+.header-title {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.info-item {
+    margin-bottom: 4px;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12px;
+}
+
+.items-table th,
+.items-table td {
+    border: 1px solid #000;
+    padding: 4px;
+    font-size: 11px;
+}
+
+.items-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+    text-align: center;
+}
+
+.summary-section {
+    margin-top: 12px;
+    text-align: right;
+}
+
+.signature-section {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.signature-box {
+    text-align: center;
+    padding-top: 30px;
+    border-top: 1px solid #000;
+    margin-top: 20px;
+}
+
+
+.delivery-note {
+    transition: transform 0.3s ease;
+    transform-origin: center center;
+}
+
+.delivery-note.flipped {
+    transform: rotate(90deg);
+}
+
+@media print {
+    .print-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .delivery-note.flipped {
+        transform: rotate(90deg);
+        width: 140mm; /* Must fit within 148mm container height */
+        height: 194mm; /* Must fit within 210mm container width */
+        transform-origin: center center;
+    }
+}
+
+@media screen {
+    .print-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .delivery-note.flipped {
+        transform: rotate(90deg);
+        width: 140mm;
+        height: 194mm;
+        transform-origin: center center;
+    }
+}
+</style>
