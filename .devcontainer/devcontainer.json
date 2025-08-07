@@ -1,0 +1,68 @@
+{
+	"name": "Laravel PM System",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspace",
+	
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	},
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode-remote.remote-containers",
+				"bmewburn.vscode-intelephense-client",
+				"MehediDracula.php-namespace-resolver",
+				"onecentlin.laravel-blade",
+				"Vue.volar",
+				"Vue.vscode-typescript-vue-plugin",
+				"bradlc.vscode-tailwindcss",
+				"esbenp.prettier-vscode",
+				"ms-vscode.vscode-json",
+				"ryannaddy.laravel-artisan",
+				"codingyu.laravel-goto-view",
+				"amiralizadeh9480.laravel-extra-intellisense"
+			],
+			"settings": {
+				"php.validate.executablePath": "/usr/local/bin/php",
+				"php.suggest.basic": false,
+				"intelephense.files.maxSize": 5000000,
+				"editor.formatOnSave": true,
+				"editor.defaultFormatter": "esbenp.prettier-vscode",
+				"[php]": {
+					"editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
+				},
+				"tailwindCSS.includeLanguages": {
+					"vue": "html"
+				}
+			}
+		}
+	},
+
+	"forwardPorts": [8000, 5173, 6379, 8025],
+	"portsAttributes": {
+		"8000": {
+			"label": "Laravel App",
+			"onAutoForward": "notify"
+		},
+		"5173": {
+			"label": "Vite Dev Server",
+			"onAutoForward": "notify"
+		},
+		"6379": {
+			"label": "Redis"
+		},
+		"8025": {
+			"label": "MailHog"
+		}
+	},
+
+	"postCreateCommand": "bash .devcontainer/setup.sh",
+	"remoteUser": "vscode",
+	
+	"mounts": [
+		"source=${localWorkspaceFolder}/.devcontainer/php.ini,target=/usr/local/etc/php/conf.d/99-custom.ini,type=bind"
+	]
+}
