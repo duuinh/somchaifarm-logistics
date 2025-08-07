@@ -52,7 +52,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
-            <div class="max-w-4xl mx-auto space-y-6">
+            <div class="w-full max-w-4xl mx-auto space-y-6">
                 <!-- Vehicle Information -->
                 <Card>
                     <CardHeader>

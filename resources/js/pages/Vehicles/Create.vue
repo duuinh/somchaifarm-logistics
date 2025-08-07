@@ -40,7 +40,7 @@ const submit = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
-            <Card class="max-w-2xl mx-auto">
+            <Card class="w-full max-w-4xl mx-auto">
                 <CardHeader>
                     <div class="flex items-center gap-4">
                         <Link :href="route('vehicles.index')">

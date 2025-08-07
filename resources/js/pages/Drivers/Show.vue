@@ -60,7 +60,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
-            <Card class="max-w-2xl mx-auto">
+            <Card class="w-full max-w-4xl mx-auto">
                 <CardHeader>
                     <div class="flex items-center gap-4">
                         <Link :href="route('drivers.index')">
@@ -111,7 +111,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             </Card>
 
             <!-- Delivery History -->
-            <Card class="max-w-4xl mx-auto">
+            <Card class="w-full max-w-4xl mx-auto">
                 <CardHeader>
                     <div class="flex items-center gap-2">
                         <FileText class="h-5 w-5" />
