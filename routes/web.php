@@ -21,7 +21,11 @@ Route::get('/', function () {
             'items_count' => Item::count(),
             'drivers_count' => Driver::count(),
             'vehicles_count' => Vehicle::count(),
-        ]
+        ],
+        'recent_delivery_notes' => DeliveryNote::with(['client', 'driver', 'vehicle'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get()
     ]);
 })->middleware(['auth', 'verified'])->name('home');
 
@@ -34,7 +38,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 'items_count' => Item::count(),
                 'drivers_count' => Driver::count(),
                 'vehicles_count' => Vehicle::count(),
-            ]
+            ],
+            'recent_delivery_notes' => DeliveryNote::with(['client', 'driver', 'vehicle'])
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get()
         ]);
     })->name('dashboard');
 

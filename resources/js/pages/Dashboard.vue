@@ -6,6 +6,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-vue-next';
 
+interface DeliveryNote {
+    id: number;
+    delivery_date: string;
+    total_amount: number;
+    client: {
+        name: string;
+    } | null;
+    driver: {
+        name: string;
+    } | null;
+    vehicle: {
+        license_plate: string;
+    } | null;
+}
+
 interface Props {
     stats: {
         delivery_notes_count: number;
@@ -14,6 +29,7 @@ interface Props {
         drivers_count: number;
         vehicles_count: number;
     };
+    recent_delivery_notes: DeliveryNote[];
 }
 
 defineProps<Props>();
@@ -68,7 +84,29 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div class="text-center py-8 text-muted-foreground">
+                    <div v-if="$props.recent_delivery_notes && $props.recent_delivery_notes.length > 0" class="space-y-4">
+                        <div v-for="deliveryNote in $props.recent_delivery_notes" :key="deliveryNote.id" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="font-medium">ใบส่งของ #{{ deliveryNote.id }}</span>
+                                    <span class="text-sm text-gray-500">{{ new Date(deliveryNote.delivery_date).toLocaleDateString('th-TH') }}</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    <span v-if="deliveryNote.client">ลูกค้า: {{ deliveryNote.client.name }}</span>
+                                    <span v-if="deliveryNote.driver" class="ml-3">คนขับ: {{ deliveryNote.driver.name }}</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium">{{ deliveryNote.total_amount?.toLocaleString() || '0' }} บาท</div>
+                                <Link :href="route('delivery-notes.show', deliveryNote.id)">
+                                    <Button variant="ghost" size="sm" class="text-blue-600 hover:text-blue-800">
+                                        ดูรายละเอียด
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="text-center py-8 text-muted-foreground">
                         <FileText class="mx-auto h-12 w-12 mb-4 opacity-50" />
                         <p>ยังไม่มีใบส่งของ</p>
                         <p class="text-sm mb-4">เริ่มต้นด้วยการสร้างใบส่งของใหม่</p>
