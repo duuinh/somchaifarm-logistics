@@ -51,7 +51,7 @@ class DriverController extends Controller
     public function show(Driver $driver)
     {
         return Inertia::render('Drivers/Show', [
-            'driver' => $driver->load('deliveryNotes')
+            'driver' => $driver->load(['deliveryNotes.client', 'deliveryNotes.vehicle'])
         ]);
     }
 
