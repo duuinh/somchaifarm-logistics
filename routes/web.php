@@ -5,16 +5,37 @@ use App\Http\Controllers\DeliveryNoteController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\VehicleController;
+use App\Models\Client;
+use App\Models\DeliveryNote;
+use App\Models\Item;
+use App\Models\Driver;
+use App\Models\Vehicle;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome');
-})->name('home');
+    return Inertia::render('Dashboard', [
+        'stats' => [
+            'delivery_notes_count' => DeliveryNote::count(),
+            'clients_count' => Client::count(),
+            'items_count' => Item::count(),
+            'drivers_count' => Driver::count(),
+            'vehicles_count' => Vehicle::count(),
+        ]
+    ]);
+})->middleware(['auth', 'verified'])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
-        return Inertia::render('Dashboard');
+        return Inertia::render('Dashboard', [
+            'stats' => [
+                'delivery_notes_count' => DeliveryNote::count(),
+                'clients_count' => Client::count(),
+                'items_count' => Item::count(),
+                'drivers_count' => Driver::count(),
+                'vehicles_count' => Vehicle::count(),
+            ]
+        ]);
     })->name('dashboard');
 
     // Resource routes for data management
