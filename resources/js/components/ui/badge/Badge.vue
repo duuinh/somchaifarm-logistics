@@ -22,7 +22,7 @@ const badgeVariants = cva(
   },
 );
 
-interface BadgeProps extends VariantProps<typeof badgeVariants> {
+interface BadgeProps extends /* @vue-ignore */ VariantProps<typeof badgeVariants> {
     class?: string;
 }
 
