@@ -2,25 +2,58 @@
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
+import { BookOpen, LayoutGrid, FileText, Users, Package, Truck, IdCard } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from '@/components/ui/sidebar';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: 'แดชบอร์ด',
         href: '/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: 'ใบส่งของ',
+        href: '/delivery-notes',
+        icon: FileText,
+    },
+    {
+        title: 'จัดการลูกค้า',
+        href: '/clients',
+        icon: Users,
+    },
+    {
+        title: 'จัดการสินค้า',
+        href: '/items',
+        icon: Package,
+    },
+    {
+        title: 'จัดการคนขับ',
+        href: '/drivers',
+        icon: IdCard,
+    },
+    {
+        title: 'จัดการรถ',
+        href: '/vehicles',
+        icon: Truck,
     },
 ];
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Github Repo',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
+        title: 'จัดการยูเซอร์',
+        href: '/users',
+        icon: Users,
     },
     {
         title: 'Documentation',
