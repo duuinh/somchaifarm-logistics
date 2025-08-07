@@ -4,7 +4,6 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Pencil } from 'lucide-vue-next';
 
 interface Client {
@@ -12,7 +11,6 @@ interface Client {
     name: string;
     address: string;
     phone: string;
-    customer_type: 'regular' | 'credit' | 'special';
     delivery_notes: Array<{
         id: number;
         delivery_date: string;
@@ -41,14 +39,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const getCustomerTypeBadge = (type: string) => {
-    const badges = {
-        regular: { label: 'ปกติ', class: 'bg-blue-100 text-blue-800 hover:bg-blue-100' },
-        credit: { label: 'เครดิต', class: 'bg-green-100 text-green-800 hover:bg-green-100' },
-        special: { label: 'พิเศษ', class: 'bg-purple-100 text-purple-800 hover:bg-purple-100' },
-    };
-    return badges[type as keyof typeof badges] || badges.regular;
-};
 </script>
 
 <template>
@@ -56,7 +46,7 @@ const getCustomerTypeBadge = (type: string) => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
-            <div class="max-w-4xl mx-auto space-y-6">
+            <div class="w-full max-w-4xl mx-auto space-y-6">
                 <!-- Client Information -->
                 <Card>
                     <CardHeader>
@@ -85,12 +75,6 @@ const getCustomerTypeBadge = (type: string) => {
                             <div>
                                 <h3 class="text-sm font-medium text-muted-foreground mb-1">ชื่อ</h3>
                                 <p class="text-sm">{{ client.name }}</p>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-medium text-muted-foreground mb-1">ประเภทลูกค้า</h3>
-                                <Badge :class="getCustomerTypeBadge(client.customer_type).class">
-                                    {{ getCustomerTypeBadge(client.customer_type).label }}
-                                </Badge>
                             </div>
                             <div>
                                 <h3 class="text-sm font-medium text-muted-foreground mb-1">เบอร์โทรศัพท์</h3>

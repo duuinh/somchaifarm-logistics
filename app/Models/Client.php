@@ -13,11 +13,6 @@ class Client extends Model
         'name',
         'address',
         'phone',
-        'customer_type',
-    ];
-
-    protected $casts = [
-        'customer_type' => 'string',
     ];
 
     public function deliveryNotes(): HasMany

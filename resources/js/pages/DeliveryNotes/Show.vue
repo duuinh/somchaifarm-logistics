@@ -18,7 +18,6 @@ interface Client {
     name: string;
     address?: string;
     phone?: string;
-    customer_type: 'regular' | 'credit';
 }
 
 interface Driver {
@@ -95,13 +94,6 @@ const getPricingTypeBadge = (type: string) => {
     return badges[type as keyof typeof badges] || badges.regular;
 };
 
-const getCustomerTypeBadge = (type: string) => {
-    const badges = {
-        regular: { label: 'ปกติ', class: 'bg-blue-100 text-blue-800 hover:bg-blue-100' },
-        credit: { label: 'เครดิต', class: 'bg-green-100 text-green-800 hover:bg-green-100' },
-    };
-    return badges[type as keyof typeof badges] || badges.regular;
-};
 
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('th-TH', {
@@ -207,12 +199,6 @@ const shouldShowDriverVehicle = () => {
                             <div>
                                 <h3 class="text-sm font-medium text-muted-foreground mb-1">ชื่อลูกค้า</h3>
                                 <p class="text-sm">{{ deliveryNote.client.name }}</p>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-medium text-muted-foreground mb-1">ประเภทลูกค้า</h3>
-                                <Badge :class="getCustomerTypeBadge(deliveryNote.client.customer_type).class">
-                                    {{ getCustomerTypeBadge(deliveryNote.client.customer_type).label }}
-                                </Badge>
                             </div>
                             <div v-if="deliveryNote.client.phone">
                                 <h3 class="text-sm font-medium text-muted-foreground mb-1">เบอร์โทรศัพท์</h3>

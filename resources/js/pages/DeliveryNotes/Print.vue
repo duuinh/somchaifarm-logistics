@@ -29,7 +29,6 @@ interface Client {
     name: string;
     address?: string;
     phone?: string;
-    customer_type: 'regular' | 'credit';
 }
 
 interface Driver {

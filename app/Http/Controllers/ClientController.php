@@ -37,7 +37,6 @@ class ClientController extends Controller
             'name' => 'required|string|max:255',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
-            'customer_type' => 'required|in:regular,credit,special',
         ]);
 
         $client = Client::create($validated);
@@ -75,7 +74,6 @@ class ClientController extends Controller
             'name' => 'required|string|max:255',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
-            'customer_type' => 'required|in:regular,credit,special',
         ]);
 
         $client->update($validated);

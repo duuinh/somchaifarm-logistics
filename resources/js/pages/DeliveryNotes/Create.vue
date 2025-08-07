@@ -14,7 +14,6 @@ import { ref, computed, watch } from 'vue';
 interface Client {
     id: number;
     name: string;
-    customer_type: 'regular' | 'credit' | 'special';
 }
 
 interface Item {
@@ -92,12 +91,8 @@ watch(() => form.client_id, (clientId) => {
     const client = props.clients.find(c => c.id.toString() === clientId);
     if (client) {
         selectedClient.value = client;
-        // Set pricing type based on client type, but allow manual override
-        if (client.customer_type === 'credit') {
-            form.pricing_type = 'credit';
-        } else {
-            form.pricing_type = 'regular';
-        }
+        // Default to regular pricing, but allow manual override
+        form.pricing_type = 'regular';
     }
 });
 
@@ -121,7 +116,7 @@ const calculateItemPrice = (item: Item, quantityKg: number | null, quantityBags:
 const addItem = () => {
     if (!newItemId.value || (!newQuantityKg.value && !newQuantityBags.value)) return;
 
-    const item = props.items.find(i => i.id.toString() === newItemId.value);
+    const item = props.items.find(i => i.id.toString() === newItemId.value.toString());
     if (!item) return;
 
     const totalPrice = calculateItemPrice(item, newQuantityKg.value, newQuantityBags.value);
@@ -210,7 +205,7 @@ const getItemName = (itemId: number) => {
                                 >
                                     <option value="">เลือกลูกค้า</option>
                                     <option v-for="client in clients" :key="client.id" :value="client.id">
-                                        {{ client.name }} ({{ client.customer_type }})
+                                        {{ client.name }}
                                     </option>
                                 </select>
                                 <div v-if="form.errors.client_id" class="text-sm text-red-500">

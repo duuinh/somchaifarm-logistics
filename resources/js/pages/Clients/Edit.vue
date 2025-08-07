@@ -14,7 +14,6 @@ interface Client {
     name: string;
     address: string;
     phone: string;
-    customer_type: 'regular' | 'credit' | 'special';
 }
 
 interface Props {
@@ -42,7 +41,6 @@ const form = useForm({
     name: props.client.name,
     address: props.client.address || '',
     phone: props.client.phone || '',
-    customer_type: props.client.customer_type,
 });
 
 const submit = () => {
@@ -55,7 +53,7 @@ const submit = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
-            <Card class="max-w-2xl mx-auto">
+            <Card class="w-full max-w-2xl mx-auto">
                 <CardHeader>
                     <div class="flex items-center gap-4">
                         <Link :href="route('clients.index')">
@@ -111,23 +109,6 @@ const submit = () => {
                             </div>
                         </div>
 
-                        <div class="space-y-2">
-                            <Label for="customer_type">ประเภทลูกค้า *</Label>
-                            <select 
-                                id="customer_type"
-                                v-model="form.customer_type"
-                                class="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                :class="{ 'border-red-500': form.errors.customer_type }"
-                                required
-                            >
-                                <option value="regular">ลูกค้าปกติ</option>
-                                <option value="credit">ลูกค้าเครดิต</option>
-                                <option value="special">ลูกค้าพิเศษ</option>
-                            </select>
-                            <div v-if="form.errors.customer_type" class="text-sm text-red-500">
-                                {{ form.errors.customer_type }}
-                            </div>
-                        </div>
 
                         <div class="flex gap-4">
                             <Button type="submit" :disabled="form.processing">

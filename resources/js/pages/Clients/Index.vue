@@ -22,7 +22,6 @@ interface Client {
     name: string;
     address: string;
     phone: string;
-    customer_type: 'regular' | 'credit' | 'special';
 }
 
 interface Props {
@@ -57,14 +56,6 @@ const filteredClients = computed(() => {
     );
 });
 
-const getCustomerTypeBadge = (type: string) => {
-    const badges = {
-        regular: { label: 'ปกติ', class: 'bg-blue-100 text-blue-800 hover:bg-blue-100' },
-        credit: { label: 'เครดิต', class: 'bg-green-100 text-green-800 hover:bg-green-100' },
-        special: { label: 'พิเศษ', class: 'bg-purple-100 text-purple-800 hover:bg-purple-100' },
-    };
-    return badges[type as keyof typeof badges] || badges.regular;
-};
 
 const deleteClient = (id: number) => {
     if (confirm('คุณแน่ใจหรือไม่ที่จะลบลูกค้านี้?')) {
@@ -108,7 +99,6 @@ const deleteClient = (id: number) => {
                                     <TableHead>ชื่อ</TableHead>
                                     <TableHead>ที่อยู่</TableHead>
                                     <TableHead>โทรศัพท์</TableHead>
-                                    <TableHead>ประเภท</TableHead>
                                     <TableHead class="text-right">การดำเนินการ</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -117,11 +107,6 @@ const deleteClient = (id: number) => {
                                     <TableCell class="font-medium">{{ client.name }}</TableCell>
                                     <TableCell>{{ client.address || '-' }}</TableCell>
                                     <TableCell>{{ client.phone || '-' }}</TableCell>
-                                    <TableCell>
-                                        <Badge :class="getCustomerTypeBadge(client.customer_type).class">
-                                            {{ getCustomerTypeBadge(client.customer_type).label }}
-                                        </Badge>
-                                    </TableCell>
                                     <TableCell class="text-right">
                                         <div class="flex justify-end gap-2">
                                             <Link :href="route('clients.show', client.id)">
