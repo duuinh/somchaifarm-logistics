@@ -47,6 +47,14 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear() + 543; // Convert to Buddhist Era
+    return `${day}/${month}/${year}`;
+};
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'แดชบอร์ด',
@@ -181,7 +189,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                         ลูกค้า: {{ deliveryItem.delivery_note.client.name }}
                                     </p>
                                     <p class="text-sm text-muted-foreground">
-                                        วันที่: {{ new Date(deliveryItem.delivery_note.delivery_date).toLocaleDateString('th-TH') }}
+                                        วันที่: {{ deliveryItem.delivery_note?.delivery_date ? formatDate(deliveryItem.delivery_note.delivery_date) : 'N/A' }}
                                     </p>
                                 </div>
                                 <div class="text-right">

@@ -90,11 +90,11 @@ const deleteDeliveryNote = (id: number) => {
 };
 
 const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('th-TH', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear() + 543; // Convert to Buddhist Era
+    return `${day}/${month}/${year}`;
 };
 </script>
 
@@ -184,7 +184,7 @@ const formatDate = (dateString: string) => {
                             </TableBody>
                         </Table>
                     </div>
-                    
+
                     <div v-if="filteredNotes.length === 0" class="text-center py-8">
                         <p class="text-muted-foreground">ไม่พบใบส่งของ</p>
                     </div>

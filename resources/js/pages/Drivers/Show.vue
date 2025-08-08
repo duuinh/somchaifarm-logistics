@@ -39,6 +39,14 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear() + 543; // Convert to Buddhist Era
+    return `${day}/${month}/${year}`;
+};
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'แดชบอร์ด',
@@ -99,11 +107,11 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="space-y-2">
                                 <label class="text-sm font-medium text-gray-700">วันที่สร้าง</label>
-                                <p class="text-sm bg-gray-50 p-3 rounded-md">{{ new Date(driver.created_at).toLocaleDateString('th-TH') }}</p>
+                                <p class="text-sm bg-gray-50 p-3 rounded-md">{{ formatDate(driver.created_at) }}</p>
                             </div>
                             <div class="space-y-2">
                                 <label class="text-sm font-medium text-gray-700">วันที่แก้ไขล่าสุด</label>
-                                <p class="text-sm bg-gray-50 p-3 rounded-md">{{ new Date(driver.updated_at).toLocaleDateString('th-TH') }}</p>
+                                <p class="text-sm bg-gray-50 p-3 rounded-md">{{ formatDate(driver.updated_at) }}</p>
                             </div>
                         </div>
                     </div>
@@ -137,7 +145,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <TableBody>
                                 <TableRow v-for="deliveryNote in driver.delivery_notes" :key="deliveryNote.id">
                                     <TableCell>
-                                        {{ new Date(deliveryNote.delivery_date).toLocaleDateString('th-TH') }}
+                                        {{ formatDate(deliveryNote.delivery_date) }}
                                     </TableCell>
                                     <TableCell class="font-medium">
                                         {{ deliveryNote.client?.name || '-' }}

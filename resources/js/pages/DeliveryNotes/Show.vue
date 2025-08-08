@@ -96,11 +96,11 @@ const getPricingTypeBadge = (type: string) => {
 
 
 const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('th-TH', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear() + 543; // Convert to Buddhist Era
+    return `${day}/${month}/${year}`;
 };
 
 const shouldShowDriverVehicle = () => {
