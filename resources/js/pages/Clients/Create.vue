@@ -76,7 +76,7 @@ const submit = () => {
                             <Textarea
                                 id="address"
                                 v-model="form.address"
-                                rows="3"
+                                :rows="3"
                                 :class="{ 'border-red-500': form.errors.address }"
                             />
                             <div v-if="form.errors.address" class="text-sm text-red-500">
