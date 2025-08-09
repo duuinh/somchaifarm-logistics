@@ -13,7 +13,6 @@ class ItemSeeder extends Seeder
             // Raw Materials
             [
                 'name' => 'ข้าวโพด',
-                'unit_type' => 'both',
                 'regular_price_per_kg' => 12.50,
                 'regular_price_per_bag' => 312.50,
                 'credit_price_per_kg' => 13.00,
@@ -22,7 +21,6 @@ class ItemSeeder extends Seeder
             ],
             [
                 'name' => 'แป้งปลา',
-                'unit_type' => 'both',
                 'regular_price_per_kg' => 28.00,
                 'regular_price_per_bag' => 700.00,
                 'credit_price_per_kg' => 29.00,
@@ -31,7 +29,6 @@ class ItemSeeder extends Seeder
             ],
             [
                 'name' => 'แป้งกะทิ',
-                'unit_type' => 'both',
                 'regular_price_per_kg' => 15.50,
                 'regular_price_per_bag' => 387.50,
                 'credit_price_per_kg' => 16.00,
@@ -40,7 +37,6 @@ class ItemSeeder extends Seeder
             ],
             [
                 'name' => 'รำข้าว',
-                'unit_type' => 'both',
                 'regular_price_per_kg' => 8.50,
                 'regular_price_per_bag' => 212.50,
                 'credit_price_per_kg' => 9.00,
@@ -49,7 +45,6 @@ class ItemSeeder extends Seeder
             ],
             [
                 'name' => 'ปูนหอยเผา',
-                'unit_type' => 'both',
                 'regular_price_per_kg' => 3.50,
                 'regular_price_per_bag' => 87.50,
                 'credit_price_per_kg' => 4.00,
@@ -58,7 +53,6 @@ class ItemSeeder extends Seeder
             ],
             [
                 'name' => 'เกลือ',
-                'unit_type' => 'both',
                 'regular_price_per_kg' => 5.00,
                 'regular_price_per_bag' => 125.00,
                 'credit_price_per_kg' => 5.50,

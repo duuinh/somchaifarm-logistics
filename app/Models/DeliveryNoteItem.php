@@ -12,8 +12,6 @@ class DeliveryNoteItem extends Model
         'item_id',
         'quantity_kg',
         'quantity_bags',
-        'quantity_tons',
-        'quantity_units',
         'unit_multiplier',
         'unit_price',
         'total_price',
@@ -22,8 +20,6 @@ class DeliveryNoteItem extends Model
     protected $casts = [
         'quantity_kg' => 'decimal:2',
         'quantity_bags' => 'decimal:2',
-        'quantity_tons' => 'decimal:2',
-        'quantity_units' => 'decimal:2',
         'unit_multiplier' => 'decimal:2',
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',

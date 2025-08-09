@@ -9,28 +9,18 @@ class Item extends Model
 {
     protected $fillable = [
         'name',
-        'unit_type',
         'regular_price_per_kg',
         'regular_price_per_bag',
-        'regular_price_per_ton',
-        'regular_price_per_unit',
         'credit_price_per_kg',
         'credit_price_per_bag',
-        'credit_price_per_ton',
-        'credit_price_per_unit',
         'kg_per_bag_conversion',
     ];
 
     protected $casts = [
-        'unit_type' => 'string',
         'regular_price_per_kg' => 'decimal:2',
         'regular_price_per_bag' => 'decimal:2',
-        'regular_price_per_ton' => 'decimal:2',
-        'regular_price_per_unit' => 'decimal:2',
         'credit_price_per_kg' => 'decimal:2',
         'credit_price_per_bag' => 'decimal:2',
-        'credit_price_per_ton' => 'decimal:2',
-        'credit_price_per_unit' => 'decimal:2',
         'kg_per_bag_conversion' => 'decimal:2',
     ];
 

@@ -62,12 +62,13 @@ class DeliveryNoteController extends Controller
             'pricing_type' => 'required|in:regular,credit',
             'notes' => 'nullable|string',
             'service_fee' => 'nullable|numeric|min:0',
+            'service_fee_per_ton' => 'nullable|numeric|min:0',
+            'bag_fee' => 'nullable|numeric|min:0',
+            'transport_fee' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required|exists:items,id',
             'items.*.quantity_kg' => 'nullable|numeric|min:0',
             'items.*.quantity_bags' => 'nullable|numeric|min:0',
-            'items.*.quantity_tons' => 'nullable|numeric|min:0',
-            'items.*.quantity_units' => 'nullable|numeric|min:0',
             'items.*.unit_multiplier' => 'nullable|numeric|min:0',
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.total_price' => 'required|numeric|min:0',
@@ -91,9 +92,12 @@ class DeliveryNoteController extends Controller
                 }
             }
 
-            // Handle service fee
+            // Handle fees
             $serviceFee = $validated['service_fee'] ?? 0;
-            $totalAmount += $serviceFee;
+            $serviceFeePerTon = $validated['service_fee_per_ton'] ?? 0;
+            $bagFee = $validated['bag_fee'] ?? 0;
+            $transportFee = $validated['transport_fee'] ?? 0;
+            $totalAmount += $serviceFee + $bagFee + $transportFee;
 
             // Create delivery note
             $deliveryNote = DeliveryNote::create([
@@ -106,6 +110,9 @@ class DeliveryNoteController extends Controller
                 'total_weight' => $totalWeight,
                 'total_amount' => $totalAmount,
                 'service_fee' => $serviceFee,
+                'service_fee_per_ton' => $serviceFeePerTon,
+                'bag_fee' => $bagFee,
+                'transport_fee' => $transportFee,
                 'notes' => $validated['notes'],
             ]);
 
@@ -116,8 +123,6 @@ class DeliveryNoteController extends Controller
                     'item_id' => $item['item_id'],
                     'quantity_kg' => $item['quantity_kg'] ?? null,
                     'quantity_bags' => $item['quantity_bags'] ?? null,
-                    'quantity_tons' => $item['quantity_tons'] ?? null,
-                    'quantity_units' => $item['quantity_units'] ?? null,
                     'unit_multiplier' => $item['unit_multiplier'] ?? 1,
                     'unit_price' => $item['unit_price'],
                     'total_price' => $item['total_price'],
@@ -180,12 +185,13 @@ class DeliveryNoteController extends Controller
             'pricing_type' => 'required|in:regular,credit',
             'notes' => 'nullable|string',
             'service_fee' => 'nullable|numeric|min:0',
+            'service_fee_per_ton' => 'nullable|numeric|min:0',
+            'bag_fee' => 'nullable|numeric|min:0',
+            'transport_fee' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required|exists:items,id',
             'items.*.quantity_kg' => 'nullable|numeric|min:0',
             'items.*.quantity_bags' => 'nullable|numeric|min:0',
-            'items.*.quantity_tons' => 'nullable|numeric|min:0',
-            'items.*.quantity_units' => 'nullable|numeric|min:0',
             'items.*.unit_multiplier' => 'nullable|numeric|min:0',
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.total_price' => 'required|numeric|min:0',
@@ -209,9 +215,12 @@ class DeliveryNoteController extends Controller
                 }
             }
 
-            // Handle service fee
+            // Handle fees
             $serviceFee = $validated['service_fee'] ?? 0;
-            $totalAmount += $serviceFee;
+            $serviceFeePerTon = $validated['service_fee_per_ton'] ?? 0;
+            $bagFee = $validated['bag_fee'] ?? 0;
+            $transportFee = $validated['transport_fee'] ?? 0;
+            $totalAmount += $serviceFee + $bagFee + $transportFee;
 
             // Update delivery note
             $deliveryNote->update([
@@ -223,6 +232,9 @@ class DeliveryNoteController extends Controller
                 'total_weight' => $totalWeight,
                 'total_amount' => $totalAmount,
                 'service_fee' => $serviceFee,
+                'service_fee_per_ton' => $serviceFeePerTon,
+                'bag_fee' => $bagFee,
+                'transport_fee' => $transportFee,
                 'notes' => $validated['notes'],
             ]);
 
@@ -235,8 +247,6 @@ class DeliveryNoteController extends Controller
                     'item_id' => $item['item_id'],
                     'quantity_kg' => $item['quantity_kg'] ?? null,
                     'quantity_bags' => $item['quantity_bags'] ?? null,
-                    'quantity_tons' => $item['quantity_tons'] ?? null,
-                    'quantity_units' => $item['quantity_units'] ?? null,
                     'unit_multiplier' => $item['unit_multiplier'] ?? 1,
                     'unit_price' => $item['unit_price'],
                     'total_price' => $item['total_price'],

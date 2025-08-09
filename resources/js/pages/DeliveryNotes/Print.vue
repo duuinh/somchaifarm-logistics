@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Printer, RotateCcw, X } from 'lucide-vue-next';
+import { bahttext } from "bahttext";
 
 interface Item {
     id: number;
@@ -15,7 +16,6 @@ interface DeliveryNoteItem {
     id: number;
     quantity_kg?: number;
     quantity_bags?: number;
-    quantity_units?: number;
     unit_multiplier: number;
     unit_price: number;
     total_price: number;
@@ -54,6 +54,8 @@ interface DeliveryNote {
     total_amount?: number;
     service_fee?: number;
     service_fee_per_ton?: number;
+    bag_fee?: number;
+    transport_fee?: number;
     notes?: string;
     client: Client;
     driver?: Driver;
@@ -90,11 +92,11 @@ const handleClose = () => {
 };
 
 const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('th-TH', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear() + 543; // Convert to Buddhist Era
+    return `${day}/${month}/${year} พ.ศ.`;
 };
 
 const getPricingTypeLabel = (type: string) => {
@@ -108,6 +110,10 @@ const getPricingTypeLabel = (type: string) => {
 const shouldShowDriverVehicle = () => {
     // Show driver/vehicle info if explicitly set
     return (props.deliveryNote.driver && props.deliveryNote.vehicle);
+};
+
+const formatBahtText = (amount: number) => {
+    return bahttext(amount);
 };
 
 // Auto-print when page loads
@@ -205,8 +211,12 @@ onMounted(() => {
                         </td>
                         <td class="text-center">
                             <div v-if="item.quantity_kg">{{ item.quantity_kg }} กก.</div>
-                            <div v-if="item.quantity_bags">{{ item.quantity_bags }} ถุง</div>
-                            <div v-if="item.quantity_units">{{ item.quantity_units }} หน่วย</div>
+                            <div v-if="item.quantity_bags">
+                                {{ item.quantity_bags }} กระสอบ
+                                <div v-if="item.item && item.item.kg_per_bag_conversion" style="font-size: 10px; color: #666;">
+                                    ({{ item.item.kg_per_bag_conversion }} กก./กระสอบ)
+                                </div>
+                            </div>
                         </td>
                         <td class="text-right">{{ item.unit_price.toLocaleString() }}</td>
                         <td class="text-right">{{ item.total_price.toLocaleString() }}</td>
@@ -214,19 +224,71 @@ onMounted(() => {
                 </tbody>
             </table>
 
+            <!-- Service Fees Table -->
+            <div v-if="deliveryNote.service_fee || deliveryNote.bag_fee || deliveryNote.transport_fee" style="margin-top: 15px;">
+                <div style="background-color: #f5f5f5; padding: 5px 10px; border: 1px solid #000; border-bottom: none;">
+                    <strong style="font-size: 12px;">ค่าบริการเพิ่มเติม</strong>
+                </div>
+                <table class="items-table" style="margin-top: 0;">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%">รายการ</th>
+                            <th style="width: 15%">จำนวน</th>
+                            <th style="width: 20%">ราคา/หน่วย</th>
+                            <th style="width: 25%">รวม (บาท)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-if="deliveryNote.service_fee">
+                            <td>ค่าผสม</td>
+                            <td class="text-center">
+                                {{ deliveryNote.service_fee_per_ton && deliveryNote.service_fee_per_ton > 0 
+                                    ? (deliveryNote.service_fee / deliveryNote.service_fee_per_ton).toFixed(2) + ' ตัน'
+                                    : '-' }}
+                            </td>
+                            <td class="text-right">
+                                {{ deliveryNote.service_fee_per_ton ? deliveryNote.service_fee_per_ton.toLocaleString() + ' บาท/ตัน' : '-' }}
+                            </td>
+                            <td class="text-right">{{ deliveryNote.service_fee.toLocaleString() }}</td>
+                        </tr>
+                        <tr v-if="deliveryNote.bag_fee">
+                            <td>ค่ากระสอบ</td>
+                            <td class="text-center">-</td>
+                            <td class="text-right">-</td>
+                            <td class="text-right">{{ deliveryNote.bag_fee.toLocaleString() }}</td>
+                        </tr>
+                        <tr v-if="deliveryNote.transport_fee">
+                            <td>ค่าขนส่ง</td>
+                            <td class="text-center">-</td>
+                            <td class="text-right">-</td>
+                            <td class="text-right">{{ deliveryNote.transport_fee.toLocaleString() }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
             <!-- Summary -->
             <div class="summary-section">
                 <div v-if="deliveryNote.total_weight" class="mb-2">
                     <strong>น้ำหนักรวม:</strong> {{ deliveryNote.total_weight.toLocaleString() }} กิโลกรัม
                 </div>
                 <div class="mb-2">
-                    <strong>รวมค่าสินค้า:</strong> {{ deliveryNote.items.reduce((total, item) => total + item.total_price, 0).toLocaleString() }} บาท
+                    <strong>รวมค่าสินค้า:</strong> {{ Number(deliveryNote.items.reduce((total, item) => Number(total) + Number(item.total_price), 0)).toLocaleString() }} บาท
                 </div>
                 <div v-if="deliveryNote.service_fee" class="mb-2">
                     <strong>ค่าผสม:</strong> {{ deliveryNote.service_fee.toLocaleString() }} บาท
                 </div>
+                <div v-if="deliveryNote.bag_fee" class="mb-2">
+                    <strong>ค่ากระสอบ:</strong> {{ deliveryNote.bag_fee.toLocaleString() }} บาท
+                </div>
+                <div v-if="deliveryNote.transport_fee" class="mb-2">
+                    <strong>ค่าขนส่ง:</strong> {{ deliveryNote.transport_fee.toLocaleString() }} บาท
+                </div>
                 <div class="font-bold" style="font-size: 14px;">
                     <strong>รวมทั้งหมด: {{ deliveryNote.total_amount?.toLocaleString() }} บาท</strong>
+                </div>
+                <div class="mt-2" style="font-size: 11px;">
+                    <strong>จำนวนเงิน (ตัวอักษร): {{ formatBahtText(deliveryNote.total_amount || 0) }}</strong>
                 </div>
             </div>
 

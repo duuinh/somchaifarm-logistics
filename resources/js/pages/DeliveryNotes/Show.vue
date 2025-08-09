@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowLeft, Pencil, Printer } from 'lucide-vue-next';
+import { bahttext } from "bahttext";
+import BahtTextDisplay from '@/components/BahtTextDisplay.vue';
 
 interface User {
     id: number;
@@ -41,7 +43,6 @@ interface DeliveryNoteItem {
     id: number;
     quantity_kg?: number;
     quantity_bags?: number;
-    quantity_units?: number;
     unit_multiplier: number;
     unit_price: number;
     total_price: number;
@@ -56,6 +57,8 @@ interface DeliveryNote {
     total_amount?: number;
     service_fee?: number;
     service_fee_per_ton?: number;
+    bag_fee?: number;
+    transport_fee?: number;
     notes?: string;
     client: Client;
     driver?: Driver;
@@ -106,6 +109,10 @@ const formatDate = (dateString: string) => {
 const shouldShowDriverVehicle = () => {
     // Show driver/vehicle info if explicitly set
     return (props.deliveryNote.driver && props.deliveryNote.vehicle);
+};
+
+const formatBahtText = (amount: number) => {
+    return bahttext(amount);
 };
 </script>
 
@@ -256,7 +263,7 @@ const shouldShowDriverVehicle = () => {
                                     <TableRow v-for="item in deliveryNote.items" :key="item.id">
                                         <TableCell>
                                             <div>
-                                                {{ item.item.name }}
+                                                {{ item.item?.name || 'ไม่ระบุชื่อสินค้า' }}
                                                 <span v-if="item.unit_multiplier > 1" class="text-muted-foreground">
                                                     (x{{ item.unit_multiplier }})
                                                 </span>
@@ -265,12 +272,64 @@ const shouldShowDriverVehicle = () => {
                                         <TableCell>
                                             <div class="space-y-1">
                                                 <div v-if="item.quantity_kg">{{ item.quantity_kg }} กก.</div>
-                                                <div v-if="item.quantity_bags">{{ item.quantity_bags }} ถุง</div>
-                                                <div v-if="item.quantity_units">{{ item.quantity_units }} หน่วย</div>
+                                                <div v-if="item.quantity_bags">{{ item.quantity_bags }} กระสอบ</div>
                                             </div>
                                         </TableCell>
-                                        <TableCell class="text-right">{{ item.unit_price.toLocaleString() }}</TableCell>
-                                        <TableCell class="text-right font-medium">{{ item.total_price.toLocaleString() }}</TableCell>
+                                        <TableCell class="text-right">{{ Number(item.unit_price || 0).toLocaleString() }}</TableCell>
+                                        <TableCell class="text-right font-medium">{{ Number(item.total_price || 0).toLocaleString() }}</TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </div>
+
+                        <!-- Service Fees Table -->
+                        <div v-if="deliveryNote.service_fee || deliveryNote.bag_fee || deliveryNote.transport_fee" class="mt-6 border rounded-lg overflow-hidden">
+                            <div class="bg-gray-50 px-4 py-2 border-b">
+                                <h3 class="text-sm font-semibold text-gray-700">ค่าบริการเพิ่มเติม</h3>
+                            </div>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>รายการ</TableHead>
+                                        <TableHead class="text-center">จำนวน</TableHead>
+                                        <TableHead class="text-center">หน่วย</TableHead>
+                                        <TableHead class="text-right">ราคาต่อหน่วย</TableHead>
+                                        <TableHead class="text-right">ราคารวม (บาท)</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow v-if="deliveryNote.service_fee">
+                                        <TableCell class="font-medium">ค่าผสม</TableCell>
+                                        <TableCell class="text-center">
+                                            {{ deliveryNote.service_fee_per_ton && deliveryNote.service_fee_per_ton > 0
+                                                ? (deliveryNote.service_fee / deliveryNote.service_fee_per_ton).toFixed(2)
+                                                : '-' }}
+                                        </TableCell>
+                                        <TableCell class="text-center">ตัน</TableCell>
+                                        <TableCell class="text-right">
+                                            {{ deliveryNote.service_fee_per_ton ? deliveryNote.service_fee_per_ton.toLocaleString() + ' บาท/ตัน' : '-' }}
+                                        </TableCell>
+                                        <TableCell class="text-right font-medium">
+                                            {{ deliveryNote.service_fee.toLocaleString() }}
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow v-if="deliveryNote.bag_fee">
+                                        <TableCell class="font-medium">ค่ากระสอบ</TableCell>
+                                        <TableCell class="text-center">{{ deliveryNote.bag_fee.toLocaleString() }}</TableCell>
+                                        <TableCell class="text-center">บาท</TableCell>
+                                        <TableCell class="text-right">-</TableCell>
+                                        <TableCell class="text-right font-medium">
+                                            {{ deliveryNote.bag_fee.toLocaleString() }}
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow v-if="deliveryNote.transport_fee">
+                                        <TableCell class="font-medium">ค่าขนส่ง</TableCell>
+                                        <TableCell class="text-center">{{ deliveryNote.transport_fee.toLocaleString() }}</TableCell>
+                                        <TableCell class="text-center">บาท</TableCell>
+                                        <TableCell class="text-right">-</TableCell>
+                                        <TableCell class="text-right font-medium">
+                                            {{ deliveryNote.transport_fee.toLocaleString() }}
+                                        </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
@@ -285,19 +344,26 @@ const shouldShowDriverVehicle = () => {
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-sm text-muted-foreground">รวมค่าสินค้า</span>
-                                    <span>{{ deliveryNote.items.reduce((total, item) => total + item.total_price, 0).toLocaleString() }} บาท</span>
+                                    <span>{{ Number(deliveryNote.items.reduce((total, item) => Number(total) + Number(item.total_price), 0)).toLocaleString() }} บาท</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-sm text-muted-foreground">ค่าผสม</span>
                                     <span>{{ deliveryNote.service_fee?.toLocaleString() || '0' }} บาท</span>
                                 </div>
-                                <div v-if="deliveryNote.service_fee_per_ton" class="flex justify-between">
-                                    <span class="text-sm text-muted-foreground">ค่าผสมต่อตัน</span>
-                                    <span>{{ deliveryNote.service_fee_per_ton?.toLocaleString() || '0' }} บาท</span>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-muted-foreground">ค่ากระสอบ</span>
+                                    <span>{{ deliveryNote.bag_fee?.toLocaleString() || '0' }} บาท</span>
                                 </div>
-                                <div class="border-t pt-3 flex justify-between items-center">
-                                    <span class="text-sm text-muted-foreground">ยอดรวมทั้งหมด</span>
-                                    <span class="text-2xl font-bold text-primary">{{ deliveryNote.total_amount?.toLocaleString() || '0' }} บาท</span>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-muted-foreground">ค่าขนส่ง</span>
+                                    <span>{{ deliveryNote.transport_fee?.toLocaleString() || '0' }} บาท</span>
+                                </div>
+                                <div class="border-t pt-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-muted-foreground">ยอดรวมทั้งหมด</span>
+                                        <span class="text-2xl font-bold text-primary">{{ deliveryNote.total_amount?.toLocaleString() || '0' }} บาท</span>
+                                    </div>
+                                    <BahtTextDisplay :baht-text="formatBahtText(deliveryNote.total_amount || 0)" />
                                 </div>
                             </div>
                         </div>

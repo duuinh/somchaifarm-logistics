@@ -19,16 +19,20 @@ class DeliveryNote extends Model
         'total_amount',
         'service_fee_per_ton',
         'service_fee',
+        'bag_fee',
+        'transport_fee',
         'notes',
     ];
 
     protected $casts = [
         'delivery_date' => 'date',
         'pricing_type' => 'string',
-        'total_weight' => 'decimal:2',
-        'total_amount' => 'decimal:2',
-        'service_fee_per_ton' => 'decimal:2',
-        'service_fee' => 'decimal:2',
+        'total_weight' => 'float',
+        'total_amount' => 'float',
+        'service_fee_per_ton' => 'float',
+        'service_fee' => 'float',
+        'bag_fee' => 'float',
+        'transport_fee' => 'float',
     ];
 
     public function client(): BelongsTo

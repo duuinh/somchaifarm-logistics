@@ -23,6 +23,9 @@ importers:
       '@vueuse/core':
         specifier: ^12.8.2
         version: 12.8.2(typescript@5.9.2)
+      bahttext:
+        specifier: ^2.3.3
+        version: 2.3.3
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -791,6 +794,9 @@ packages:
 
   axios@1.11.0:
     resolution: {integrity: sha512-1Lx3WLFQWm3ooKDYZD1eXmoGO9fxYQjrycfHFC8P0sCfQVXyROp0p9PFWBehewBOdCwHc+f/b8I0fMto5eSfwA==}
+
+  bahttext@2.3.3:
+    resolution: {integrity: sha512-KdSkwbTR6w1Qh3WKDGAw3PWifPJQUd2THFrTyvr6QI28Tn0T2YvZeXBd2pDbJss8gjIVboyPBCxJq2abhQGtqA==}
 
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
@@ -2395,6 +2401,8 @@ snapshots:
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
+
+  bahttext@2.3.3: {}
 
   balanced-match@1.0.2: {}
 
