@@ -29,7 +29,7 @@ const form = useForm({
     regular_price_per_bag: '',
     credit_price_per_kg: '',
     credit_price_per_bag: '',
-    kg_per_bag_conversion: '25',
+    kg_per_bag_conversion: '',
 });
 
 const submit = () => {

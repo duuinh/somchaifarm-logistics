@@ -37,12 +37,6 @@ class SettingSeeder extends Seeder
                 'type' => 'string',
                 'description' => 'Company phone number',
             ],
-            [
-                'key' => 'default_kg_per_bag',
-                'value' => '25',
-                'type' => 'number',
-                'description' => 'Default kg per bag conversion',
-            ],
         ];
 
         foreach ($settings as $setting) {

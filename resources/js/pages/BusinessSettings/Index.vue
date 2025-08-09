@@ -52,7 +52,6 @@ const getLabel = (key: string) => {
         'company_name': 'ชื่อบริษัท',
         'company_address': 'ที่อยู่บริษัท',
         'company_phone': 'เบอร์โทรศัพท์บริษัท',
-        'default_kg_per_bag': 'กิโลกรัมต่อกระสอบเริ่มต้น',
     };
     return labels[key] || key;
 };
