@@ -25,7 +25,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const form = useForm({
     name: '',
-    unit_type: 'both' as string,
     regular_price_per_kg: '',
     regular_price_per_bag: '',
     credit_price_per_kg: '',
@@ -86,7 +85,7 @@ const submit = () => {
                             </div>
 
                             <div class="space-y-2">
-                                <Label for="regular_price_per_bag">ราคาปกติ ต่อ ถุง (บาท)</Label>
+                                <Label for="regular_price_per_bag">ราคาปกติ ต่อ กระสอบ (บาท)</Label>
                                 <Input
                                     id="regular_price_per_bag"
                                     v-model="form.regular_price_per_bag"
@@ -108,7 +107,7 @@ const submit = () => {
                             </div>
 
                             <div class="space-y-2">
-                                <Label for="credit_price_per_bag">ราคาเครดิต ต่อ ถุง (บาท)</Label>
+                                <Label for="credit_price_per_bag">ราคาเครดิต ต่อ กระสอบ (บาท)</Label>
                                 <Input
                                     id="credit_price_per_bag"
                                     v-model="form.credit_price_per_bag"
@@ -119,7 +118,7 @@ const submit = () => {
                             </div>
 
                             <div class="space-y-2">
-                                <Label for="kg_per_bag_conversion">กิโลกรัมต่อถุง</Label>
+                                <Label for="kg_per_bag_conversion">กิโลกรัมต่อกระสอบ</Label>
                                 <Input
                                     id="kg_per_bag_conversion"
                                     v-model="form.kg_per_bag_conversion"

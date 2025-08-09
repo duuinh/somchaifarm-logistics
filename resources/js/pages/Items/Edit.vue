@@ -11,15 +11,10 @@ import { ArrowLeft, Save } from 'lucide-vue-next';
 interface Item {
     id: number;
     name: string;
-    unit_type: string;
     regular_price_per_kg: number;
     regular_price_per_bag: number;
-    regular_price_per_ton: number;
-    regular_price_per_unit: number;
     credit_price_per_kg: number;
     credit_price_per_bag: number;
-    credit_price_per_ton: number;
-    credit_price_per_unit: number;
     kg_per_bag_conversion: number;
 }
 
@@ -46,15 +41,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const form = useForm({
     name: props.item.name,
-    unit_type: props.item.unit_type,
     regular_price_per_kg: props.item.regular_price_per_kg?.toString() || '',
     regular_price_per_bag: props.item.regular_price_per_bag?.toString() || '',
-    regular_price_per_ton: props.item.regular_price_per_ton?.toString() || '',
-    regular_price_per_unit: props.item.regular_price_per_unit?.toString() || '',
     credit_price_per_kg: props.item.credit_price_per_kg?.toString() || '',
     credit_price_per_bag: props.item.credit_price_per_bag?.toString() || '',
-    credit_price_per_ton: props.item.credit_price_per_ton?.toString() || '',
-    credit_price_per_unit: props.item.credit_price_per_unit?.toString() || '',
     kg_per_bag_conversion: props.item.kg_per_bag_conversion?.toString() || '',
 });
 
@@ -99,21 +89,6 @@ const submit = () => {
                             </div>
 
 
-                            <div class="space-y-2">
-                                <Label for="unit_type">หน่วย *</Label>
-                                <select 
-                                    id="unit_type"
-                                    v-model="form.unit_type"
-                                    class="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                    required
-                                >
-                                    <option value="kg">กิโลกรัม</option>
-                                    <option value="bags">กระสอบ</option>
-                                    <option value="ton">ตัน</option>
-                                    <option value="unit">หน่วย</option>
-                                    <option value="both">ทั้งกิโลและกระสอบ</option>
-                                </select>
-                            </div>
 
                             <div class="space-y-2">
                                 <Label for="kg_per_bag_conversion">กิโลกรัมต่อกระสอบ</Label>
@@ -153,28 +128,6 @@ const submit = () => {
                                         min="0"
                                     />
                                 </div>
-
-                                <div class="space-y-2">
-                                    <Label for="regular_price_per_ton">ราคาต่อ ตัน (บาท)</Label>
-                                    <Input
-                                        id="regular_price_per_ton"
-                                        v-model="form.regular_price_per_ton"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                    />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <Label for="regular_price_per_unit">ราคาต่อ หน่วย (บาท)</Label>
-                                    <Input
-                                        id="regular_price_per_unit"
-                                        v-model="form.regular_price_per_unit"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                    />
-                                </div>
                             </div>
 
                             <h3 class="text-lg font-medium mt-6">ราคาเครดิต</h3>
@@ -195,28 +148,6 @@ const submit = () => {
                                     <Input
                                         id="credit_price_per_bag"
                                         v-model="form.credit_price_per_bag"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                    />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <Label for="credit_price_per_ton">ราคาต่อ ตัน (บาท)</Label>
-                                    <Input
-                                        id="credit_price_per_ton"
-                                        v-model="form.credit_price_per_ton"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                    />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <Label for="credit_price_per_unit">ราคาต่อ หน่วย (บาท)</Label>
-                                    <Input
-                                        id="credit_price_per_unit"
-                                        v-model="form.credit_price_per_unit"
                                         type="number"
                                         step="0.01"
                                         min="0"

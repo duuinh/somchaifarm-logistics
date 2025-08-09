@@ -13,11 +13,11 @@ import { PlusCircle, Pencil, Trash2, Eye } from 'lucide-vue-next';
 interface Item {
     id: number;
     name: string;
-    unit_type: string;
     regular_price_per_kg: number;
     regular_price_per_bag: number;
     credit_price_per_kg: number;
     credit_price_per_bag: number;
+    kg_per_bag_conversion: number;
 }
 
 interface Props {
@@ -69,7 +69,7 @@ const deleteItem = (id: number) => {
                     <div class="flex items-center justify-between">
                         <div>
                             <CardTitle>จัดการรายการสินค้า</CardTitle>
-                            <CardDescription>รายการสินค้าและบริการทั้งหมดในระบบ</CardDescription>
+                            <CardDescription>รายการสินค้าทั้งหมดในระบบ</CardDescription>
                         </div>
                         <Link :href="route('items.create')">
                             <Button>
@@ -92,18 +92,22 @@ const deleteItem = (id: number) => {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>ชื่อ</TableHead>
-                                    <TableHead>หน่วย</TableHead>
+                                    <TableHead>กก./กระสอบ</TableHead>
                                     <TableHead>ราคาปกติ (กก.)</TableHead>
+                                    <TableHead>ราคาปกติ (กระสอบ)</TableHead>
                                     <TableHead>ราคาเครดิต (กก.)</TableHead>
+                                    <TableHead>ราคาเครดิต (กระสอบ)</TableHead>
                                     <TableHead class="text-right">การดำเนินการ</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 <TableRow v-for="item in filteredItems" :key="item.id">
                                     <TableCell class="font-medium">{{ item.name }}</TableCell>
-                                    <TableCell>{{ item.unit_type }}</TableCell>
+                                    <TableCell>{{ item.kg_per_bag_conversion }} กก.</TableCell>
                                     <TableCell>{{ item.regular_price_per_kg?.toLocaleString() || '-' }} บาท</TableCell>
+                                    <TableCell>{{ item.regular_price_per_bag?.toLocaleString() || '-' }} บาท</TableCell>
                                     <TableCell>{{ item.credit_price_per_kg?.toLocaleString() || '-' }} บาท</TableCell>
+                                    <TableCell>{{ item.credit_price_per_bag?.toLocaleString() || '-' }} บาท</TableCell>
                                     <TableCell class="text-right">
                                         <div class="flex justify-end gap-2">
                                             <Link :href="route('items.show', item.id)">

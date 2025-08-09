@@ -28,15 +28,10 @@ interface DeliveryNoteItem {
 interface Item {
     id: number;
     name: string;
-    unit_type: string;
     regular_price_per_kg: number;
     regular_price_per_bag: number;
-    regular_price_per_ton: number;
-    regular_price_per_unit: number;
     credit_price_per_kg: number;
     credit_price_per_bag: number;
-    credit_price_per_ton: number;
-    credit_price_per_unit: number;
     kg_per_bag_conversion: number;
     delivery_note_items: DeliveryNoteItem[];
 }
@@ -108,12 +103,8 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <p class="text-sm">{{ item.name }}</p>
                             </div>
                             <div>
-                                <h3 class="text-sm font-medium text-muted-foreground mb-1">หน่วย</h3>
-                                <p class="text-sm">{{ item.unit_type }}</p>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-medium text-muted-foreground mb-1">การแปลงหน่วย</h3>
-                                <p class="text-sm">{{ item.kg_per_bag_conversion }} กก./กระสอบ</p>
+                                <h3 class="text-sm font-medium text-muted-foreground mb-1">กิโลกรัมต่อกระสอบ</h3>
+                                <p class="text-sm">{{ item.kg_per_bag_conversion }} กก.</p>
                             </div>
                         </div>
 
@@ -132,14 +123,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                                             <span class="text-sm">ต่อกระสอบ:</span>
                                             <span class="text-sm">{{ item.regular_price_per_bag?.toLocaleString() || '-' }} บาท</span>
                                         </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-sm">ต่อตัน:</span>
-                                            <span class="text-sm">{{ item.regular_price_per_ton?.toLocaleString() || '-' }} บาท</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-sm">ต่อหน่วย:</span>
-                                            <span class="text-sm">{{ item.regular_price_per_unit?.toLocaleString() || '-' }} บาท</span>
-                                        </div>
                                     </div>
                                 </div>
                                 <div>
@@ -152,14 +135,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                                         <div class="flex justify-between">
                                             <span class="text-sm">ต่อกระสอบ:</span>
                                             <span class="text-sm">{{ item.credit_price_per_bag?.toLocaleString() || '-' }} บาท</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-sm">ต่อตัน:</span>
-                                            <span class="text-sm">{{ item.credit_price_per_ton?.toLocaleString() || '-' }} บาท</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-sm">ต่อหน่วย:</span>
-                                            <span class="text-sm">{{ item.credit_price_per_unit?.toLocaleString() || '-' }} บาท</span>
                                         </div>
                                     </div>
                                 </div>
@@ -184,9 +159,9 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 class="flex items-center justify-between p-4 border rounded-lg"
                             >
                                 <div>
-                                    <p class="font-medium">ใบส่งของ #{{ deliveryItem.delivery_note.id }}</p>
+                                    <p class="font-medium">ใบส่งของ #{{ deliveryItem.delivery_note?.id || 'N/A' }}</p>
                                     <p class="text-sm text-muted-foreground">
-                                        ลูกค้า: {{ deliveryItem.delivery_note.client.name }}
+                                        ลูกค้า: {{ deliveryItem.delivery_note?.client?.name || 'N/A' }}
                                     </p>
                                     <p class="text-sm text-muted-foreground">
                                         วันที่: {{ deliveryItem.delivery_note?.delivery_date ? formatDate(deliveryItem.delivery_note.delivery_date) : 'N/A' }}
