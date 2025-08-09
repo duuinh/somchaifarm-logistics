@@ -29,7 +29,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/dashboard',
     },
     {
-        title: 'การตั้งค่าระบบ',
+        title: 'การตั้งค่าธุรกิจ',
         href: '/business-settings',
     },
 ];
@@ -48,7 +48,7 @@ const submit = () => {
 
 const getLabel = (key: string) => {
     const labels: Record<string, string> = {
-        'default_service_fee': 'ค่าผสมเริ่มต้น (บาท)',
+        'default_service_fee': 'ค่าผสมอาหารต่อตัน (บาท)',
         'company_name': 'ชื่อบริษัท',
         'company_address': 'ที่อยู่บริษัท',
         'company_phone': 'เบอร์โทรศัพท์บริษัท',
@@ -62,64 +62,134 @@ const getLabel = (key: string) => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
-            <Card class="w-full max-w-6xl mx-auto">
+            <Card class="w-full max-w-4xl mx-auto">
                 <CardHeader>
-                    <CardTitle>การตั้งค่าระบบ</CardTitle>
-                    <CardDescription>จัดการการตั้งค่าต่างๆ ของระบบ</CardDescription>
+                    <CardTitle class="text-2xl font-bold">การตั้งค่าธุรกิจ</CardTitle>
+                    <CardDescription class="text-gray-600">จัดการการตั้งค่าต่าง ๆ ของธุรกิจ</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form @submit.prevent="submit" class="space-y-6">
-                        <div v-for="(setting, index) in form.settings" :key="setting.key" class="space-y-2">
-                            <Label :for="setting.key">{{ getLabel(setting.key) }}</Label>
-                            
-                            <!-- String/Text fields -->
-                            <Input
-                                v-if="setting.type === 'string' && setting.key !== 'company_address'"
-                                :id="setting.key"
-                                v-model="form.settings[index].value"
-                                type="text"
-                                :class="{ 'border-red-500': form.errors[`settings.${index}.value`] }"
-                            />
-                            
-                            <!-- Textarea for address -->
-                            <Textarea
-                                v-else-if="setting.key === 'company_address'"
-                                :id="setting.key"
-                                v-model="form.settings[index].value"
-                                rows="3"
-                                :class="{ 'border-red-500': form.errors[`settings.${index}.value`] }"
-                            />
-                            
-                            <!-- Number fields -->
-                            <Input
-                                v-else-if="setting.type === 'number'"
-                                :id="setting.key"
-                                v-model.number="form.settings[index].value"
-                                type="number"
-                                step="0.01"
-                                :class="{ 'border-red-500': form.errors[`settings.${index}.value`] }"
-                            />
-                            
-                            <!-- Boolean fields -->
-                            <div v-else-if="setting.type === 'boolean'" class="flex items-center space-x-2">
-                                <input
-                                    :id="setting.key"
-                                    v-model="form.settings[index].value"
-                                    type="checkbox"
-                                    class="rounded border-gray-300"
-                                />
-                                <label :for="setting.key" class="text-sm">เปิดใช้งาน</label>
-                            </div>
-                            
-                            <div v-if="form.errors[`settings.${index}.value`]" class="text-sm text-red-500">
-                                {{ form.errors[`settings.${index}.value`] }}
+                    <form @submit.prevent="submit" class="space-y-8">
+                        <!-- Company Information Section -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold border-b pb-2">ข้อมูลบริษัท</h3>
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <!-- Company Name -->
+                                <template v-for="(setting, index) in form.settings" :key="setting.key">
+                                    <div v-if="setting.key === 'company_name'" class="space-y-2">
+                                        <Label :for="setting.key" class="text-sm font-medium">
+                                            {{ getLabel(setting.key) }}
+                                        </Label>
+                                        <Input
+                                            :id="setting.key"
+                                            v-model="form.settings[index].value"
+                                            type="text"
+                                            class="w-full"
+                                            :class="{ 'border-red-500': form.errors[`settings.${index}.value`] }"
+                                        />
+                                        <div v-if="form.errors[`settings.${index}.value`]" class="text-sm text-red-500">
+                                            {{ form.errors[`settings.${index}.value`] }}
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Company Phone -->
+                                <template v-for="(setting, index) in form.settings" :key="setting.key">
+                                    <div v-if="setting.key === 'company_phone'" class="space-y-2">
+                                        <Label :for="setting.key" class="text-sm font-medium">
+                                            {{ getLabel(setting.key) }}
+                                        </Label>
+                                        <Input
+                                            :id="setting.key"
+                                            v-model="form.settings[index].value"
+                                            type="text"
+                                            class="w-full"
+                                            :class="{ 'border-red-500': form.errors[`settings.${index}.value`] }"
+                                        />
+                                        <div v-if="form.errors[`settings.${index}.value`]" class="text-sm text-red-500">
+                                            {{ form.errors[`settings.${index}.value`] }}
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Company Address (spans full width) -->
+                                <template v-for="(setting, index) in form.settings" :key="setting.key">
+                                    <div v-if="setting.key === 'company_address'" class="col-span-full space-y-2">
+                                        <Label :for="setting.key" class="text-sm font-medium">
+                                            {{ getLabel(setting.key) }}
+                                        </Label>
+                                        <Textarea
+                                            :id="setting.key"
+                                            v-model="form.settings[index].value"
+                                            rows="3"
+                                            class="w-full"
+                                            :class="{ 'border-red-500': form.errors[`settings.${index}.value`] }"
+                                        />
+                                        <div v-if="form.errors[`settings.${index}.value`]" class="text-sm text-red-500">
+                                            {{ form.errors[`settings.${index}.value`] }}
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
                         </div>
 
-                        <div class="flex gap-4">
-                            <Button type="submit" :disabled="form.processing">
+                        <!-- Business Settings Section -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold border-b pb-2">การตั้งค่าเริ่มต้น</h3>
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <template v-for="(setting, index) in form.settings" :key="setting.key">
+                                    <div v-if="!setting.key.startsWith('company_')" class="space-y-2">
+                                        <Label :for="setting.key" class="text-sm font-medium">
+                                            {{ getLabel(setting.key) }}
+                                        </Label>
+
+                                        <Input
+                                            v-if="setting.type === 'number'"
+                                            :id="setting.key"
+                                            v-model.number="form.settings[index].value"
+                                            type="number"
+                                            step="0.01"
+                                            class="w-full"
+                                            :class="{ 'border-red-500': form.errors[`settings.${index}.value`] }"
+                                        />
+
+                                        <Input
+                                            v-else-if="setting.type === 'string'"
+                                            :id="setting.key"
+                                            v-model="form.settings[index].value"
+                                            type="text"
+                                            class="w-full"
+                                            :class="{ 'border-red-500': form.errors[`settings.${index}.value`] }"
+                                        />
+
+                                        <div v-else-if="setting.type === 'boolean'" class="flex items-center space-x-3">
+                                            <input
+                                                :id="setting.key"
+                                                v-model="form.settings[index].value"
+                                                type="checkbox"
+                                                class="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
+                                            />
+                                            <label :for="setting.key" class="text-sm text-gray-700">เปิดใช้งาน</label>
+                                        </div>
+
+                                        <div v-if="form.errors[`settings.${index}.value`]" class="text-sm text-red-500">
+                                            {{ form.errors[`settings.${index}.value`] }}
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="flex justify-end pt-4 border-t">
+                            <Button
+                                type="submit"
+                                :disabled="form.processing"
+                                class="px-6 py-2"
+                                :class="{ 'opacity-50 cursor-not-allowed': form.processing }"
+                            >
                                 <Save class="mr-2 h-4 w-4" />
-                                บันทึกการตั้งค่า
+                                <span v-if="form.processing">กำลังบันทึก...</span>
+                                <span v-else>บันทึกการตั้งค่า</span>
                             </Button>
                         </div>
                     </form>

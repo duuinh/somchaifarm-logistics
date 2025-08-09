@@ -33,8 +33,8 @@ export function useDeliveryNote(
                 notes: props.deliveryNote.notes || '',
                 service_fee: props.deliveryNote.service_fee || props.defaultServiceFee,
                 service_fee_tons: props.deliveryNote.service_fee_per_ton ? 
-                    (props.deliveryNote.service_fee || 0) / (props.deliveryNote.service_fee_per_ton || 300) : 0,
-                service_fee_per_ton: props.deliveryNote.service_fee_per_ton || 300,
+                    (props.deliveryNote.service_fee || 0) / (props.deliveryNote.service_fee_per_ton || props.defaultServiceFee) : 0,
+                service_fee_per_ton: props.deliveryNote.service_fee_per_ton || props.defaultServiceFee,
                 bag_fee: props.deliveryNote.bag_fee || 0,
                 transport_fee: props.deliveryNote.transport_fee || 0,
                 items: props.deliveryNote.items.map(item => ({
@@ -60,7 +60,7 @@ export function useDeliveryNote(
                 notes: '',
                 service_fee: props.defaultServiceFee,
                 service_fee_tons: 0,
-                service_fee_per_ton: 300,
+                service_fee_per_ton: props.defaultServiceFee,
                 bag_fee: 0,
                 transport_fee: 0,
                 items: [],

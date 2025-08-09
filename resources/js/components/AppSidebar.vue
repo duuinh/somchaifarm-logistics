@@ -51,7 +51,7 @@ const mainNavItems: NavItem[] = [
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'การตั้งค่าระบบ',
+        title: 'การตั้งค่าธุรกิจ',
         href: '/business-settings',
         icon: Settings,
     },
