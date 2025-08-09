@@ -65,8 +65,16 @@ interface DeliveryNote {
     created_at: string;
 }
 
+interface CompanySettings {
+    company_name: string;
+    company_address: string;
+    company_phone: string;
+    company_tax_id: string;
+}
+
 interface Props {
     deliveryNote: DeliveryNote;
+    companySettings: CompanySettings;
 }
 
 const props = defineProps<Props>();
@@ -96,7 +104,7 @@ const formatDate = (dateString: string) => {
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear() + 543; // Convert to Buddhist Era
-    return `${day}/${month}/${year} พ.ศ.`;
+    return `${day}/${month}/${year}`;
 };
 
 const getPricingTypeLabel = (type: string) => {
@@ -162,8 +170,22 @@ onMounted(() => {
         <!-- Delivery Note Content -->
         <div class="delivery-note" :class="{ 'flipped': isFlipped }">
             <!-- Header -->
-            <div class="header-title">ใบส่งของ</div>
-            <div class="text-center mb-4">เลขที่: #{{ deliveryNote.id }}</div>
+            <div class="header-section">
+                <div class="company-info" v-if="companySettings && companySettings.company_name">
+                    <div class="company-name">{{ companySettings.company_name }}</div>
+                    <div class="company-address" v-if="companySettings.company_address">{{ companySettings.company_address }}</div>
+                    <div class="company-contact">
+                        <span v-if="companySettings.company_phone">โทร: {{ companySettings.company_phone }}</span>
+                        <span v-if="companySettings.company_phone && companySettings.company_tax_id"> | </span>
+                        <span v-if="companySettings.company_tax_id">เลขประจำตัวผู้เสียภาษี: {{ companySettings.company_tax_id }}</span>
+                    </div>
+                </div>
+
+                <div class="header-title-row">
+                    <span>ใบส่งของ</span>
+                    <span class="document-number">เลขที่: #{{ deliveryNote.id }}</span>
+                </div>
+            </div>
 
             <!-- Customer Information -->
             <div class="info-grid">
@@ -213,84 +235,50 @@ onMounted(() => {
                             <div v-if="item.quantity_kg">{{ item.quantity_kg }} กก.</div>
                             <div v-if="item.quantity_bags">
                                 {{ item.quantity_bags }} กระสอบ
-                                <div v-if="item.item && item.item.kg_per_bag_conversion" style="font-size: 10px; color: #666;">
-                                    ({{ item.item.kg_per_bag_conversion }} กก./กระสอบ)
-                                </div>
                             </div>
                         </td>
                         <td class="text-right">{{ item.unit_price.toLocaleString() }}</td>
                         <td class="text-right">{{ item.total_price.toLocaleString() }}</td>
                     </tr>
+
+                    <!-- Service fees rows integrated into items table -->
+                    <tr v-if="deliveryNote.service_fee">
+                        <td>ค่าผสมอาหาร</td>
+                        <td class="text-center">
+                            {{ deliveryNote.service_fee_per_ton && deliveryNote.service_fee_per_ton > 0
+                                ? (deliveryNote.service_fee / deliveryNote.service_fee_per_ton).toFixed(2) + ' ตัน'
+                                : '-' }}
+                        </td>
+                        <td class="text-right">
+                            {{ deliveryNote.service_fee_per_ton ? deliveryNote.service_fee_per_ton.toLocaleString() : '-' }}
+                        </td>
+                        <td class="text-right">{{ deliveryNote.service_fee.toLocaleString() }}</td>
+                    </tr>
+                    <tr v-if="deliveryNote.bag_fee">
+                        <td>ค่ากระสอบ</td>
+                        <td class="text-center">-</td>
+                        <td class="text-right">-</td>
+                        <td class="text-right">{{ deliveryNote.bag_fee.toLocaleString() }}</td>
+                    </tr>
+                    <tr v-if="deliveryNote.transport_fee">
+                        <td>ค่าขนส่ง</td>
+                        <td class="text-center">-</td>
+                        <td class="text-right">-</td>
+                        <td class="text-right">{{ deliveryNote.transport_fee.toLocaleString() }}</td>
+                    </tr>
+
+                    <!-- Summary rows -->
+                    <tr style="border-top: 2px solid #000;">
+                        <td colspan="3" class="text-right font-bold">รวมทั้งหมด</td>
+                        <td class="text-right font-bold">{{ deliveryNote.total_amount?.toLocaleString() }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="text-center" style="font-size: 11px;">
+                            <strong>{{ formatBahtText(deliveryNote.total_amount || 0) }}</strong>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
-
-            <!-- Service Fees Table -->
-            <div v-if="deliveryNote.service_fee || deliveryNote.bag_fee || deliveryNote.transport_fee" style="margin-top: 15px;">
-                <div style="background-color: #f5f5f5; padding: 5px 10px; border: 1px solid #000; border-bottom: none;">
-                    <strong style="font-size: 12px;">ค่าบริการเพิ่มเติม</strong>
-                </div>
-                <table class="items-table" style="margin-top: 0;">
-                    <thead>
-                        <tr>
-                            <th style="width: 40%">รายการ</th>
-                            <th style="width: 15%">จำนวน</th>
-                            <th style="width: 20%">ราคา/หน่วย</th>
-                            <th style="width: 25%">รวม (บาท)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-if="deliveryNote.service_fee">
-                            <td>ค่าผสม</td>
-                            <td class="text-center">
-                                {{ deliveryNote.service_fee_per_ton && deliveryNote.service_fee_per_ton > 0 
-                                    ? (deliveryNote.service_fee / deliveryNote.service_fee_per_ton).toFixed(2) + ' ตัน'
-                                    : '-' }}
-                            </td>
-                            <td class="text-right">
-                                {{ deliveryNote.service_fee_per_ton ? deliveryNote.service_fee_per_ton.toLocaleString() + ' บาท/ตัน' : '-' }}
-                            </td>
-                            <td class="text-right">{{ deliveryNote.service_fee.toLocaleString() }}</td>
-                        </tr>
-                        <tr v-if="deliveryNote.bag_fee">
-                            <td>ค่ากระสอบ</td>
-                            <td class="text-center">-</td>
-                            <td class="text-right">-</td>
-                            <td class="text-right">{{ deliveryNote.bag_fee.toLocaleString() }}</td>
-                        </tr>
-                        <tr v-if="deliveryNote.transport_fee">
-                            <td>ค่าขนส่ง</td>
-                            <td class="text-center">-</td>
-                            <td class="text-right">-</td>
-                            <td class="text-right">{{ deliveryNote.transport_fee.toLocaleString() }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Summary -->
-            <div class="summary-section">
-                <div v-if="deliveryNote.total_weight" class="mb-2">
-                    <strong>น้ำหนักรวม:</strong> {{ deliveryNote.total_weight.toLocaleString() }} กิโลกรัม
-                </div>
-                <div class="mb-2">
-                    <strong>รวมค่าสินค้า:</strong> {{ Number(deliveryNote.items.reduce((total, item) => Number(total) + Number(item.total_price), 0)).toLocaleString() }} บาท
-                </div>
-                <div v-if="deliveryNote.service_fee" class="mb-2">
-                    <strong>ค่าผสม:</strong> {{ deliveryNote.service_fee.toLocaleString() }} บาท
-                </div>
-                <div v-if="deliveryNote.bag_fee" class="mb-2">
-                    <strong>ค่ากระสอบ:</strong> {{ deliveryNote.bag_fee.toLocaleString() }} บาท
-                </div>
-                <div v-if="deliveryNote.transport_fee" class="mb-2">
-                    <strong>ค่าขนส่ง:</strong> {{ deliveryNote.transport_fee.toLocaleString() }} บาท
-                </div>
-                <div class="font-bold" style="font-size: 14px;">
-                    <strong>รวมทั้งหมด: {{ deliveryNote.total_amount?.toLocaleString() }} บาท</strong>
-                </div>
-                <div class="mt-2" style="font-size: 11px;">
-                    <strong>จำนวนเงิน (ตัวอักษร): {{ formatBahtText(deliveryNote.total_amount || 0) }}</strong>
-                </div>
-            </div>
 
             <!-- Driver and Vehicle Info (conditional) -->
             <div v-if="shouldShowDriverVehicle()" class="mt-4 info-grid">
@@ -329,10 +317,6 @@ onMounted(() => {
                 </div>
             </div>
 
-            <!-- Footer -->
-            <div class="text-center mt-4" style="font-size: 10px; color: #666;">
-                วันที่พิมพ์: {{ formatDate(new Date().toISOString()) }}
-            </div>
         </div>
     </div>
 </template>
@@ -346,10 +330,10 @@ onMounted(() => {
         font-size: 12px;
     }
     .print-container {
-        width: 210mm; /* Always A4 width */
+        width: 210mm; /* A4 width */
         height: 148mm; /* Top half of A4 */
         margin: 0;
-        padding: 4mm;
+        padding: 2mm; /* Reduced padding */
         box-sizing: border-box;
     }
     .no-print {
@@ -366,17 +350,23 @@ onMounted(() => {
         border: 1px solid #000;
     }
     th, td {
-        padding: 4px;
+        padding: 3px; /* Increased padding */
         text-align: left;
-        font-size: 11px;
+        font-size: 11px; /* Increased font */
     }
     .text-center { text-align: center; }
     .text-right { text-align: right; }
     .font-bold { font-weight: bold; }
-    .mb-1 { margin-bottom: 2px; }
-    .mb-2 { margin-bottom: 4px; }
-    .mb-4 { margin-bottom: 8px; }
-    .mt-4 { margin-top: 8px; }
+    .mb-1 { margin-bottom: 1px; }
+    .mb-2 { margin-bottom: 2px; }
+    .mb-4 { margin-bottom: 4px; }
+    .mt-4 { margin-top: 4px; }
+
+    /* Hide debug elements in print */
+    div[style*="background: yellow"],
+    div[style*="background: pink"] {
+        display: none !important;
+    }
 }
 
 @media screen {
@@ -384,45 +374,78 @@ onMounted(() => {
         width: 210mm; /* A4 width */
         height: 148mm; /* Top half of A4 */
         margin: 20px auto;
-        padding: 4mm;
+        padding: 2mm; /* Match print padding */
         border: 1px solid hsl(var(--border));
         background: white;
         font-family: 'Sarabun', 'Arial', sans-serif;
-        font-size: 12px;
+        font-size: 12px; /* Match print font size */
         box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         border-radius: 8px;
     }
 }
 
-.header-title {
-    font-size: 18px;
-    font-weight: bold;
+.header-section {
     text-align: center;
-    margin-bottom: 8px;
+    margin-bottom: 6px; /* Reduced margin */
+}
+
+.company-info {
+    margin-bottom: 4px; /* Reduced margin */
+}
+
+.company-name {
+    font-size: 14px; /* Increased font */
+    font-weight: bold;
+    margin-bottom: 1px;
+}
+
+.company-address {
+    font-size: 11px; /* Increased font */
+    margin-bottom: 1px;
+}
+
+.company-contact {
+    font-size: 11px; /* Increased font */
+    margin-bottom: 2px;
+}
+
+.header-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.document-number {
+    font-size: 14px;
+    font-weight: normal;
 }
 
 .info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 4px; /* Reduced gap */
+    margin-bottom: 6px; /* Reduced margin */
 }
 
 .info-item {
-    margin-bottom: 4px;
+    margin-bottom: 2px;
+    font-size: 11px; /* Increased font */
 }
 
 .items-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 12px;
+    margin-bottom: 6px; /* Reduced margin */
 }
 
 .items-table th,
 .items-table td {
     border: 1px solid #000;
-    padding: 4px;
-    font-size: 11px;
+    padding: 3px; /* Increased padding */
+    font-size: 11px; /* Increased font */
 }
 
 .items-table th {
@@ -432,7 +455,7 @@ onMounted(() => {
 }
 
 .summary-section {
-    margin-top: 12px;
+    margin-top: 6px; /* Reduced margin */
     text-align: right;
 }
 

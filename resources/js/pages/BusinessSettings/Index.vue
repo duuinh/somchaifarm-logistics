@@ -52,6 +52,7 @@ const getLabel = (key: string) => {
         'company_name': 'ชื่อบริษัท',
         'company_address': 'ที่อยู่บริษัท',
         'company_phone': 'เบอร์โทรศัพท์บริษัท',
+        'company_tax_id': 'เลขประจำตัวผู้เสียภาษีอากร',
     };
     return labels[key] || key;
 };
@@ -95,6 +96,25 @@ const getLabel = (key: string) => {
                                 <!-- Company Phone -->
                                 <template v-for="(setting, index) in form.settings" :key="setting.key">
                                     <div v-if="setting.key === 'company_phone'" class="space-y-2">
+                                        <Label :for="setting.key" class="text-sm font-medium">
+                                            {{ getLabel(setting.key) }}
+                                        </Label>
+                                        <Input
+                                            :id="setting.key"
+                                            v-model="form.settings[index].value"
+                                            type="text"
+                                            class="w-full"
+                                            :class="{ 'border-red-500': form.errors[`settings.${index}.value`] }"
+                                        />
+                                        <div v-if="form.errors[`settings.${index}.value`]" class="text-sm text-red-500">
+                                            {{ form.errors[`settings.${index}.value`] }}
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Company Tax ID -->
+                                <template v-for="(setting, index) in form.settings" :key="setting.key">
+                                    <div v-if="setting.key === 'company_tax_id'" class="space-y-2">
                                         <Label :for="setting.key" class="text-sm font-medium">
                                             {{ getLabel(setting.key) }}
                                         </Label>

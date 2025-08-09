@@ -281,8 +281,19 @@ class DeliveryNoteController extends Controller
     {
         $deliveryNote->load(['client', 'driver', 'vehicle', 'creator', 'items.item']);
 
+        $companySettings = [
+            'company_name' => Setting::get('company_name', ''),
+            'company_address' => Setting::get('company_address', ''),
+            'company_phone' => Setting::get('company_phone', ''),
+            'company_tax_id' => Setting::get('company_tax_id', ''),
+        ];
+
+        // Debug: Log the company settings
+        \Log::info('Company Settings:', $companySettings);
+
         return Inertia::render('DeliveryNotes/Print', [
-            'deliveryNote' => $deliveryNote
+            'deliveryNote' => $deliveryNote,
+            'companySettings' => $companySettings
         ]);
     }
 }
