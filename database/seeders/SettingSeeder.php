@@ -21,27 +21,33 @@ class SettingSeeder extends Seeder
             ],
             [
                 'key' => 'company_name',
-                'value' => 'บริษัท สมชายฟาร์ม จำกัด',
+                'value' => 'บริษัท สมชายฟาร์มพัทลุง จำกัด (สำนักงานใหญ่)',
                 'type' => 'string',
                 'description' => 'Company name for documents',
             ],
             [
                 'key' => 'company_address',
-                'value' => '123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110',
+                'value' => 'เลขที่ 149 ม.7 ต.โตนดด้วน อ.ควนขนุน จ.พัทลุง',
                 'type' => 'string',
                 'description' => 'Company address for documents',
             ],
             [
                 'key' => 'company_phone',
-                'value' => '02-123-4567',
+                'value' => '082-4939429, 087-0599884',
                 'type' => 'string',
                 'description' => 'Company phone number',
             ],
             [
                 'key' => 'company_tax_id',
-                'value' => '0105500000000',
+                'value' => '0935561000171',
                 'type' => 'string',
                 'description' => 'Company Tax ID Number',
+            ],
+            [
+                'key' => 'company_fax',
+                'value' => '074-681482',
+                'type' => 'string',
+                'description' => 'Company fax number',
             ],
         ];
 

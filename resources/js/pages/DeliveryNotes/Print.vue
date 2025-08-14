@@ -70,6 +70,7 @@ interface CompanySettings {
     company_address: string;
     company_phone: string;
     company_tax_id: string;
+    company_fax?: string;
 }
 
 interface Props {
@@ -171,13 +172,18 @@ onMounted(() => {
         <div class="delivery-note" :class="{ 'flipped': isFlipped }">
             <!-- Header -->
             <div class="header-section">
-                <div class="company-info" v-if="companySettings && companySettings.company_name">
-                    <div class="company-name">{{ companySettings.company_name }}</div>
-                    <div class="company-address" v-if="companySettings.company_address">{{ companySettings.company_address }}</div>
-                    <div class="company-contact">
-                        <span v-if="companySettings.company_phone">โทร: {{ companySettings.company_phone }}</span>
-                        <span v-if="companySettings.company_phone && companySettings.company_tax_id"> | </span>
-                        <span v-if="companySettings.company_tax_id">เลขประจำตัวผู้เสียภาษี: {{ companySettings.company_tax_id }}</span>
+                <div class="header-with-logo">
+                    <img src="/images/logo.png" alt="Company Logo" class="company-logo" />
+                    <div class="company-info" v-if="companySettings && companySettings.company_name">
+                        <div class="company-name">{{ companySettings.company_name }}</div>
+                        <div class="company-address" v-if="companySettings.company_address">{{ companySettings.company_address }}</div>
+                        <div class="company-contact">
+                            <span v-if="companySettings.company_phone">โทร. {{ companySettings.company_phone }}</span>
+                            <span v-if="companySettings.company_fax"> แฟกซ์ {{ companySettings.company_fax }}</span>
+                        </div>
+                        <div class="company-tax" v-if="companySettings.company_tax_id">
+                            เลขประจำตัวผู้เสียภาษีอากร {{ companySettings.company_tax_id }}
+                        </div>
                     </div>
                 </div>
 
@@ -389,8 +395,23 @@ onMounted(() => {
     margin-bottom: 6px; /* Reduced margin */
 }
 
+.header-with-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 4px;
+}
+
+.company-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+}
+
 .company-info {
     margin-bottom: 4px; /* Reduced margin */
+    text-align: left;
 }
 
 .company-name {
@@ -406,6 +427,11 @@ onMounted(() => {
 
 .company-contact {
     font-size: 11px; /* Increased font */
+    margin-bottom: 1px;
+}
+
+.company-tax {
+    font-size: 11px;
     margin-bottom: 2px;
 }
 

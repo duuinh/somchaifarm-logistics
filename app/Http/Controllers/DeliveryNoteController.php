@@ -286,6 +286,7 @@ class DeliveryNoteController extends Controller
             'company_address' => Setting::get('company_address', ''),
             'company_phone' => Setting::get('company_phone', ''),
             'company_tax_id' => Setting::get('company_tax_id', ''),
+            'company_fax' => Setting::get('company_fax', ''),
         ];
 
         // Debug: Log the company settings
