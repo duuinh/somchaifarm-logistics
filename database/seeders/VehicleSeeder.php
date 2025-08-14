@@ -14,19 +14,19 @@ class VehicleSeeder extends Seeder
                 'license_plate' => 'กข-1234',
                 'province' => 'กรุงเทพมหานคร',
                 'vehicle_type' => 'รถบรรทุก 6 ล้อ',
-                'load_capacity' => 5000.00,
+                'load_capacity' => 5.00,
             ],
             [
                 'license_plate' => 'คง-5678',
                 'province' => 'สมุทรปราการ',
                 'vehicle_type' => 'รถบรรทุก 10 ล้อ',
-                'load_capacity' => 8000.00,
+                'load_capacity' => 8.00,
             ],
             [
                 'license_plate' => 'จฉ-9012',
                 'province' => 'นนทบุรี',
                 'vehicle_type' => 'รถกระบะ',
-                'load_capacity' => 1000.00,
+                'load_capacity' => 1.00,
             ],
         ];
 
