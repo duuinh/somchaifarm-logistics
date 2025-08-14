@@ -14,18 +14,24 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create admin user
-        User::factory()->create([
-            'name' => 'ผู้ดูแลระบบ',
-            'email' => 'admin@example.com',
-            'role' => 'admin',
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'ผู้ดูแลระบบ',
+                'role' => 'admin',
+                'password' => bcrypt('password'),
+            ]
+        );
 
         // Create operator user
-        User::factory()->create([
-            'name' => 'พนักงานออกบิล',
-            'email' => 'operator@example.com',
-            'role' => 'operator',
-        ]);
+        User::firstOrCreate(
+            ['email' => 'operator@example.com'],
+            [
+                'name' => 'พนักงานออกบิล',
+                'role' => 'operator',
+                'password' => bcrypt('password'),
+            ]
+        );
 
         // Seed sample data
         $this->call([
