@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'ผู้ดูแลระบบ',
                 'role' => 'admin',
+                'status' => 'active',
                 'password' => bcrypt('password'),
             ]
         );
@@ -29,6 +30,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'พนักงานออกบิล',
                 'role' => 'operator',
+                'status' => 'active',
                 'password' => bcrypt('password'),
             ]
         );

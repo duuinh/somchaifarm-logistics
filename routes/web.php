@@ -5,6 +5,7 @@ use App\Http\Controllers\DeliveryNoteController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
 use App\Models\Client;
 use App\Models\DeliveryNote;
@@ -52,6 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('items', ItemController::class);
     Route::resource('drivers', DriverController::class);
     Route::resource('vehicles', VehicleController::class);
+    Route::resource('users', UserController::class);
     
     // Delivery Notes routes
     Route::resource('delivery-notes', DeliveryNoteController::class);
