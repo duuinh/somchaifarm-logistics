@@ -15,27 +15,33 @@ class SettingSeeder extends Seeder
         $settings = [
             [
                 'key' => 'default_service_fee',
-                'value' => '0',
+                'value' => '300',
                 'type' => 'number',
-                'description' => 'Default service fee (ค่าผสม) amount in baht',
+                'description' => 'Default service fee (ค่าผสมอาหาร) amount in baht',
             ],
             [
                 'key' => 'company_name',
-                'value' => 'บริษัท ตัวอย่าง จำกัด',
+                'value' => 'บริษัท สมชายฟาร์ม จำกัด',
                 'type' => 'string',
                 'description' => 'Company name for documents',
             ],
             [
                 'key' => 'company_address',
-                'value' => '123 ถนนตัวอย่าง แขวงตัวอย่าง เขตตัวอย่าง กรุงเทพฯ 10100',
+                'value' => '123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110',
                 'type' => 'string',
                 'description' => 'Company address for documents',
             ],
             [
                 'key' => 'company_phone',
-                'value' => '02-000-0000',
+                'value' => '02-123-4567',
                 'type' => 'string',
                 'description' => 'Company phone number',
+            ],
+            [
+                'key' => 'company_tax_id',
+                'value' => '0105500000000',
+                'type' => 'string',
+                'description' => 'Company Tax ID Number',
             ],
         ];
 
