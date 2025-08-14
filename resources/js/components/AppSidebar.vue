@@ -61,7 +61,7 @@ const footerNavItems: NavItem[] = [
         icon: Users,
     },
     {
-        title: 'Documentation',
+        title: 'คู่มือการใช้งาน',
         href: 'https://laravel.com/docs/starter-kits#vue',
         icon: BookOpen,
     },
