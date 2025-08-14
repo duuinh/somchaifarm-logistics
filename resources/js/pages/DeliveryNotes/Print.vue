@@ -286,7 +286,14 @@ onMounted(() => {
             <!-- Notes -->
             <div v-if="deliveryNote.notes" class="mt-1">
                 <div class="text-xs mb-1">
-                    <strong>หมายเหตุ:</strong> {{ deliveryNote.notes }}
+                    <div class="flex">
+                        <strong class="mr-1">หมายเหตุ:</strong>
+                        <div class="flex-1 notes-content">
+                            <div v-for="(line, index) in deliveryNote.notes.split('\n')" :key="index" class="notes-line">
+                                {{ line }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -448,6 +455,11 @@ onMounted(() => {
 }
 
 /* Custom utility classes not covered by Tailwind */
+
+/* ==================== Notes Formatting ==================== */
+.notes-line {
+    margin-left: 0;
+}
 
 /* ==================== Rotation Support ==================== */
 @media print {

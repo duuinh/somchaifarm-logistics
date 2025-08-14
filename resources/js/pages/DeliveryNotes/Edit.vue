@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Save } from 'lucide-vue-next';
+import { ArrowLeft, Save, FileText } from 'lucide-vue-next';
 import { onMounted, computed } from 'vue';
+import { generateNotesTemplate } from '@/utils/notesTemplate';
 
 // Import types
 import type { Client, Item, Driver, Vehicle, DeliveryNote } from '@/types/delivery-notes';
@@ -74,6 +75,17 @@ const breadcrumbs: BreadcrumbItem[] = [
 onMounted(() => {
     initializeServiceFeeCheckboxes();
 });
+
+// Template insertion function
+const insertNotesTemplate = () => {
+    form.notes = generateNotesTemplate({
+        drivers: props.drivers,
+        vehicles: props.vehicles,
+        driverId: form.driver_id,
+        vehicleId: form.vehicle_id,
+        existingNotes: form.notes
+    });
+};
 
 // Form submission
 const submit = () => {
@@ -196,7 +208,19 @@ const transportFee = computed(() => {
 
                             <!-- Notes -->
                             <div class="space-y-2 md:col-span-2">
-                                <Label for="notes">หมายเหตุ</Label>
+                                <div class="flex items-center justify-between">
+                                    <Label for="notes">หมายเหตุ</Label>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        @click="insertNotesTemplate"
+                                        class="text-xs"
+                                    >
+                                        <FileText class="h-3 w-3 mr-1" />
+                                        ใช้เทมเพลท
+                                    </Button>
+                                </div>
                                 <textarea
                                     id="notes"
                                     v-model="form.notes"
