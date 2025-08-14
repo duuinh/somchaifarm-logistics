@@ -178,7 +178,7 @@ const formatBahtText = (amount: number) => {
                             </div>
                             <div>
                                 <h3 class="text-sm font-medium text-muted-foreground mb-1">จำนวนเงินรวม</h3>
-                                <p class="text-lg font-semibold text-primary">{{ deliveryNote.total_amount?.toLocaleString() || '0' }} บาท</p>
+                                <p class="text-lg font-semibold text-primary">{{ deliveryNote.total_amount?.toLocaleString('th-TH', { minimumFractionDigits: 2 }) || '0' }} บาท</p>
                             </div>
                             <div>
                                 <h3 class="text-sm font-medium text-muted-foreground mb-1">คนออกบิล</h3>
@@ -268,12 +268,12 @@ const formatBahtText = (amount: number) => {
                                         </TableCell>
                                         <TableCell>
                                             <div class="space-y-1">
-                                                <div v-if="item.quantity_kg">{{ item.quantity_kg }} กก.</div>
-                                                <div v-if="item.quantity_bags">{{ item.quantity_bags }} กระสอบ</div>
+                                                <div v-if="item.quantity_kg">{{ item.quantity_kg.toLocaleString('th-TH') }} กก.</div>
+                                                <div v-if="item.quantity_bags">{{ item.quantity_bags.toLocaleString('th-TH') }} กระสอบ</div>
                                             </div>
                                         </TableCell>
-                                        <TableCell class="text-right">{{ Number(item.unit_price || 0).toLocaleString() }}</TableCell>
-                                        <TableCell class="text-right font-medium">{{ Number(item.total_price || 0).toLocaleString() }}</TableCell>
+                                        <TableCell class="text-right">{{ Number(item.unit_price || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</TableCell>
+                                        <TableCell class="text-right font-medium">{{ Number(item.total_price || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
@@ -299,33 +299,33 @@ const formatBahtText = (amount: number) => {
                                         <TableCell class="font-medium">ค่าผสม</TableCell>
                                         <TableCell class="text-center">
                                             {{ deliveryNote.service_fee_per_ton && deliveryNote.service_fee_per_ton > 0
-                                                ? (deliveryNote.service_fee / deliveryNote.service_fee_per_ton).toFixed(2)
+                                                ? (deliveryNote.service_fee / deliveryNote.service_fee_per_ton).toLocaleString('th-TH')
                                                 : '-' }}
                                         </TableCell>
                                         <TableCell class="text-center">ตัน</TableCell>
                                         <TableCell class="text-right">
-                                            {{ deliveryNote.service_fee_per_ton ? deliveryNote.service_fee_per_ton.toLocaleString() + ' บาท/ตัน' : '-' }}
+                                            {{ deliveryNote.service_fee_per_ton ? deliveryNote.service_fee_per_ton.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท/ตัน' : '-' }}
                                         </TableCell>
                                         <TableCell class="text-right font-medium">
-                                            {{ deliveryNote.service_fee.toLocaleString() }}
+                                            {{ deliveryNote.service_fee.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
                                         </TableCell>
                                     </TableRow>
                                     <TableRow v-if="deliveryNote.bag_fee">
                                         <TableCell class="font-medium">ค่ากระสอบ</TableCell>
-                                        <TableCell class="text-center">{{ deliveryNote.bag_fee.toLocaleString() }}</TableCell>
+                                        <TableCell class="text-center">{{ deliveryNote.bag_fee.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</TableCell>
                                         <TableCell class="text-center">บาท</TableCell>
                                         <TableCell class="text-right">-</TableCell>
                                         <TableCell class="text-right font-medium">
-                                            {{ deliveryNote.bag_fee.toLocaleString() }}
+                                            {{ deliveryNote.bag_fee.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
                                         </TableCell>
                                     </TableRow>
                                     <TableRow v-if="deliveryNote.transport_fee">
                                         <TableCell class="font-medium">ค่าขนส่ง</TableCell>
-                                        <TableCell class="text-center">{{ deliveryNote.transport_fee.toLocaleString() }}</TableCell>
+                                        <TableCell class="text-center">{{ deliveryNote.transport_fee.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</TableCell>
                                         <TableCell class="text-center">บาท</TableCell>
                                         <TableCell class="text-right">-</TableCell>
                                         <TableCell class="text-right font-medium">
-                                            {{ deliveryNote.transport_fee.toLocaleString() }}
+                                            {{ deliveryNote.transport_fee.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
                                         </TableCell>
                                     </TableRow>
                                 </TableBody>
@@ -341,24 +341,24 @@ const formatBahtText = (amount: number) => {
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-sm text-muted-foreground">รวมค่าสินค้า</span>
-                                    <span>{{ Number(deliveryNote.items.reduce((total, item) => Number(total) + Number(item.total_price), 0)).toLocaleString() }} บาท</span>
+                                    <span>{{ Number(deliveryNote.items.reduce((total, item) => Number(total) + Number(item.total_price), 0)).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-sm text-muted-foreground">ค่าผสม</span>
-                                    <span>{{ deliveryNote.service_fee?.toLocaleString() || '0' }} บาท</span>
+                                    <span>{{ deliveryNote.service_fee?.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00' }} บาท</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-sm text-muted-foreground">ค่ากระสอบ</span>
-                                    <span>{{ deliveryNote.bag_fee?.toLocaleString() || '0' }} บาท</span>
+                                    <span>{{ deliveryNote.bag_fee?.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00' }} บาท</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-sm text-muted-foreground">ค่าขนส่ง</span>
-                                    <span>{{ deliveryNote.transport_fee?.toLocaleString() || '0' }} บาท</span>
+                                    <span>{{ deliveryNote.transport_fee?.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00' }} บาท</span>
                                 </div>
                                 <div class="border-t pt-3">
                                     <div class="flex justify-between items-center">
                                         <span class="text-sm text-muted-foreground">ยอดรวมทั้งหมด</span>
-                                        <span class="text-2xl font-bold text-primary">{{ deliveryNote.total_amount?.toLocaleString() || '0' }} บาท</span>
+                                        <span class="text-2xl font-bold text-primary">{{ deliveryNote.total_amount?.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00' }} บาท</span>
                                     </div>
                                     <BahtTextDisplay :baht-text="formatBahtText(deliveryNote.total_amount || 0)" />
                                 </div>

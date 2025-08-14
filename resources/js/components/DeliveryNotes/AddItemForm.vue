@@ -78,8 +78,8 @@
                         <span class="text-gray-500">ราคาปกติ ({{ unitType === 'kg' ? 'กก.' : 'กระสอบ' }}):</span>
                         <span class="font-medium ml-1 text-green-600">
                             {{ unitType === 'kg'
-                                ? (selectedItemInfo.regular_price_per_kg?.toLocaleString() || '-')
-                                : (selectedItemInfo.regular_price_per_bag?.toLocaleString() || '-')
+                                ? (selectedItemInfo.regular_price_per_kg?.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '-')
+                                : (selectedItemInfo.regular_price_per_bag?.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '-')
                             }} บาท
                         </span>
                     </div>
@@ -87,8 +87,8 @@
                         <span class="text-gray-500">ราคาเครดิต ({{ unitType === 'kg' ? 'กก.' : 'กระสอบ' }}):</span>
                         <span class="font-medium ml-1 text-orange-600">
                             {{ unitType === 'kg'
-                                ? (selectedItemInfo.credit_price_per_kg?.toLocaleString() || '-')
-                                : (selectedItemInfo.credit_price_per_bag?.toLocaleString() || '-')
+                                ? (selectedItemInfo.credit_price_per_kg?.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '-')
+                                : (selectedItemInfo.credit_price_per_bag?.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '-')
                             }} บาท
                         </span>
                     </div>
@@ -97,7 +97,7 @@
                     <div class="text-sm">
                         <span class="text-gray-500">ราคารวมที่จะได้:</span>
                         <span class="font-bold ml-1 text-green-600 text-lg">
-                            {{ (quantity * unitPrice).toLocaleString() }} บาท
+                            {{ (quantity * unitPrice).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท
                         </span>
                     </div>
                 </div>

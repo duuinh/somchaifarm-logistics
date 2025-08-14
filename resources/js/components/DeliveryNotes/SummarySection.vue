@@ -7,24 +7,24 @@
             </div>
             <div class="flex justify-between">
                 <span>รวมค่าสินค้า:</span>
-                <span>{{ Number(itemsTotal).toLocaleString() }} บาท</span>
+                <span>{{ Number(itemsTotal).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท</span>
             </div>
             <div class="flex justify-between">
                 <span>ค่าผสม:</span>
-                <span>{{ Number(serviceFee).toLocaleString() }} บาท</span>
+                <span>{{ Number(serviceFee).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท</span>
             </div>
             <div class="flex justify-between">
                 <span>ค่ากระสอบ:</span>
-                <span>{{ Number(bagFee).toLocaleString() }} บาท</span>
+                <span>{{ Number(bagFee).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท</span>
             </div>
             <div class="flex justify-between">
                 <span>ค่าขนส่ง:</span>
-                <span>{{ Number(transportFee).toLocaleString() }} บาท</span>
+                <span>{{ Number(transportFee).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท</span>
             </div>
             <div class="border-t pt-2">
                 <div class="flex justify-between">
                     <span class="font-medium text-lg">รวมทั้งหมด:</span>
-                    <span class="font-medium text-lg">{{ Number(totalAmount).toLocaleString() }} บาท</span>
+                    <span class="font-medium text-lg">{{ Number(totalAmount).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท</span>
                 </div>
                 <BahtTextDisplay :baht-text="bahtText" />
             </div>

@@ -60,7 +60,7 @@
                         </div>
                     </TableCell>
                     <TableCell class="text-right font-semibold text-blue-600">
-                        {{ includeServiceFee ? Number(calculatedServiceFee).toLocaleString() : '0' }} บาท
+                        {{ includeServiceFee ? Number(calculatedServiceFee).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00' }} บาท
                     </TableCell>
                     <TableCell></TableCell>
                 </TableRow>
@@ -95,7 +95,7 @@
                     </TableCell>
                     <TableCell class="text-right">-</TableCell>
                     <TableCell class="text-right font-semibold text-blue-600">
-                        {{ includeBagFee ? Number(bagFee || 0).toLocaleString() : '0' }} บาท
+                        {{ includeBagFee ? Number(bagFee || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00' }} บาท
                     </TableCell>
                     <TableCell></TableCell>
                 </TableRow>
@@ -130,7 +130,7 @@
                     </TableCell>
                     <TableCell class="text-right">-</TableCell>
                     <TableCell class="text-right font-semibold text-blue-600">
-                        {{ includeTransportFee ? Number(transportFee || 0).toLocaleString() : '0' }} บาท
+                        {{ includeTransportFee ? Number(transportFee || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00' }} บาท
                     </TableCell>
                     <TableCell></TableCell>
                 </TableRow>

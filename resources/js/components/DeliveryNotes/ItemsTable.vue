@@ -40,14 +40,14 @@
                         </TableCell>
                         <TableCell class="text-right">
                             <span class="font-medium text-green-600">
-                                {{ (Number(item.total_price) / Number(item.quantity_kg || item.quantity_bags || 1)).toFixed(2) }}
+                                {{ (Number(item.total_price) / Number(item.quantity_kg || item.quantity_bags || 1)).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
                             </span>
                             <div v-if="!item.quantity_kg" class="text-xs text-gray-500 mt-1">
-                                ({{ item.unit_price ? item.unit_price.toFixed(2) : '0.00' }} บาท/กก.)
+                                ({{ item.unit_price ? item.unit_price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00' }} บาท/กก.)
                             </div>
                         </TableCell>
                         <TableCell class="text-right font-semibold text-blue-600">
-                            {{ item.total_price.toLocaleString() }} บาท
+                            {{ item.total_price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท
                         </TableCell>
                         <TableCell>
                             <Button
