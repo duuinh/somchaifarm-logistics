@@ -18,11 +18,11 @@ class DeliveryNoteItem extends Model
     ];
 
     protected $casts = [
-        'quantity_kg' => 'decimal:2',
-        'quantity_bags' => 'decimal:2',
-        'unit_multiplier' => 'decimal:2',
-        'unit_price' => 'decimal:2',
-        'total_price' => 'decimal:2',
+        'quantity_kg' => 'float',
+        'quantity_bags' => 'float',
+        'unit_multiplier' => 'float',
+        'unit_price' => 'float',
+        'total_price' => 'float',
     ];
 
     public function deliveryNote(): BelongsTo

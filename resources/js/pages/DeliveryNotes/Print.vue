@@ -80,7 +80,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const isFlipped = ref(false);
+const isFlipped = ref(true);
 
 const toggleFlip = () => {
     isFlipped.value = !isFlipped.value;
@@ -125,8 +125,9 @@ const formatBahtText = (amount: number) => {
     return bahttext(amount);
 };
 
-// Auto-print when page loads
 import { onMounted } from 'vue';
+
+// Auto-print when page loads
 onMounted(() => {
     setTimeout(() => {
         window.print();
@@ -171,51 +172,50 @@ onMounted(() => {
         <!-- Delivery Note Content -->
         <div class="delivery-note" :class="{ 'flipped': isFlipped }">
             <!-- Header -->
-            <div class="header-section">
-                <div class="header-with-logo">
-                    <img src="/images/logo.png" alt="Company Logo" class="company-logo" />
-                    <div class="company-info" v-if="companySettings && companySettings.company_name">
-                        <div class="company-name">{{ companySettings.company_name }}</div>
-                        <div class="company-address" v-if="companySettings.company_address">{{ companySettings.company_address }}</div>
-                        <div class="company-contact">
+            <div class="text-center mb-2">
+                <div class="flex items-center justify-center gap-4 mb-1">
+                    <img src="/images/logo.png" alt="Company Logo" class="w-20 h-20 object-contain" />
+                    <div class="text-left" v-if="companySettings?.company_name">
+                        <div class="text-sm font-bold mb-px">{{ companySettings.company_name }}</div>
+                        <div class="text-xs mb-px" v-if="companySettings.company_address">{{ companySettings.company_address }}</div>
+                        <div class="text-xs mb-px">
                             <span v-if="companySettings.company_phone">โทร. {{ companySettings.company_phone }}</span>
                             <span v-if="companySettings.company_fax"> แฟกซ์ {{ companySettings.company_fax }}</span>
                         </div>
-                        <div class="company-tax" v-if="companySettings.company_tax_id">
+                        <div class="text-xs" v-if="companySettings.company_tax_id">
                             เลขประจำตัวผู้เสียภาษีอากร {{ companySettings.company_tax_id }}
                         </div>
                     </div>
                 </div>
 
-                <div class="header-title-row">
-                    <span>ใบส่งของ</span>
-                    <span class="document-number">เลขที่: #{{ deliveryNote.id }}</span>
+                <div class="relative grid grid-cols-3 items-center mb-1">
+                    <div></div>
+                    <div class="text-base font-bold">ใบส่งสินค้า</div>
+                    <div class="text-sm text-right">เลขที่ {{ deliveryNote.id }}</div>
                 </div>
             </div>
 
             <!-- Customer Information -->
-            <div class="info-grid">
-                <div>
-                    <div class="info-item">
-                        <strong>ลูกค้า:</strong> {{ deliveryNote.client.name }}
-                    </div>
-                    <div class="info-item" v-if="deliveryNote.client.address">
-                        <strong>ที่อยู่:</strong> {{ deliveryNote.client.address }}
-                    </div>
-                    <div class="info-item" v-if="deliveryNote.client.phone">
-                        <strong>โทร:</strong> {{ deliveryNote.client.phone }}
-                    </div>
+            <div class="mb-2">
+                <div class="flex justify-end text-xs mb-1">
+                    <span>วันที่ {{ formatDate(deliveryNote.created_at) }}</span>
                 </div>
-                <div>
-                    <div class="info-item">
-                        <strong>วันที่ส่ง:</strong> {{ formatDate(deliveryNote.delivery_date) }}
-                    </div>
-                    <div class="info-item">
-                        <strong>ประเภทราคา:</strong> {{ getPricingTypeLabel(deliveryNote.pricing_type) }}
-                    </div>
-                    <div class="info-item">
-                        <strong>คนออกบิล:</strong> {{ deliveryNote.creator.name }}
-                    </div>
+                <div class="flex items-baseline text-xs mb-1">
+                    <span class="min-w-[50px]">นาม </span>
+                    <span class="dots flex-dots">{{ deliveryNote.client.name }}</span>
+                </div>
+                <div class="flex items-baseline text-xs mb-1">
+                    <span class="min-w-[50px]">ที่อยู่ </span>
+                    <span class="dots flex-dots">{{ deliveryNote.client.address || '' }}</span>
+                </div>
+                <div class="flex items-baseline text-xs mt-1">
+                    <span class="text-sm mx-1">☐</span> สำนักงานใหญ่
+                    <span class="flex items-baseline mx-2">
+                        <span class="text-sm ml-1 mr-1">☐</span> สาขา <span class="dots short ml-1"></span>
+                    </span>
+                    <span class="flex items-baseline flex-1 ml-2 text-xs">
+                        เลขที่ผู้เสียภาษี <span class="dots flex-dots">{{ deliveryNote.client.tax_id || '' }}</span>
+                    </span>
                 </div>
             </div>
 
@@ -223,103 +223,94 @@ onMounted(() => {
             <table class="items-table">
                 <thead>
                     <tr>
-                        <th style="width: 40%">รายการ</th>
                         <th style="width: 15%">จำนวน</th>
-                        <th style="width: 20%">ราคา/หน่วย</th>
-                        <th style="width: 25%">รวม (บาท)</th>
+                        <th style="width: 40%">รายการสินค้า</th>
+                        <th style="width: 20%">หน่วยละ</th>
+                        <th style="width: 25%">จำนวนเงิน</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="item in deliveryNote.items" :key="item.id">
-                        <td>
-                            {{ item.item.name }}
-                            <span v-if="item.unit_multiplier > 1">
-                                (x{{ item.unit_multiplier }})
-                            </span>
-                        </td>
                         <td class="text-center">
                             <div v-if="item.quantity_kg">{{ item.quantity_kg }} กก.</div>
                             <div v-if="item.quantity_bags">
                                 {{ item.quantity_bags }} กระสอบ
                             </div>
                         </td>
-                        <td class="text-right">{{ item.unit_price.toLocaleString() }}</td>
-                        <td class="text-right">{{ item.total_price.toLocaleString() }}</td>
+                        <td>
+                            {{ item.item.name }}
+                        </td>
+                        <td class="text-right">{{ item.unit_price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
+                        <td class="text-right">{{ item.total_price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
                     </tr>
 
                     <!-- Service fees rows integrated into items table -->
                     <tr v-if="deliveryNote.service_fee">
-                        <td>ค่าผสมอาหาร</td>
                         <td class="text-center">
                             {{ deliveryNote.service_fee_per_ton && deliveryNote.service_fee_per_ton > 0
-                                ? (deliveryNote.service_fee / deliveryNote.service_fee_per_ton).toFixed(2) + ' ตัน'
+                                ? (deliveryNote.service_fee / deliveryNote.service_fee_per_ton) + ' ตัน'
                                 : '-' }}
                         </td>
+                        <td>ค่าผสมอาหาร</td>
                         <td class="text-right">
-                            {{ deliveryNote.service_fee_per_ton ? deliveryNote.service_fee_per_ton.toLocaleString() : '-' }}
+                            {{ deliveryNote.service_fee_per_ton ? deliveryNote.service_fee_per_ton.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-' }}
                         </td>
-                        <td class="text-right">{{ deliveryNote.service_fee.toLocaleString() }}</td>
+                        <td class="text-right">{{ deliveryNote.service_fee.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
                     </tr>
                     <tr v-if="deliveryNote.bag_fee">
-                        <td>ค่ากระสอบ</td>
                         <td class="text-center">-</td>
+                        <td>ค่ากระสอบ</td>
                         <td class="text-right">-</td>
-                        <td class="text-right">{{ deliveryNote.bag_fee.toLocaleString() }}</td>
+                        <td class="text-right">{{ deliveryNote.bag_fee.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
                     </tr>
                     <tr v-if="deliveryNote.transport_fee">
-                        <td>ค่าขนส่ง</td>
                         <td class="text-center">-</td>
+                        <td>ค่าขนส่ง</td>
                         <td class="text-right">-</td>
-                        <td class="text-right">{{ deliveryNote.transport_fee.toLocaleString() }}</td>
+                        <td class="text-right">{{ deliveryNote.transport_fee.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
                     </tr>
 
                     <!-- Summary rows -->
-                    <tr style="border-top: 2px solid #000;">
-                        <td colspan="3" class="text-right font-bold">รวมทั้งหมด</td>
-                        <td class="text-right font-bold">{{ deliveryNote.total_amount?.toLocaleString() }}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="4" class="text-center" style="font-size: 11px;">
-                            <strong>{{ formatBahtText(deliveryNote.total_amount || 0) }}</strong>
+                    <tr class="border-t-2 border-black">
+                        <td colspan="2" class="text-center p-1">
+                            <div class="font-bold text-xs">{{ formatBahtText(deliveryNote.total_amount || 0) }}</div>
+                            <div class="text-[9px] text-gray-600">จำนวนเงินรวมทั้งสิ้น (ตัวอักษร)</div>
                         </td>
+                        <td class="text-right font-bold">รวมเงิน</td>
+                        <td class="text-right font-bold">{{ deliveryNote.total_amount?.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
                     </tr>
                 </tbody>
             </table>
 
-            <!-- Driver and Vehicle Info (conditional) -->
-            <div v-if="shouldShowDriverVehicle()" class="mt-4 info-grid">
-                <div v-if="deliveryNote.driver">
-                    <div class="info-item">
-                        <strong>คนขับ:</strong> {{ deliveryNote.driver.name }}
-                    </div>
-                    <div class="info-item" v-if="deliveryNote.driver.phone">
-                        <strong>โทร:</strong> {{ deliveryNote.driver.phone }}
-                    </div>
-                </div>
-                <div v-if="deliveryNote.vehicle">
-                    <div class="info-item">
-                        <strong>ทะเบียนรถ:</strong> {{ deliveryNote.vehicle.license_plate }}
-                    </div>
-                    <div class="info-item" v-if="deliveryNote.vehicle.province">
-                        <strong>จังหวัด:</strong> {{ deliveryNote.vehicle.province }}
-                    </div>
-                </div>
-            </div>
 
             <!-- Notes -->
-            <div v-if="deliveryNote.notes" class="mt-4">
-                <div class="info-item">
+            <div v-if="deliveryNote.notes" class="mt-1">
+                <div class="text-xs mb-1">
                     <strong>หมายเหตุ:</strong> {{ deliveryNote.notes }}
                 </div>
             </div>
 
             <!-- Signatures -->
             <div class="signature-section">
-                <div class="signature-box">
-                    ผู้ส่ง
+                <div class="p-1">
+                    <div class="flex items-baseline mb-1 text-xs">
+                        <span class="mr-2 min-w-[60px]">ผู้รับสินค้า</span>
+                        <span class="dots flex-1 min-w-[120px] pb-0.5"></span>
+                    </div>
+                    <div class="flex items-baseline mb-1 text-xs">
+                        <span class="mr-2 min-w-[60px]">วันที่</span>
+                        <span class="dots flex-1 min-w-[120px] pb-0.5"></span>
+                    </div>
                 </div>
-                <div class="signature-box">
-                    ผู้รับ
+                <div class="p-1">
+                    <div class="flex items-baseline mb-1 text-xs">
+                        <span class="mr-2 min-w-[60px]">ผู้ส่งสินค้า</span>
+                        <span class="dots flex-1 min-w-[120px] pb-0.5"></span>
+                    </div>
+                    <div class="flex items-baseline mb-1 text-xs">
+                        <span class="mr-2 min-w-[60px]">วันที่</span>
+                        <span class="dots flex-1 min-w-[120px] pb-0.5">{{ formatDate(deliveryNote.delivery_date) }}</span>
+                    </div>
                 </div>
             </div>
 
@@ -328,6 +319,7 @@ onMounted(() => {
 </template>
 
 <style>
+/* ==================== Media Queries ==================== */
 @media print {
     body {
         font-family: 'Sarabun', 'Arial', sans-serif;
@@ -335,143 +327,68 @@ onMounted(() => {
         padding: 0;
         font-size: 12px;
     }
+    
     .print-container {
-        width: 210mm; /* A4 width */
-        height: 148mm; /* Top half of A4 */
+        width: 210mm;
+        height: 148mm;
         margin: 0;
-        padding: 2mm; /* Reduced padding */
+        padding: 5mm;
         box-sizing: border-box;
     }
+    
+    
     .no-print {
         display: none;
     }
-    .page-break {
-        page-break-after: always;
-    }
+    
+    /* Table print styles */
     table {
         width: 100%;
         border-collapse: collapse;
     }
+    
     table, th, td {
         border: 1px solid #000;
     }
+    
     th, td {
-        padding: 3px; /* Increased padding */
+        padding: 3px;
         text-align: left;
-        font-size: 11px; /* Increased font */
-    }
-    .text-center { text-align: center; }
-    .text-right { text-align: right; }
-    .font-bold { font-weight: bold; }
-    .mb-1 { margin-bottom: 1px; }
-    .mb-2 { margin-bottom: 2px; }
-    .mb-4 { margin-bottom: 4px; }
-    .mt-4 { margin-top: 4px; }
-
-    /* Hide debug elements in print */
-    div[style*="background: yellow"],
-    div[style*="background: pink"] {
-        display: none !important;
+        font-size: 11px;
     }
 }
 
 @media screen {
     .print-container {
-        width: 210mm; /* A4 width */
-        height: 148mm; /* Top half of A4 */
+        width: 210mm;
+        height: 148mm;
         margin: 20px auto;
-        padding: 2mm; /* Match print padding */
+        padding: 5mm;
         border: 1px solid hsl(var(--border));
         background: white;
         font-family: 'Sarabun', 'Arial', sans-serif;
-        font-size: 12px; /* Match print font size */
+        font-size: 12px;
         box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         border-radius: 8px;
+        box-sizing: border-box;
     }
+    
 }
 
-.header-section {
-    text-align: center;
-    margin-bottom: 6px; /* Reduced margin */
-}
+/* ==================== Print-specific styles ==================== */
 
-.header-with-logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 4px;
-}
-
-.company-logo {
-    width: 60px;
-    height: 60px;
-    object-fit: contain;
-}
-
-.company-info {
-    margin-bottom: 4px; /* Reduced margin */
-    text-align: left;
-}
-
-.company-name {
-    font-size: 14px; /* Increased font */
-    font-weight: bold;
-    margin-bottom: 1px;
-}
-
-.company-address {
-    font-size: 11px; /* Increased font */
-    margin-bottom: 1px;
-}
-
-.company-contact {
-    font-size: 11px; /* Increased font */
-    margin-bottom: 1px;
-}
-
-.company-tax {
-    font-size: 11px;
-    margin-bottom: 2px;
-}
-
-.header-title-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 4px;
-}
-
-.document-number {
-    font-size: 14px;
-    font-weight: normal;
-}
-
-.info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px; /* Reduced gap */
-    margin-bottom: 6px; /* Reduced margin */
-}
-
-.info-item {
-    margin-bottom: 2px;
-    font-size: 11px; /* Increased font */
-}
-
+/* ==================== Table Section ==================== */
 .items-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 6px; /* Reduced margin */
+    margin-bottom: 6px;
 }
 
 .items-table th,
 .items-table td {
     border: 1px solid #000;
-    padding: 3px; /* Increased padding */
-    font-size: 11px; /* Increased font */
+    padding: 3px;
+    font-size: 11px;
 }
 
 .items-table th {
@@ -480,35 +397,59 @@ onMounted(() => {
     text-align: center;
 }
 
-.summary-section {
-    margin-top: 6px; /* Reduced margin */
-    text-align: right;
-}
-
+/* ==================== Signature Section ==================== */
 .signature-section {
-    margin-top: 20px;
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 40px;
+    padding: 0 10px;
 }
 
-.signature-box {
-    text-align: center;
-    padding-top: 30px;
-    border-top: 1px solid #000;
-    margin-top: 20px;
+/* ==================== Dotted Line Styles ==================== */
+.dots {
+    display: inline-block;
+    border-bottom: 1px dotted #000;
+    min-height: 1em;
+    vertical-align: bottom;
 }
 
+.dots.short {
+    min-width: 80px;
+    flex: 1;
+}
 
+.dots.medium {
+    min-width: 150px;
+}
+
+.dots.flex-dots {
+    flex: 1;
+    margin-left: 5px;
+    padding-bottom: 1px;
+}
+
+/* ==================== Layout Container ==================== */
 .delivery-note {
+    position: relative;
+    width: 138mm;
+    min-height: 128mm;
+    padding: 5mm;
     transition: transform 0.3s ease;
     transform-origin: center center;
+    box-sizing: border-box;
 }
 
 .delivery-note.flipped {
     transform: rotate(90deg);
 }
 
+/* Custom utility classes not covered by Tailwind */
+
+/* ==================== Rotation Support ==================== */
 @media print {
     .print-container {
         display: flex;
@@ -518,8 +459,8 @@ onMounted(() => {
 
     .delivery-note.flipped {
         transform: rotate(90deg);
-        width: 140mm; /* Must fit within 148mm container height */
-        height: 194mm; /* Must fit within 210mm container width */
+        width: 138mm;
+        height: 190mm;
         transform-origin: center center;
     }
 }
@@ -533,8 +474,8 @@ onMounted(() => {
 
     .delivery-note.flipped {
         transform: rotate(90deg);
-        width: 140mm;
-        height: 194mm;
+        width: 138mm;
+        height: 190mm;
         transform-origin: center center;
     }
 }

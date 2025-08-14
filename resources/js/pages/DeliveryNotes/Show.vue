@@ -264,9 +264,6 @@ const formatBahtText = (amount: number) => {
                                         <TableCell>
                                             <div>
                                                 {{ item.item?.name || 'ไม่ระบุชื่อสินค้า' }}
-                                                <span v-if="item.unit_multiplier > 1" class="text-muted-foreground">
-                                                    (x{{ item.unit_multiplier }})
-                                                </span>
                                             </div>
                                         </TableCell>
                                         <TableCell>
