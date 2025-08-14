@@ -14,10 +14,6 @@ const sidebarNavItems: NavItem[] = [
         title: 'รหัสผ่าน',
         href: '/settings/password',
     },
-    {
-        title: 'การแสดงผล',
-        href: '/settings/appearance',
-    },
 ];
 
 const page = usePage();

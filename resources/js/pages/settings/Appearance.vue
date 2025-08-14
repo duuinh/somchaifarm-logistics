@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 
-import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import { type BreadcrumbItem } from '@/types';
 
@@ -23,7 +22,9 @@ const breadcrumbItems: BreadcrumbItem[] = [
         <SettingsLayout>
             <div class="space-y-6">
                 <HeadingSmall title="ตั้งค่าการแสดงผล" description="อัปเดตการตั้งค่าการแสดงผลของบัญชีของคุณ" />
-                <AppearanceTabs />
+                <div class="text-sm text-muted-foreground">
+                    แอปพลิเคชันใช้ธีมสีสว่างเป็นค่าเริ่มต้น
+                </div>
             </div>
         </SettingsLayout>
     </AppLayout>
