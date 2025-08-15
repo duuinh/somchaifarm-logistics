@@ -122,6 +122,7 @@ const deleteClient = (id: number) => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead class="w-20">รหัสลูกค้า</TableHead>
                                     <TableHead>ชื่อ</TableHead>
                                     <TableHead>ที่อยู่</TableHead>
                                     <TableHead>โทรศัพท์</TableHead>
@@ -130,6 +131,7 @@ const deleteClient = (id: number) => {
                             </TableHeader>
                             <TableBody>
                                 <TableRow v-for="client in clients.data" :key="client.id">
+                                    <TableCell class="font-medium text-muted-foreground">{{ String(client.id).padStart(3, '0') }}</TableCell>
                                     <TableCell class="font-medium">{{ client.name }}</TableCell>
                                     <TableCell>{{ client.address || '-' }}</TableCell>
                                     <TableCell>{{ client.phone || '-' }}</TableCell>

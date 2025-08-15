@@ -24,7 +24,7 @@ class ClientController extends Controller
             });
         }
         
-        $clients = $query->orderBy('name')->paginate(10);
+        $clients = $query->orderBy('id', 'asc')->paginate(10);
         
         return Inertia::render('Clients/Index', [
             'clients' => $clients,

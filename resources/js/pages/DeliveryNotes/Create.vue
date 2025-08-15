@@ -149,7 +149,7 @@ const transportFee = computed(() => {
                                 >
                                     <option value="">เลือกลูกค้า</option>
                                     <option v-for="client in clients" :key="client.id" :value="client.id">
-                                        {{ client.name }}
+                                        {{ String(client.id).padStart(3, '0') }} - {{ client.name }}
                                     </option>
                                 </select>
                                 <div v-if="form.errors.client_id" class="text-sm text-red-500">

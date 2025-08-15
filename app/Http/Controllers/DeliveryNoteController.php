@@ -46,8 +46,8 @@ class DeliveryNoteController extends Controller
      */
     public function create()
     {
-        $clients = Client::orderBy('name')->get();
-        $items = Item::orderBy('name')->get();
+        $clients = Client::orderBy('id', 'asc')->get();
+        $items = Item::orderBy('id', 'asc')->get();
         $drivers = Driver::orderBy('name')->get();
         $vehicles = Vehicle::orderBy('license_plate')->get();
 
@@ -178,8 +178,8 @@ class DeliveryNoteController extends Controller
     public function edit(DeliveryNote $deliveryNote)
     {
         $deliveryNote->load('items');
-        $clients = Client::orderBy('name')->get();
-        $items = Item::orderBy('name')->get();
+        $clients = Client::orderBy('id', 'asc')->get();
+        $items = Item::orderBy('id', 'asc')->get();
         $drivers = Driver::orderBy('name')->get();
         $vehicles = Vehicle::orderBy('license_plate')->get();
 

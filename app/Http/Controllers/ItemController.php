@@ -23,7 +23,7 @@ class ItemController extends Controller
             });
         }
         
-        $items = $query->orderBy('name')->paginate(10);
+        $items = $query->orderBy('id', 'asc')->paginate(10);
         
         return Inertia::render('Items/Index', [
             'items' => $items,

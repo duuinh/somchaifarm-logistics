@@ -15,7 +15,7 @@
                     >
                         <option value="">-- เลือกสินค้า --</option>
                         <option v-for="item in items" :key="item.id" :value="item.id">
-                            {{ item.name }} ({{ item.kg_per_bag_conversion }} กก./กระสอบ)
+                            {{ String(item.id).padStart(3, '0') }} - {{ item.name }} ({{ item.kg_per_bag_conversion }} กก./กระสอบ)
                         </option>
                     </select>
                 </div>

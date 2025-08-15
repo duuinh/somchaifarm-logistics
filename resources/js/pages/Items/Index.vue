@@ -118,6 +118,7 @@ const deleteItem = (id: number) => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead class="w-20">รหัสสินค้า</TableHead>
                                     <TableHead>ชื่อ</TableHead>
                                     <TableHead>กก./กระสอบ</TableHead>
                                     <TableHead>ราคาปกติ (กก.)</TableHead>
@@ -129,6 +130,7 @@ const deleteItem = (id: number) => {
                             </TableHeader>
                             <TableBody>
                                 <TableRow v-for="item in items.data" :key="item.id">
+                                    <TableCell class="font-medium text-muted-foreground">{{ String(item.id).padStart(3, '0') }}</TableCell>
                                     <TableCell class="font-medium">{{ item.name }}</TableCell>
                                     <TableCell>{{ item.kg_per_bag_conversion }} กก.</TableCell>
                                     <TableCell>{{ item.regular_price_per_kg?.toLocaleString() || '-' }} บาท</TableCell>
