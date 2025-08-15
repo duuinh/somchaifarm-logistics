@@ -21,6 +21,7 @@ import ItemsTable from '@/components/DeliveryNotes/ItemsTable.vue';
 import AddItemForm from '@/components/DeliveryNotes/AddItemForm.vue';
 import ServiceFeesTable from '@/components/DeliveryNotes/ServiceFeesTable.vue';
 import SummarySection from '@/components/DeliveryNotes/SummarySection.vue';
+import { Combobox } from '@/components/ui/combobox';
 
 interface Props {
     clients: Client[];
@@ -53,6 +54,29 @@ const {
     removeItem,
     resetAddItemForm,
 } = useDeliveryNote(props);
+
+const clientOptions = computed(() => {
+    return props.clients.map(client => ({
+        value: client.id.toString(),
+        label: `${String(client.id).padStart(3, '0')} - ${client.name}`
+    }));
+});
+
+const driverOptions = computed(() => {
+    return props.drivers.map(driver => ({
+        value: driver.id.toString(),
+        label: driver.name
+    }));
+});
+
+const vehicleOptions = computed(() => {
+    return props.vehicles.map(vehicle => ({
+        value: vehicle.id.toString(),
+        label: vehicle.load_capacity 
+            ? `${vehicle.license_plate} (${vehicle.load_capacity} ตัน)`
+            : vehicle.license_plate
+    }));
+});
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -141,17 +165,12 @@ const transportFee = computed(() => {
                             <!-- Client Selection -->
                             <div class="space-y-2">
                                 <Label for="client_id">ลูกค้า *</Label>
-                                <select
-                                    id="client_id"
-                                    v-model="form.client_id"
-                                    class="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                    required
-                                >
-                                    <option value="">เลือกลูกค้า</option>
-                                    <option v-for="client in clients" :key="client.id" :value="client.id">
-                                        {{ String(client.id).padStart(3, '0') }} - {{ client.name }}
-                                    </option>
-                                </select>
+                                <Combobox
+                                    :model-value="String(form.client_id || '')"
+                                    @update:model-value="form.client_id = $event"
+                                    :options="clientOptions"
+                                    placeholder="พิมพ์เพื่อค้นหาหรือเลือกลูกค้า..."
+                                />
                                 <div v-if="form.errors.client_id" class="text-sm text-red-500">
                                     {{ form.errors.client_id }}
                                 </div>
@@ -171,32 +190,23 @@ const transportFee = computed(() => {
                             <!-- Driver -->
                             <div class="space-y-2">
                                 <Label for="driver_id">คนขับ</Label>
-                                <select
-                                    id="driver_id"
-                                    v-model="form.driver_id"
-                                    class="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    <option value="">เลือกคนขับ</option>
-                                    <option v-for="driver in drivers" :key="driver.id" :value="driver.id">
-                                        {{ driver.name }}
-                                    </option>
-                                </select>
+                                <Combobox
+                                    :model-value="String(form.driver_id || '')"
+                                    @update:model-value="form.driver_id = $event"
+                                    :options="driverOptions"
+                                    placeholder="พิมพ์เพื่อค้นหาหรือเลือกคนขับ..."
+                                />
                             </div>
 
                             <!-- Vehicle -->
                             <div class="space-y-2">
                                 <Label for="vehicle_id">รถ</Label>
-                                <select
-                                    id="vehicle_id"
-                                    v-model="form.vehicle_id"
-                                    class="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    <option value="">เลือกรถ</option>
-                                    <option v-for="vehicle in vehicles" :key="vehicle.id" :value="vehicle.id">
-                                        {{ vehicle.license_plate }}
-                                        <span v-if="vehicle.load_capacity">({{ vehicle.load_capacity }} ตัน)</span>
-                                    </option>
-                                </select>
+                                <Combobox
+                                    :model-value="String(form.vehicle_id || '')"
+                                    @update:model-value="form.vehicle_id = $event"
+                                    :options="vehicleOptions"
+                                    placeholder="พิมพ์เพื่อค้นหาหรือเลือกรถ..."
+                                />
                             </div>
 
                             <!-- Notes -->
@@ -277,8 +287,8 @@ const transportFee = computed(() => {
                             :selected-item-info="getSelectedItemInfo()"
                             @update:item-id="newItemId = $event"
                             @update:unit-type="newUnitType = $event"
-                            @update:quantity="newQuantity = $event"
-                            @update:unit-price="newUnitPrice = $event"
+                            @update:quantity="newQuantity = typeof $event === 'string' ? (parseFloat($event) || null) : $event"
+                            @update:unit-price="newUnitPrice = typeof $event === 'string' ? (parseFloat($event) || null) : $event"
                             @add-item="addItem"
                         />
 

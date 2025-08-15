@@ -8,16 +8,13 @@
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                 <div class="md:col-span-4 space-y-2">
                     <Label class="text-blue-900">เลือกสินค้า *</Label>
-                    <select
-                        :value="itemId"
-                        @change="$emit('update:itemId', $event.target.value)"
-                        class="flex h-10 w-full items-center justify-between whitespace-nowrap rounded-md border-2 border-blue-200 bg-white px-3 py-2 text-sm shadow-sm hover:border-blue-300 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"
-                    >
-                        <option value="">-- เลือกสินค้า --</option>
-                        <option v-for="item in items" :key="item.id" :value="item.id">
-                            {{ String(item.id).padStart(3, '0') }} - {{ item.name }} ({{ item.kg_per_bag_conversion }} กก./กระสอบ)
-                        </option>
-                    </select>
+                    <Combobox
+                        :model-value="itemId"
+                        @update:model-value="$emit('update:itemId', $event)"
+                        :options="itemOptions"
+                        placeholder="พิมพ์เพื่อค้นหาหรือเลือกสินค้า..."
+                        class="border-2 border-blue-200 focus:border-blue-400"
+                    />
                 </div>
 
                 <div class="md:col-span-2 space-y-2">
@@ -35,8 +32,8 @@
                 <div class="md:col-span-2 space-y-2">
                     <Label class="text-blue-900">จำนวน</Label>
                     <Input
-                        :model-value="quantity"
-                        @update:model-value="$emit('update:quantity', $event)"
+                        :model-value="quantity?.toString() || ''"
+                        @update:model-value="$emit('update:quantity', $event ? parseFloat($event) || null : null)"
                         type="number"
                         step="1"
                         min="0"
@@ -48,8 +45,8 @@
                 <div class="md:col-span-2 space-y-2">
                     <Label class="text-blue-900">ราคาต่อหน่วย</Label>
                     <Input
-                        :model-value="unitPrice"
-                        @update:model-value="$emit('update:unitPrice', $event)"
+                        :model-value="unitPrice?.toString() || ''"
+                        @update:model-value="$emit('update:unitPrice', $event ? parseFloat($event) || null : null)"
                         type="number"
                         step="0.01"
                         min="0"
@@ -111,6 +108,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-vue-next';
+import { Combobox } from '@/components/ui/combobox';
+import { computed } from 'vue';
 import type { Item, UnitType } from '@/types/delivery-notes';
 
 interface Props {
@@ -122,7 +121,14 @@ interface Props {
     selectedItemInfo: Item | null;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
+
+const itemOptions = computed(() => {
+    return props.items.map(item => ({
+        value: item.id.toString(),
+        label: `${String(item.id).padStart(3, '0')} - ${item.name} (${item.kg_per_bag_conversion} กก./กระสอบ)`
+    }));
+});
 defineEmits<{
     'update:itemId': [value: string];
     'update:unitType': [value: UnitType];

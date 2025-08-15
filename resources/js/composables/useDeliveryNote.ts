@@ -206,9 +206,11 @@ export function useDeliveryNote(
 
         const pricingType = form.pricing_type;
         if (newUnitType.value === 'kg') {
-            newUnitPrice.value = pricingType === 'credit' ? item.credit_price_per_kg : item.regular_price_per_kg;
+            const price = pricingType === 'credit' ? item.credit_price_per_kg : item.regular_price_per_kg;
+            newUnitPrice.value = price ? parseFloat(String(price)) : null;
         } else {
-            newUnitPrice.value = pricingType === 'credit' ? item.credit_price_per_bag : item.regular_price_per_bag;
+            const price = pricingType === 'credit' ? item.credit_price_per_bag : item.regular_price_per_bag;
+            newUnitPrice.value = price ? parseFloat(String(price)) : null;
         }
     });
 
