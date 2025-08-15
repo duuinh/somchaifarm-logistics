@@ -270,7 +270,7 @@ const formatBahtText = (amount: number) => {
                                                 <div>{{ item.quantity.toLocaleString('th-TH') }} {{ item.unit_type === 'kg' ? 'กก.' : 'กระสอบ' }}</div>
                                             </div>
                                         </TableCell>
-                                        <TableCell class="text-right">{{ Number(item.unit_price || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</TableCell>
+                                        <TableCell class="text-right">{{ Number(item.price_per_unit || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</TableCell>
                                         <TableCell class="text-right font-medium">{{ Number(item.total_price || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</TableCell>
                                     </TableRow>
                                 </TableBody>

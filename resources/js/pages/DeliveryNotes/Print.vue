@@ -236,7 +236,7 @@ onMounted(() => {
                         <td>
                             {{ item.item.name }}
                         </td>
-                        <td class="text-right">{{ item.unit_price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
+                        <td class="text-right">{{ item.price_per_unit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
                         <td class="text-right">{{ item.total_price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
                     </tr>
 

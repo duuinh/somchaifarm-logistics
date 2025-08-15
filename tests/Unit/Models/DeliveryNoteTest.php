@@ -5,10 +5,8 @@ namespace Tests\Unit\Models;
 use App\Models\Client;
 use App\Models\DeliveryNote;
 use App\Models\DeliveryNoteItem;
-use App\Models\Driver;
 use App\Models\Item;
 use App\Models\User;
-use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -22,7 +20,7 @@ class DeliveryNoteTest extends TestCase
         $user = User::factory()->create();
         $client = Client::create([
             'name' => 'Test Client',
-            'customer_type' => 'regular'
+            'customer_type' => 'regular',
         ]);
 
         $deliveryNote = DeliveryNote::create([
@@ -49,10 +47,10 @@ class DeliveryNoteTest extends TestCase
     {
         $client = Client::create([
             'name' => 'Test Client',
-            'customer_type' => 'regular'
+            'customer_type' => 'regular',
         ]);
         $user = User::factory()->create();
-        
+
         $deliveryNote = DeliveryNote::create([
             'client_id' => $client->id,
             'created_by' => $user->id,
@@ -70,9 +68,9 @@ class DeliveryNoteTest extends TestCase
         $user = User::factory()->create();
         $client = Client::create([
             'name' => 'Test Client',
-            'customer_type' => 'regular'
+            'customer_type' => 'regular',
         ]);
-        
+
         $deliveryNote = DeliveryNote::create([
             'client_id' => $client->id,
             'created_by' => $user->id,
@@ -90,9 +88,9 @@ class DeliveryNoteTest extends TestCase
         $user = User::factory()->create();
         $client = Client::create([
             'name' => 'Test Client',
-            'customer_type' => 'regular'
+            'customer_type' => 'regular',
         ]);
-        
+
         $deliveryNote = DeliveryNote::create([
             'client_id' => $client->id,
             'created_by' => $user->id,
@@ -112,22 +110,22 @@ class DeliveryNoteTest extends TestCase
         $user = User::factory()->create();
         $client = Client::create([
             'name' => 'Test Client',
-            'customer_type' => 'regular'
+            'customer_type' => 'regular',
         ]);
-        
+
         $deliveryNote = DeliveryNote::create([
             'client_id' => $client->id,
             'created_by' => $user->id,
             'delivery_date' => now(),
             'pricing_type' => 'regular',
         ]);
-        
+
         $item1 = Item::create([
             'name' => 'Item 1',
             'item_type' => 'material',
             'kg_per_bag_conversion' => 25.00,
         ]);
-        
+
         $item2 = Item::create([
             'name' => 'Item 2',
             'item_type' => 'material',
@@ -137,18 +135,18 @@ class DeliveryNoteTest extends TestCase
         DeliveryNoteItem::create([
             'delivery_note_id' => $deliveryNote->id,
             'item_id' => $item1->id,
-            'item_type' => 'material',
-            'quantity_kg' => 100,
-            'unit_price' => 10.00,
+            'quantity' => 100,
+            'unit_type' => 'kg',
+            'price_per_unit' => 10.00,
             'total_price' => 1000.00,
         ]);
 
         DeliveryNoteItem::create([
             'delivery_note_id' => $deliveryNote->id,
             'item_id' => $item2->id,
-            'item_type' => 'material',
-            'quantity_bags' => 4,
-            'unit_price' => 250.00,
+            'quantity' => 4,
+            'unit_type' => 'bags',
+            'price_per_unit' => 250.00,
             'total_price' => 1000.00,
         ]);
 
@@ -162,11 +160,11 @@ class DeliveryNoteTest extends TestCase
         $user = User::factory()->create();
         $client = Client::create([
             'name' => 'Test Client',
-            'customer_type' => 'regular'
+            'customer_type' => 'regular',
         ]);
-        
+
         $validTypes = ['regular', 'credit'];
-        
+
         foreach ($validTypes as $type) {
             $deliveryNote = DeliveryNote::create([
                 'client_id' => $client->id,
@@ -174,7 +172,7 @@ class DeliveryNoteTest extends TestCase
                 'delivery_date' => now(),
                 'pricing_type' => $type,
             ]);
-            
+
             $this->assertEquals($type, $deliveryNote->pricing_type);
         }
     }
