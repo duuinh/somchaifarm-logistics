@@ -11,12 +11,24 @@ class VehicleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $vehicles = Vehicle::orderBy('license_plate')->paginate(10);
+        $query = Vehicle::query();
+        
+        // Add search functionality
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('license_plate', 'like', '%' . $request->search . '%')
+                  ->orWhere('vehicle_type', 'like', '%' . $request->search . '%')
+                  ->orWhere('province', 'like', '%' . $request->search . '%');
+            });
+        }
+        
+        $vehicles = $query->orderBy('license_plate')->paginate(10);
         
         return Inertia::render('Vehicles/Index', [
-            'vehicles' => $vehicles
+            'vehicles' => $vehicles,
+            'filters' => $request->only(['search'])
         ]);
     }
 

@@ -14,8 +14,10 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ref, computed } from 'vue';
-import { PlusCircle, Pencil, Trash2, Eye } from 'lucide-vue-next';
+import { ref, computed, watch } from 'vue';
+import { PlusCircle, Pencil, Trash2, Eye, Search } from 'lucide-vue-next';
+import { useDebounceFn } from '@vueuse/core';
+import Pagination from '@/components/Pagination.vue';
 
 interface Client {
     id: number;
@@ -24,12 +26,26 @@ interface Client {
     phone: string;
 }
 
+interface PaginatedData {
+    current_page: number;
+    data: Client[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: any[];
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+}
+
 interface Props {
-    clients: {
-        data: Client[];
-        current_page: number;
-        last_page: number;
-        total: number;
+    clients: PaginatedData;
+    filters?: {
+        search?: string;
     };
 }
 
@@ -46,14 +62,18 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const searchQuery = ref('');
+const searchQuery = ref(props.filters?.search || '');
 
-const filteredClients = computed(() => {
-    if (!searchQuery.value) return props.clients.data;
-    return props.clients.data.filter(client =>
-        client.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        client.phone?.includes(searchQuery.value)
-    );
+// Server-side search with debounce
+const performSearch = useDebounceFn(() => {
+    router.get('/clients', { search: searchQuery.value }, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+}, 300);
+
+watch(searchQuery, () => {
+    performSearch();
 });
 
 
@@ -85,12 +105,18 @@ const deleteClient = (id: number) => {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div class="mb-4">
-                        <Input
-                            v-model="searchQuery"
-                            placeholder="ค้นหาชื่อลูกค้าหรือเบอร์โทร..."
-                            class="max-w-sm"
-                        />
+                    <div class="mb-4 flex items-center gap-2">
+                        <div class="relative max-w-sm">
+                            <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                v-model="searchQuery"
+                                placeholder="ค้นหาชื่อลูกค้าหรือเบอร์โทร..."
+                                class="pl-8"
+                            />
+                        </div>
+                        <div class="text-sm text-muted-foreground">
+                            พบ {{ clients.total }} รายการ
+                        </div>
                     </div>
                     <div class="rounded-md border">
                         <Table>
@@ -103,7 +129,7 @@ const deleteClient = (id: number) => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                <TableRow v-for="client in filteredClients" :key="client.id">
+                                <TableRow v-for="client in clients.data" :key="client.id">
                                     <TableCell class="font-medium">{{ client.name }}</TableCell>
                                     <TableCell>{{ client.address || '-' }}</TableCell>
                                     <TableCell>{{ client.phone || '-' }}</TableCell>
@@ -132,6 +158,13 @@ const deleteClient = (id: number) => {
                             </TableBody>
                         </Table>
                     </div>
+
+                    <div v-if="clients.data.length === 0" class="text-center py-8">
+                        <p class="text-muted-foreground">ไม่พบลูกค้าที่ตรงกับเงื่อนไขการค้นหา</p>
+                    </div>
+
+                    <!-- Pagination -->
+                    <Pagination :data="clients" />
                 </CardContent>
             </Card>
         </div>

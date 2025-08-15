@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ref, computed } from 'vue';
-import { PlusCircle, Pencil, Trash2, Eye, Printer } from 'lucide-vue-next';
+import { ref, computed, watch } from 'vue';
+import { PlusCircle, Pencil, Trash2, Eye, Printer, Search } from 'lucide-vue-next';
+import { useDebounceFn } from '@vueuse/core';
+import Pagination from '@/components/Pagination.vue';
 
 interface User {
     id: number;
@@ -43,12 +45,26 @@ interface DeliveryNote {
     created_at: string;
 }
 
+interface PaginatedData {
+    current_page: number;
+    data: DeliveryNote[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: any[];
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+}
+
 interface Props {
-    deliveryNotes: {
-        data: DeliveryNote[];
-        current_page: number;
-        last_page: number;
-        total: number;
+    deliveryNotes: PaginatedData;
+    filters?: {
+        search?: string;
     };
 }
 
@@ -65,14 +81,18 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const searchQuery = ref('');
+const searchQuery = ref(props.filters?.search || '');
 
-const filteredNotes = computed(() => {
-    if (!searchQuery.value) return props.deliveryNotes.data;
-    return props.deliveryNotes.data.filter(note =>
-        note.client.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        note.id.toString().includes(searchQuery.value)
-    );
+// Server-side search with debounce
+const performSearch = useDebounceFn(() => {
+    router.get('/delivery-notes', { search: searchQuery.value }, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+}, 300);
+
+watch(searchQuery, () => {
+    performSearch();
 });
 
 const getPricingTypeBadge = (type: string) => {
@@ -119,12 +139,18 @@ const formatDate = (dateString: string) => {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div class="mb-4">
-                        <Input
-                            v-model="searchQuery"
-                            placeholder="ค้นหาเลขใบส่งของหรือชื่อลูกค้า..."
-                            class="max-w-sm"
-                        />
+                    <div class="mb-4 flex items-center gap-2">
+                        <div class="relative max-w-sm">
+                            <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                v-model="searchQuery"
+                                placeholder="ค้นหาเลขใบส่งของหรือชื่อลูกค้า..."
+                                class="pl-8"
+                            />
+                        </div>
+                        <div class="text-sm text-muted-foreground">
+                            พบ {{ deliveryNotes.total }} รายการ
+                        </div>
                     </div>
                     <div class="rounded-md border">
                         <Table>
@@ -141,7 +167,7 @@ const formatDate = (dateString: string) => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                <TableRow v-for="note in filteredNotes" :key="note.id">
+                                <TableRow v-for="note in deliveryNotes.data" :key="note.id">
                                     <TableCell class="font-medium">#{{ note.id }}</TableCell>
                                     <TableCell>{{ note.client.name }}</TableCell>
                                     <TableCell>{{ formatDate(note.delivery_date) }}</TableCell>
@@ -185,9 +211,12 @@ const formatDate = (dateString: string) => {
                         </Table>
                     </div>
 
-                    <div v-if="filteredNotes.length === 0" class="text-center py-8">
-                        <p class="text-muted-foreground">ไม่พบใบส่งของ</p>
+                    <div v-if="deliveryNotes.data.length === 0" class="text-center py-8">
+                        <p class="text-muted-foreground">ไม่พบใบส่งของที่ตรงกับเงื่อนไขการค้นหา</p>
                     </div>
+
+                    <!-- Pagination -->
+                    <Pagination :data="deliveryNotes" />
                 </CardContent>
             </Card>
         </div>

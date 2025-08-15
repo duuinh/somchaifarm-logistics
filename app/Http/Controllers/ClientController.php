@@ -11,12 +11,24 @@ class ClientController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $clients = Client::orderBy('name')->paginate(10);
+        $query = Client::query();
+        
+        // Add search functionality
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('address', 'like', '%' . $request->search . '%')
+                  ->orWhere('phone', 'like', '%' . $request->search . '%');
+            });
+        }
+        
+        $clients = $query->orderBy('name')->paginate(10);
         
         return Inertia::render('Clients/Index', [
-            'clients' => $clients
+            'clients' => $clients,
+            'filters' => $request->only(['search'])
         ]);
     }
 

@@ -11,12 +11,23 @@ class ItemController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $items = Item::orderBy('name')->paginate(10);
+        $query = Item::query();
+        
+        // Add search functionality
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
+        }
+        
+        $items = $query->orderBy('name')->paginate(10);
         
         return Inertia::render('Items/Index', [
-            'items' => $items
+            'items' => $items,
+            'filters' => $request->only(['search'])
         ]);
     }
 

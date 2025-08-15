@@ -19,14 +19,25 @@ class DeliveryNoteController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $deliveryNotes = DeliveryNote::with(['client', 'driver', 'vehicle', 'creator'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $query = DeliveryNote::with(['client', 'driver', 'vehicle', 'creator']);
+        
+        // Add search functionality
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('id', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('client', function ($clientQuery) use ($request) {
+                      $clientQuery->where('name', 'like', '%' . $request->search . '%');
+                  });
+            });
+        }
+        
+        $deliveryNotes = $query->orderBy('created_at', 'desc')->paginate(10);
         
         return Inertia::render('DeliveryNotes/Index', [
-            'deliveryNotes' => $deliveryNotes
+            'deliveryNotes' => $deliveryNotes,
+            'filters' => $request->only(['search'])
         ]);
     }
 

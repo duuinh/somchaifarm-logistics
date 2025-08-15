@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ref, computed } from 'vue';
-import { PlusCircle, Pencil, Trash2, Eye } from 'lucide-vue-next';
+import { ref, computed, watch } from 'vue';
+import { PlusCircle, Pencil, Trash2, Eye, Search } from 'lucide-vue-next';
+import { useDebounceFn } from '@vueuse/core';
+import Pagination from '@/components/Pagination.vue';
 
 interface Item {
     id: number;
@@ -20,12 +22,26 @@ interface Item {
     kg_per_bag_conversion: number;
 }
 
+interface PaginatedData {
+    current_page: number;
+    data: Item[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: any[];
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+}
+
 interface Props {
-    items: {
-        data: Item[];
-        current_page: number;
-        last_page: number;
-        total: number;
+    items: PaginatedData;
+    filters?: {
+        search?: string;
     };
 }
 
@@ -42,13 +58,18 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const searchQuery = ref('');
+const searchQuery = ref(props.filters?.search || '');
 
-const filteredItems = computed(() => {
-    if (!searchQuery.value) return props.items.data;
-    return props.items.data.filter(item =>
-        item.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-    );
+// Server-side search with debounce
+const performSearch = useDebounceFn(() => {
+    router.get('/items', { search: searchQuery.value }, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+}, 300);
+
+watch(searchQuery, () => {
+    performSearch();
 });
 
 
@@ -80,12 +101,18 @@ const deleteItem = (id: number) => {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div class="mb-4">
-                        <Input
-                            v-model="searchQuery"
-                            placeholder="ค้นหาชื่อสินค้า..."
-                            class="max-w-sm"
-                        />
+                    <div class="mb-4 flex items-center gap-2">
+                        <div class="relative max-w-sm">
+                            <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                v-model="searchQuery"
+                                placeholder="ค้นหาชื่อสินค้า..."
+                                class="pl-8"
+                            />
+                        </div>
+                        <div class="text-sm text-muted-foreground">
+                            พบ {{ items.total }} รายการ
+                        </div>
                     </div>
                     <div class="rounded-md border">
                         <Table>
@@ -101,7 +128,7 @@ const deleteItem = (id: number) => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                <TableRow v-for="item in filteredItems" :key="item.id">
+                                <TableRow v-for="item in items.data" :key="item.id">
                                     <TableCell class="font-medium">{{ item.name }}</TableCell>
                                     <TableCell>{{ item.kg_per_bag_conversion }} กก.</TableCell>
                                     <TableCell>{{ item.regular_price_per_kg?.toLocaleString() || '-' }} บาท</TableCell>
@@ -133,6 +160,13 @@ const deleteItem = (id: number) => {
                             </TableBody>
                         </Table>
                     </div>
+
+                    <div v-if="items.data.length === 0" class="text-center py-8">
+                        <p class="text-muted-foreground">ไม่พบรายการสินค้าที่ตรงกับเงื่อนไขการค้นหา</p>
+                    </div>
+
+                    <!-- Pagination -->
+                    <Pagination :data="items" />
                 </CardContent>
             </Card>
         </div>

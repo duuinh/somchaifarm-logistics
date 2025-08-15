@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { ref, computed } from 'vue';
-import { PlusCircle, Pencil, Trash2, Eye } from 'lucide-vue-next';
+import { ref, computed, watch } from 'vue';
+import { PlusCircle, Pencil, Trash2, Eye, Search } from 'lucide-vue-next';
+import { useDebounceFn } from '@vueuse/core';
+import Pagination from '@/components/Pagination.vue';
 
 interface Vehicle {
     id: number;
@@ -17,12 +19,26 @@ interface Vehicle {
     load_capacity: number;
 }
 
+interface PaginatedData {
+    current_page: number;
+    data: Vehicle[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: any[];
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+}
+
 interface Props {
-    vehicles: {
-        data: Vehicle[];
-        current_page: number;
-        last_page: number;
-        total: number;
+    vehicles: PaginatedData;
+    filters?: {
+        search?: string;
     };
 }
 
@@ -39,15 +55,18 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const searchQuery = ref('');
+const searchQuery = ref(props.filters?.search || '');
 
-const filteredVehicles = computed(() => {
-    if (!searchQuery.value) return props.vehicles.data;
-    return props.vehicles.data.filter(vehicle =>
-        vehicle.license_plate.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        vehicle.province?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        vehicle.vehicle_type?.toLowerCase().includes(searchQuery.value.toLowerCase())
-    );
+// Server-side search with debounce
+const performSearch = useDebounceFn(() => {
+    router.get('/vehicles', { search: searchQuery.value }, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+}, 300);
+
+watch(searchQuery, () => {
+    performSearch();
 });
 
 const deleteVehicle = (id: number) => {
@@ -78,12 +97,18 @@ const deleteVehicle = (id: number) => {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div class="mb-4">
-                        <Input
-                            v-model="searchQuery"
-                            placeholder="ค้นหาป้ายทะเบียน, จังหวัด หรือประเภทรถ..."
-                            class="max-w-sm"
-                        />
+                    <div class="mb-4 flex items-center gap-2">
+                        <div class="relative max-w-sm">
+                            <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                v-model="searchQuery"
+                                placeholder="ค้นหาป้ายทะเบียน, จังหวัด หรือประเภทรถ..."
+                                class="pl-8"
+                            />
+                        </div>
+                        <div class="text-sm text-muted-foreground">
+                            พบ {{ vehicles.total }} รายการ
+                        </div>
                     </div>
                     <div class="rounded-md border">
                         <Table>
@@ -97,7 +122,7 @@ const deleteVehicle = (id: number) => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                <TableRow v-for="vehicle in filteredVehicles" :key="vehicle.id">
+                                <TableRow v-for="vehicle in vehicles.data" :key="vehicle.id">
                                     <TableCell class="font-medium">{{ vehicle.license_plate }}</TableCell>
                                     <TableCell>{{ vehicle.province || '-' }}</TableCell>
                                     <TableCell>{{ vehicle.vehicle_type || '-' }}</TableCell>
@@ -127,6 +152,13 @@ const deleteVehicle = (id: number) => {
                             </TableBody>
                         </Table>
                     </div>
+
+                    <div v-if="vehicles.data.length === 0" class="text-center py-8">
+                        <p class="text-muted-foreground">ไม่พบรถที่ตรงกับเงื่อนไขการค้นหา</p>
+                    </div>
+
+                    <!-- Pagination -->
+                    <Pagination :data="vehicles" />
                 </CardContent>
             </Card>
         </div>

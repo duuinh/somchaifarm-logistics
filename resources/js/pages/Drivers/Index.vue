@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { ref, computed } from 'vue';
-import { PlusCircle, Pencil, Trash2, Eye } from 'lucide-vue-next';
+import { ref, computed, watch } from 'vue';
+import { PlusCircle, Pencil, Trash2, Eye, Search } from 'lucide-vue-next';
+import { useDebounceFn } from '@vueuse/core';
+import Pagination from '@/components/Pagination.vue';
 
 interface Driver {
     id: number;
@@ -16,12 +18,26 @@ interface Driver {
     id_card_number: string;
 }
 
+interface PaginatedData {
+    current_page: number;
+    data: Driver[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: any[];
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+}
+
 interface Props {
-    drivers: {
-        data: Driver[];
-        current_page: number;
-        last_page: number;
-        total: number;
+    drivers: PaginatedData;
+    filters?: {
+        search?: string;
     };
 }
 
@@ -38,15 +54,18 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const searchQuery = ref('');
+const searchQuery = ref(props.filters?.search || '');
 
-const filteredDrivers = computed(() => {
-    if (!searchQuery.value) return props.drivers.data;
-    return props.drivers.data.filter(driver =>
-        driver.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        driver.phone?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        driver.id_card_number?.toLowerCase().includes(searchQuery.value.toLowerCase())
-    );
+// Server-side search with debounce
+const performSearch = useDebounceFn(() => {
+    router.get('/drivers', { search: searchQuery.value }, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+}, 300);
+
+watch(searchQuery, () => {
+    performSearch();
 });
 
 const deleteDriver = (id: number) => {
@@ -77,12 +96,18 @@ const deleteDriver = (id: number) => {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div class="mb-4">
-                        <Input
-                            v-model="searchQuery"
-                            placeholder="ค้นหาชื่อคนขับ, เบอร์โทร หรือเลขบัตรประชาชน..."
-                            class="max-w-sm"
-                        />
+                    <div class="mb-4 flex items-center gap-2">
+                        <div class="relative max-w-sm">
+                            <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                v-model="searchQuery"
+                                placeholder="ค้นหาชื่อคนขับ, เบอร์โทร หรือเลขบัตรประชาชน..."
+                                class="pl-8"
+                            />
+                        </div>
+                        <div class="text-sm text-muted-foreground">
+                            พบ {{ drivers.total }} รายการ
+                        </div>
                     </div>
                     <div class="rounded-md border">
                         <Table>
@@ -95,7 +120,7 @@ const deleteDriver = (id: number) => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                <TableRow v-for="driver in filteredDrivers" :key="driver.id">
+                                <TableRow v-for="driver in drivers.data" :key="driver.id">
                                     <TableCell class="font-medium">{{ driver.name }}</TableCell>
                                     <TableCell>{{ driver.phone || '-' }}</TableCell>
                                     <TableCell>{{ driver.id_card_number || '-' }}</TableCell>
@@ -124,6 +149,13 @@ const deleteDriver = (id: number) => {
                             </TableBody>
                         </Table>
                     </div>
+
+                    <div v-if="drivers.data.length === 0" class="text-center py-8">
+                        <p class="text-muted-foreground">ไม่พบคนขับที่ตรงกับเงื่อนไขการค้นหา</p>
+                    </div>
+
+                    <!-- Pagination -->
+                    <Pagination :data="drivers" />
                 </CardContent>
             </Card>
         </div>

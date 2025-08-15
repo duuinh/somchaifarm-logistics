@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Pencil, Trash2, Eye } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import { PlusCircle, Pencil, Trash2, Eye, Search } from 'lucide-vue-next';
+import { ref, computed, watch } from 'vue';
+import { useDebounceFn } from '@vueuse/core';
+import Pagination from '@/components/Pagination.vue';
 
 interface User {
     id: number;
@@ -21,13 +23,32 @@ interface User {
     updated_at: string;
 }
 
+interface PaginatedData {
+    current_page: number;
+    data: User[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: any[];
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+}
+
 interface Props {
-    users: User[];
+    users: PaginatedData;
+    filters?: {
+        search?: string;
+    };
 }
 
 const props = defineProps<Props>();
 
-const searchQuery = ref('');
+const searchQuery = ref(props.filters?.search || '');
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -40,15 +61,16 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const filteredUsers = computed(() => {
-    if (!searchQuery.value) return props.users;
-    
-    const query = searchQuery.value.toLowerCase();
-    return props.users.filter(user => 
-        user.name.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query) ||
-        user.role.toLowerCase().includes(query)
-    );
+// Server-side search with debounce
+const performSearch = useDebounceFn(() => {
+    router.get('/users', { search: searchQuery.value }, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+}, 300);
+
+watch(searchQuery, () => {
+    performSearch();
 });
 
 const formatDate = (dateString: string) => {
@@ -107,12 +129,18 @@ const deleteUser = (id: number) => {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div class="mb-4">
-                        <Input
-                            v-model="searchQuery"
-                            placeholder="ค้นหาชื่อ, อีเมล หรือบทบาท..."
-                            class="max-w-sm"
-                        />
+                    <div class="mb-4 flex items-center gap-2">
+                        <div class="relative max-w-sm">
+                            <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                v-model="searchQuery"
+                                placeholder="ค้นหาชื่อ หรืออีเมล..."
+                                class="pl-8"
+                            />
+                        </div>
+                        <div class="text-sm text-muted-foreground">
+                            พบ {{ users.total }} รายการ
+                        </div>
                     </div>
                         <div class="rounded-md border">
                             <Table>
@@ -127,7 +155,7 @@ const deleteUser = (id: number) => {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <TableRow v-for="user in filteredUsers" :key="user.id">
+                                    <TableRow v-for="user in users.data" :key="user.id">
                                         <TableCell class="font-medium">
                                             {{ user.name }}
                                         </TableCell>
@@ -173,9 +201,12 @@ const deleteUser = (id: number) => {
                             </Table>
                         </div>
 
-                        <div v-if="filteredUsers.length === 0" class="text-center py-8">
+                        <div v-if="users.data.length === 0" class="text-center py-8">
                             <p class="text-muted-foreground">ไม่พบผู้ใช้ที่ตรงกับเงื่อนไขการค้นหา</p>
                         </div>
+
+                        <!-- Pagination -->
+                        <Pagination :data="users" />
                 </CardContent>
             </Card>
         </div>

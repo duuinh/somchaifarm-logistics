@@ -11,12 +11,24 @@ class DriverController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $drivers = Driver::orderBy('name')->paginate(10);
+        $query = Driver::query();
+        
+        // Add search functionality
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('phone', 'like', '%' . $request->search . '%')
+                  ->orWhere('id_card_number', 'like', '%' . $request->search . '%');
+            });
+        }
+        
+        $drivers = $query->orderBy('name')->paginate(10);
         
         return Inertia::render('Drivers/Index', [
-            'drivers' => $drivers
+            'drivers' => $drivers,
+            'filters' => $request->only(['search'])
         ]);
     }
 
