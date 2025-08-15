@@ -17,11 +17,11 @@ class Item extends Model
     ];
 
     protected $casts = [
-        'regular_price_per_kg' => 'decimal:2',
-        'regular_price_per_bag' => 'decimal:2',
-        'credit_price_per_kg' => 'decimal:2',
-        'credit_price_per_bag' => 'decimal:2',
-        'kg_per_bag_conversion' => 'decimal:2',
+        'regular_price_per_kg' => 'float',
+        'regular_price_per_bag' => 'float',
+        'credit_price_per_kg' => 'float',
+        'credit_price_per_bag' => 'float',
+        'kg_per_bag_conversion' => 'float',
     ];
 
     public function deliveryNoteItems(): HasMany

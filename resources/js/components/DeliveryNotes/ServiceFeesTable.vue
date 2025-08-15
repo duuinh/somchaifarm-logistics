@@ -27,16 +27,22 @@
                     <TableCell class="font-medium">ค่าผสมอาหาร</TableCell>
                     <TableCell class="text-center">
                         <div class="flex justify-center">
-                            <Input
-                                :model-value="serviceFeetons"
-                                @update:model-value="$emit('update:serviceFeetons', Number($event))"
-                                type="number"
-                                step="1"
-                                min="0"
-                                placeholder="0"
-                                class="w-24 text-center"
-                                :disabled="!includeServiceFee"
-                            />
+                            <div class="space-y-1">
+                                <Input
+                                    v-model="serviceTonsInput"
+                                    type="text"
+                                    inputmode="numeric"
+                                    placeholder="0"
+                                    :class="{
+                                        'w-24 text-center': true,
+                                        'border-red-200 bg-red-50': serviceTonsError
+                                    }"
+                                    :disabled="!includeServiceFee"
+                                />
+                                <div v-if="serviceTonsError && includeServiceFee" class="text-xs text-red-500 text-center">
+                                    {{ serviceTonsError }}
+                                </div>
+                            </div>
                         </div>
                     </TableCell>
                     <TableCell class="text-center">
@@ -46,16 +52,22 @@
                     </TableCell>
                     <TableCell class="text-right">
                         <div class="flex items-center justify-end gap-2">
-                            <Input
-                                :model-value="serviceFeePerTon"
-                                @update:model-value="$emit('update:serviceFeePerTon', Number($event))"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                placeholder="300"
-                                class="w-24 text-right"
-                                :disabled="!includeServiceFee"
-                            />
+                            <div class="space-y-1">
+                                <Input
+                                    v-model="serviceFeePerTonInput"
+                                    type="text"
+                                    inputmode="decimal"
+                                    placeholder="300"
+                                    :class="{
+                                        'w-24 text-right': true,
+                                        'border-red-200 bg-red-50': serviceFeePerTonError
+                                    }"
+                                    :disabled="!includeServiceFee"
+                                />
+                                <div v-if="serviceFeePerTonError && includeServiceFee" class="text-xs text-red-500 text-right">
+                                    {{ serviceFeePerTonError }}
+                                </div>
+                            </div>
                             <span class="text-sm text-gray-500">บาท/ตัน</span>
                         </div>
                     </TableCell>
@@ -76,16 +88,22 @@
                     <TableCell class="font-medium">ค่ากระสอบ</TableCell>
                     <TableCell class="text-center">
                         <div class="flex justify-center">
-                            <Input
-                                :model-value="bagFee"
-                                @update:model-value="$emit('update:bagFee', Number($event))"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                placeholder="0"
-                                class="w-24 text-center"
-                                :disabled="!includeBagFee"
-                            />
+                            <div class="space-y-1">
+                                <Input
+                                    v-model="bagFeeInput"
+                                    type="text"
+                                    inputmode="decimal"
+                                    placeholder="0"
+                                    :class="{
+                                        'w-24 text-center': true,
+                                        'border-red-200 bg-red-50': bagFeeError
+                                    }"
+                                    :disabled="!includeBagFee"
+                                />
+                                <div v-if="bagFeeError && includeBagFee" class="text-xs text-red-500 text-center">
+                                    {{ bagFeeError }}
+                                </div>
+                            </div>
                         </div>
                     </TableCell>
                     <TableCell class="text-center">
@@ -111,16 +129,22 @@
                     <TableCell class="font-medium">ค่าขนส่ง</TableCell>
                     <TableCell class="text-center">
                         <div class="flex justify-center">
-                            <Input
-                                :model-value="transportFee"
-                                @update:model-value="$emit('update:transportFee', Number($event))"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                placeholder="0"
-                                class="w-24 text-center"
-                                :disabled="!includeTransportFee"
-                            />
+                            <div class="space-y-1">
+                                <Input
+                                    v-model="transportFeeInput"
+                                    type="text"
+                                    inputmode="decimal"
+                                    placeholder="0"
+                                    :class="{
+                                        'w-24 text-center': true,
+                                        'border-red-200 bg-red-50': transportFeeError
+                                    }"
+                                    :disabled="!includeTransportFee"
+                                />
+                                <div v-if="transportFeeError && includeTransportFee" class="text-xs text-red-500 text-center">
+                                    {{ transportFeeError }}
+                                </div>
+                            </div>
                         </div>
                     </TableCell>
                     <TableCell class="text-center">
@@ -143,6 +167,8 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ref, watch } from 'vue';
+import { useField } from 'vee-validate';
 
 interface Props {
     includeServiceFee: boolean;
@@ -155,8 +181,9 @@ interface Props {
     calculatedServiceFee: number | string;
 }
 
-defineProps<Props>();
-defineEmits<{
+const props = defineProps<Props>();
+
+const emit = defineEmits<{
     'update:includeServiceFee': [value: boolean];
     'update:includeBagFee': [value: boolean];
     'update:includeTransportFee': [value: boolean];
@@ -165,4 +192,84 @@ defineEmits<{
     'update:bagFee': [value: number];
     'update:transportFee': [value: number];
 }>();
+
+// VeeValidate fields for service fees
+const serviceTonsValidationRule = (value: string) => {
+    if (!value) return true; // Allow empty
+    const pattern = /^[0-9]+$/;
+    if (!pattern.test(value)) {
+        return 'จำนวนตันต้องเป็นจำนวนเต็ม';
+    }
+    const num = parseInt(value);
+    if (num < 0) {
+        return 'จำนวนตันต้องไม่น้อยกว่า 0';
+    }
+    return true;
+};
+
+const feeValidationRule = (value: string) => {
+    if (!value) return true; // Allow empty
+    const pattern = /^[0-9]*\.?[0-9]{0,2}$/;
+    if (!pattern.test(value)) {
+        return 'ราคาต้องเป็นตัวเลข (ทศนิยม 2 ตำแหน่ง)';
+    }
+    const num = parseFloat(value);
+    if (num < 0) {
+        return 'ราคาต้องไม่น้อยกว่า 0';
+    }
+    return true;
+};
+
+// Service tons field
+const {
+    value: serviceTonsInput,
+    errorMessage: serviceTonsError
+} = useField('serviceTons', serviceTonsValidationRule, {
+    initialValue: props.serviceFeetons?.toString() || ''
+});
+
+// Service fee per ton field
+const {
+    value: serviceFeePerTonInput,
+    errorMessage: serviceFeePerTonError
+} = useField('serviceFeePerTon', feeValidationRule, {
+    initialValue: props.serviceFeePerTon?.toString() || ''
+});
+
+// Bag fee field
+const {
+    value: bagFeeInput,
+    errorMessage: bagFeeError
+} = useField('bagFee', feeValidationRule, {
+    initialValue: props.bagFee?.toString() || ''
+});
+
+// Transport fee field
+const {
+    value: transportFeeInput,
+    errorMessage: transportFeeError
+} = useField('transportFee', feeValidationRule, {
+    initialValue: props.transportFee?.toString() || ''
+});
+
+// Watch and emit changes
+watch(serviceTonsInput, (newVal) => {
+    const num = newVal === '' ? 0 : parseInt(newVal) || 0;
+    emit('update:serviceFeetons', num);
+});
+
+watch(serviceFeePerTonInput, (newVal) => {
+    const num = newVal === '' ? 0 : parseFloat(newVal) || 0;
+    emit('update:serviceFeePerTon', num);
+});
+
+watch(bagFeeInput, (newVal) => {
+    const num = newVal === '' ? 0 : parseFloat(newVal) || 0;
+    emit('update:bagFee', num);
+});
+
+watch(transportFeeInput, (newVal) => {
+    const num = newVal === '' ? 0 : parseFloat(newVal) || 0;
+    emit('update:transportFee', num);
+});
 </script>

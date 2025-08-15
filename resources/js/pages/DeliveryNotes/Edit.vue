@@ -113,6 +113,34 @@ const insertNotesTemplate = () => {
 
 // Form submission
 const submit = () => {
+    // Basic form validation
+    if (!form.client_id) {
+        alert('กรุณาเลือกลูกค้า');
+        return;
+    }
+    
+    if (!form.delivery_date) {
+        alert('กรุณาระบุวันที่ส่ง');
+        return;
+    }
+    
+    if (form.items.length === 0) {
+        alert('กรุณาเพิ่มรายการสินค้าอย่างน้อย 1 รายการ');
+        return;
+    }
+    
+    // Validate all items have valid quantities and prices
+    for (const item of form.items) {
+        if (!item.quantity || item.quantity <= 0) {
+            alert('จำนวนสินค้าต้องมากกว่า 0');
+            return;
+        }
+        if (item.price_per_unit === null || item.price_per_unit < 0) {
+            alert('ราคาต่อหน่วยต้องไม่น้อยกว่า 0');
+            return;
+        }
+    }
+    
     // Set fees to 0 if their checkbox is not checked
     if (!includeServiceFee.value) {
         form.service_fee = 0;

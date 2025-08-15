@@ -30,36 +30,46 @@
                 </div>
 
                 <div class="md:col-span-2 space-y-2">
-                    <Label class="text-blue-900">จำนวน</Label>
+                    <Label class="text-blue-900">จำนวน *</Label>
                     <Input
-                        :model-value="quantity?.toString() || ''"
-                        @update:model-value="$emit('update:quantity', $event ? parseFloat($event) || null : null)"
-                        type="number"
-                        step="1"
-                        min="0"
-                        :placeholder="unitType === 'kg' ? '0 กก.' : '0 กระสอบ'"
-                        class="border-2 border-green-200 focus:border-green-400 bg-green-50"
+                        v-model="quantityInput"
+                        type="text"
+                        inputmode="decimal"
+                        :placeholder="unitType === 'kg' ? '0.00 กก.' : '0 กระสอบ'"
+                        :class="{
+                            'border-2 border-green-200 focus:border-green-400 bg-green-50': !quantityError,
+                            'border-2 border-red-200 focus:border-red-400 bg-red-50': quantityError
+                        }"
+                        required
                     />
+                    <div v-if="quantityError" class="text-sm text-red-500">
+                        {{ quantityError }}
+                    </div>
                 </div>
 
                 <div class="md:col-span-2 space-y-2">
-                    <Label class="text-blue-900">ราคาต่อหน่วย</Label>
+                    <Label class="text-blue-900">ราคาต่อหน่วย *</Label>
                     <Input
-                        :model-value="unitPrice?.toString() || ''"
-                        @update:model-value="$emit('update:unitPrice', $event ? parseFloat($event) || null : null)"
-                        type="number"
-                        step="0.01"
-                        min="0"
+                        v-model="unitPriceInput"
+                        type="text"
+                        inputmode="decimal"
                         placeholder="0.00 บาท"
-                        class="border-2 border-blue-200 focus:border-blue-400"
+                        :class="{
+                            'border-2 border-blue-200 focus:border-blue-400': !unitPriceError,
+                            'border-2 border-red-200 focus:border-red-400 bg-red-50': unitPriceError
+                        }"
+                        required
                     />
+                    <div v-if="unitPriceError" class="text-sm text-red-500">
+                        {{ unitPriceError }}
+                    </div>
                 </div>
 
                 <div class="md:col-span-2">
                     <Button
                         type="button"
-                        @click="$emit('addItem')"
-                        :disabled="!itemId || !quantity || unitPrice === null"
+                        @click="handleAddItem"
+                        :disabled="!canAddItem"
                         class="w-full"
                     >
                         <Plus class="mr-2 h-4 w-4" />
@@ -109,8 +119,9 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-vue-next';
 import { Combobox } from '@/components/ui/combobox';
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { Item, UnitType } from '@/types/delivery-notes';
+import { useField } from 'vee-validate';
 
 interface Props {
     items: Item[];
@@ -123,17 +134,111 @@ interface Props {
 
 const props = defineProps<Props>();
 
+// VeeValidate field for quantity with dynamic validation
+const quantityValidationRule = computed(() => {
+    const pattern = props.unitType === 'kg' ? /^[0-9]*\.?[0-9]{0,2}$/ : /^[0-9]*$/;
+    return (value: string) => {
+        if (!value) return true; // Allow empty
+        if (!pattern.test(value)) {
+            return props.unitType === 'kg' 
+                ? 'จำนวนต้องเป็นตัวเลข (ทศนิยม 2 ตำแหน่ง)' 
+                : 'จำนวนต้องเป็นจำนวนเต็ม';
+        }
+        const num = parseFloat(value);
+        if (num <= 0) {
+            return 'จำนวนต้องมากกว่า 0';
+        }
+        if (props.unitType === 'bags' && !Number.isInteger(num)) {
+            return 'จำนวนกระสอบต้องเป็นจำนวนเต็ม';
+        }
+        return true;
+    };
+});
+
+const {
+    value: quantityInput,
+    errorMessage: quantityError,
+    setValue: setQuantityValue
+} = useField('quantity', quantityValidationRule, {
+    initialValue: props.quantity?.toString() || ''
+});
+
+// Watch for prop changes to update field value
+watch(() => props.quantity, (newVal) => {
+    setQuantityValue(newVal?.toString() || '');
+}, { immediate: true });
+
+// Watch field value and emit changes
+watch(quantityInput, (newVal) => {
+    const num = newVal === '' ? null : parseFloat(newVal) || null;
+    emit('update:quantity', num);
+});
+
 const itemOptions = computed(() => {
     return props.items.map(item => ({
         value: item.id.toString(),
         label: `${String(item.id).padStart(3, '0')} - ${item.name} (${item.kg_per_bag_conversion} กก./กระสอบ)`
     }));
 });
-defineEmits<{
+
+const emit = defineEmits<{
     'update:itemId': [value: string];
     'update:unitType': [value: UnitType];
     'update:quantity': [value: number | null];
     'update:unitPrice': [value: number | null];
     addItem: [];
 }>();
+
+// VeeValidate field for unit price
+const unitPriceValidationRule = (value: string) => {
+    if (!value) return true; // Allow empty
+    const pattern = /^[0-9]*\.?[0-9]{0,2}$/;
+    if (!pattern.test(value)) {
+        return 'ราคาต้องเป็นตัวเลข (ทศนิยม 2 ตำแหน่ง)';
+    }
+    const num = parseFloat(value);
+    if (num < 0) {
+        return 'ราคาต้องไม่น้อยกว่า 0';
+    }
+    return true;
+};
+
+const {
+    value: unitPriceInput,
+    errorMessage: unitPriceError,
+    setValue: setUnitPriceValue
+} = useField('unitPrice', unitPriceValidationRule, {
+    initialValue: props.unitPrice?.toString() || ''
+});
+
+// Watch for prop changes to update field value
+watch(() => props.unitPrice, (newVal) => {
+    setUnitPriceValue(newVal?.toString() || '');
+}, { immediate: true });
+
+// Watch field value and emit changes
+watch(unitPriceInput, (newVal) => {
+    const num = newVal === '' ? null : parseFloat(newVal) || null;
+    emit('update:unitPrice', num);
+});
+
+// Check if form can be submitted
+const canAddItem = computed(() => {
+    return props.itemId && 
+           props.quantity && 
+           props.quantity > 0 && 
+           props.unitPrice !== null && 
+           props.unitPrice >= 0 && 
+           !quantityError.value && 
+           !unitPriceError.value;
+});
+
+// Handle add item with validation
+const handleAddItem = () => {
+    if (canAddItem.value) {
+        emit('addItem');
+    }
+};
+
+
 </script>

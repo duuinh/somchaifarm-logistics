@@ -232,7 +232,7 @@ class ItemSeeder extends Seeder
                 'regular_price_per_bag' => null,
                 'credit_price_per_kg' => null,
                 'credit_price_per_bag' => null,
-                'kg_per_bag_conversion' => null,
+                'kg_per_bag_conversion' => 0,
             ],
             [
                 'name' => 'สารสีแดง',
