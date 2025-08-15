@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('delivery_notes', function (Blueprint $table) {
-            // Check if column exists before dropping
-            if (Schema::hasColumn('delivery_notes', 'pricing_type')) {
+        // Only run if pricing_type column exists (skip on fresh test databases)
+        if (Schema::hasColumn('delivery_notes', 'pricing_type')) {
+            Schema::table('delivery_notes', function (Blueprint $table) {
                 // Try to drop indexes that might include pricing_type
                 try {
                     $table->dropIndex('delivery_notes_created_pricing_index');
@@ -21,10 +21,16 @@ return new class extends Migration
                     // Index might not exist, continue
                 }
                 
+                try {
+                    $table->dropIndex(['pricing_type']);
+                } catch (\Exception $e) {
+                    // Index might not exist, continue
+                }
+                
                 // Drop the column
                 $table->dropColumn('pricing_type');
-            }
-        });
+            });
+        }
     }
 
     /**
