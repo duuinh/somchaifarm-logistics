@@ -213,7 +213,7 @@ onMounted(() => {
                         <span class="text-sm ml-1 mr-1">☐</span> สาขา <span class="dots short ml-1"></span>
                     </span>
                     <span class="flex items-baseline flex-1 ml-2 text-xs">
-                        เลขที่ผู้เสียภาษี <span class="dots flex-dots">{{ deliveryNote.client.tax_id || '' }}</span>
+                        เลขประจำตัวผู้เสียภาษีอากร<span class="dots flex-dots">{{ deliveryNote.client.tax_id || '' }}</span>
                     </span>
                 </div>
             </div>
