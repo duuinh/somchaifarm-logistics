@@ -76,6 +76,18 @@ class DeliveryNoteController extends Controller
 
         DB::beginTransaction();
         try {
+            // Pre-fetch all items that need kg_per_bag_conversion to avoid N+1 queries
+            $itemIds = collect($validated['items'])
+                ->filter(function ($item) {
+                    return isset($item['quantity_bags']) && !isset($item['quantity_kg']);
+                })
+                ->pluck('item_id')
+                ->unique();
+            
+            $itemsMap = Item::whereIn('id', $itemIds)
+                ->get()
+                ->keyBy('id');
+
             // Calculate totals
             $totalWeight = 0;
             $totalAmount = 0;
@@ -86,8 +98,8 @@ class DeliveryNoteController extends Controller
                 // Calculate weight (all items are now materials)
                 if (isset($item['quantity_kg'])) {
                     $totalWeight += $item['quantity_kg'];
-                } elseif (isset($item['quantity_bags'])) {
-                    $itemModel = Item::find($item['item_id']);
+                } elseif (isset($item['quantity_bags']) && isset($itemsMap[$item['item_id']])) {
+                    $itemModel = $itemsMap[$item['item_id']];
                     $totalWeight += $item['quantity_bags'] * $itemModel->kg_per_bag_conversion;
                 }
             }
@@ -199,6 +211,18 @@ class DeliveryNoteController extends Controller
 
         DB::beginTransaction();
         try {
+            // Pre-fetch all items that need kg_per_bag_conversion to avoid N+1 queries
+            $itemIds = collect($validated['items'])
+                ->filter(function ($item) {
+                    return isset($item['quantity_bags']) && !isset($item['quantity_kg']);
+                })
+                ->pluck('item_id')
+                ->unique();
+            
+            $itemsMap = Item::whereIn('id', $itemIds)
+                ->get()
+                ->keyBy('id');
+
             // Calculate totals
             $totalWeight = 0;
             $totalAmount = 0;
@@ -209,8 +233,8 @@ class DeliveryNoteController extends Controller
                 // Calculate weight (all items are now materials)
                 if (isset($item['quantity_kg'])) {
                     $totalWeight += $item['quantity_kg'];
-                } elseif (isset($item['quantity_bags'])) {
-                    $itemModel = Item::find($item['item_id']);
+                } elseif (isset($item['quantity_bags']) && isset($itemsMap[$item['item_id']])) {
+                    $itemModel = $itemsMap[$item['item_id']];
                     $totalWeight += $item['quantity_bags'] * $itemModel->kg_per_bag_conversion;
                 }
             }
