@@ -10,18 +10,15 @@ class DeliveryNoteItem extends Model
     protected $fillable = [
         'delivery_note_id',
         'item_id',
-        'quantity_kg',
-        'quantity_bags',
-        'unit_multiplier',
-        'unit_price',
+        'quantity',
+        'unit_type',
+        'price_per_unit',
         'total_price',
     ];
 
     protected $casts = [
-        'quantity_kg' => 'float',
-        'quantity_bags' => 'float',
-        'unit_multiplier' => 'float',
-        'unit_price' => 'float',
+        'quantity' => 'float',
+        'price_per_unit' => 'float',
         'total_price' => 'float',
     ];
 

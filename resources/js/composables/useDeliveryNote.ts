@@ -40,12 +40,9 @@ export function useDeliveryNote(
                 items: props.deliveryNote.items.map(item => ({
                     id: item.id,
                     item_id: item.item_id,
-                    quantity_kg: item.quantity_kg,
-                    quantity_bags: item.quantity_bags,
-                    quantity_tons: item.quantity_tons,
-                    quantity_units: item.quantity_units,
-                    unit_multiplier: item.unit_multiplier,
-                    unit_price: Number(item.unit_price) || 0,
+                    quantity: item.quantity,
+                    unit_type: item.unit_type,
+                    price_per_unit: Number(item.price_per_unit) || 0,
                     total_price: Number(item.total_price) || 0,
                 })),
             };
@@ -101,9 +98,12 @@ export function useDeliveryNote(
         if (!form.items || !Array.isArray(form.items)) return 0;
         const weight = form.items.reduce((total, item) => {
             if (!item) return total;
-            const kgWeight = Number(item.quantity_kg || 0);
-            const bagWeight = Number(item.quantity_bags || 0) * getItemConversion(item.item_id);
-            return total + kgWeight + bagWeight;
+            if (item.unit_type === 'kg') {
+                return total + Number(item.quantity || 0);
+            } else if (item.unit_type === 'bags') {
+                return total + Number(item.quantity || 0) * getItemConversion(item.item_id);
+            }
+            return total;
         }, 0);
         return Number(weight);
     });
@@ -163,18 +163,12 @@ export function useDeliveryNote(
         if (!item) return;
 
         const totalPrice = newQuantity.value * newUnitPrice.value;
-        const totalWeightKg = newUnitType.value === 'kg' 
-            ? newQuantity.value 
-            : newQuantity.value * item.kg_per_bag_conversion;
-        
-        const unitPrice = totalWeightKg > 0 ? totalPrice / totalWeightKg : 0;
 
         const newItem: DeliveryNoteItem = {
             item_id: item.id,
-            quantity_kg: newUnitType.value === 'kg' ? newQuantity.value : undefined,
-            quantity_bags: newUnitType.value === 'bags' ? newQuantity.value : undefined,
-            unit_multiplier: 1,
-            unit_price: unitPrice,
+            quantity: newQuantity.value,
+            unit_type: newUnitType.value,
+            price_per_unit: newUnitPrice.value,
             total_price: totalPrice,
         };
 
@@ -225,15 +219,12 @@ export function useDeliveryNote(
             const item = props.items.find(i => i.id === formItem.item_id);
             if (!item) return formItem;
             
-            const unitType = formItem.quantity_kg ? 'kg' : 'bags';
-            const quantity = formItem.quantity_kg || formItem.quantity_bags || 0;
-            const totalPrice = calculateItemPrice(item, quantity, unitType);
-            const totalWeightKg = (formItem.quantity_kg || 0) + ((formItem.quantity_bags || 0) * item.kg_per_bag_conversion);
-            const unitPrice = totalWeightKg > 0 ? totalPrice / totalWeightKg : 0;
+            const totalPrice = calculateItemPrice(item, formItem.quantity, formItem.unit_type);
+            const pricePerUnit = totalPrice / formItem.quantity;
             
             return {
                 ...formItem,
-                unit_price: Number(unitPrice) || 0,
+                price_per_unit: Number(pricePerUnit) || 0,
                 total_price: Number(totalPrice) || 0,
             };
         });

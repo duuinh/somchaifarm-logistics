@@ -24,27 +24,24 @@
                         <TableCell class="font-medium">{{ getItemName(item.item_id) }}</TableCell>
                         <TableCell class="text-center">
                             <span class="text-lg font-semibold">
-                                {{ item.quantity_kg || item.quantity_bags }}
+                                {{ item.quantity }}
                             </span>
-                            <div v-if="item.quantity_bags && getKgPerBag(item.item_id)" class="text-xs text-gray-500 mt-1">
+                            <div v-if="item.unit_type === 'bags' && getKgPerBag(item.item_id)" class="text-xs text-gray-500 mt-1">
                                 ({{ getKgPerBag(item.item_id) }} กก./กระสอบ)
                             </div>
                         </TableCell>
                         <TableCell class="text-center">
-                            <span v-if="item.quantity_kg" class="inline-flex items-center px-2 py-1 rounded-md bg-purple-50 text-purple-700 text-sm font-medium">
+                            <span v-if="item.unit_type === 'kg'" class="inline-flex items-center px-2 py-1 rounded-md bg-purple-50 text-purple-700 text-sm font-medium">
                                 กิโลกรัม
                             </span>
-                            <span v-if="item.quantity_bags" class="inline-flex items-center px-2 py-1 rounded-md bg-green-50 text-green-700 text-sm font-medium">
+                            <span v-if="item.unit_type === 'bags'" class="inline-flex items-center px-2 py-1 rounded-md bg-green-50 text-green-700 text-sm font-medium">
                                 กระสอบ
                             </span>
                         </TableCell>
                         <TableCell class="text-right">
                             <span class="font-medium text-green-600">
-                                {{ (Number(item.total_price) / Number(item.quantity_kg || item.quantity_bags || 1)).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                                {{ item.price_per_unit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
                             </span>
-                            <div v-if="!item.quantity_kg" class="text-xs text-gray-500 mt-1">
-                                ({{ item.unit_price ? item.unit_price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00' }} บาท/กก.)
-                            </div>
                         </TableCell>
                         <TableCell class="text-right font-semibold text-blue-600">
                             {{ item.total_price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท

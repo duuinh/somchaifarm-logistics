@@ -33,10 +33,9 @@ export interface Vehicle {
 export interface DeliveryNoteItem {
     id?: number;
     item_id: number;
-    quantity_kg?: number;
-    quantity_bags?: number;
-    unit_multiplier: number;
-    unit_price: number;
+    quantity: number;
+    unit_type: 'kg' | 'bags';
+    price_per_unit: number;
     total_price: number;
     item?: Item;
 }

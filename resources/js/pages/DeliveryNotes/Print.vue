@@ -14,10 +14,9 @@ interface Item {
 
 interface DeliveryNoteItem {
     id: number;
-    quantity_kg?: number;
-    quantity_bags?: number;
-    unit_multiplier: number;
-    unit_price: number;
+    quantity: number;
+    unit_type: 'kg' | 'bags';
+    price_per_unit: number;
     total_price: number;
     item: Item;
 }
@@ -232,10 +231,7 @@ onMounted(() => {
                 <tbody>
                     <tr v-for="item in deliveryNote.items" :key="item.id">
                         <td class="text-center">
-                            <div v-if="item.quantity_kg">{{ item.quantity_kg }} กก.</div>
-                            <div v-if="item.quantity_bags">
-                                {{ item.quantity_bags }} กระสอบ
-                            </div>
+                            <div>{{ item.quantity }} {{ item.unit_type === 'kg' ? 'กก.' : 'กระสอบ' }}</div>
                         </td>
                         <td>
                             {{ item.item.name }}

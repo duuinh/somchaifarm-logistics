@@ -41,10 +41,9 @@ interface Item {
 
 interface DeliveryNoteItem {
     id: number;
-    quantity_kg?: number;
-    quantity_bags?: number;
-    unit_multiplier: number;
-    unit_price: number;
+    quantity: number;
+    unit_type: 'kg' | 'bags';
+    price_per_unit: number;
     total_price: number;
     item: Item;
 }
@@ -268,8 +267,7 @@ const formatBahtText = (amount: number) => {
                                         </TableCell>
                                         <TableCell>
                                             <div class="space-y-1">
-                                                <div v-if="item.quantity_kg">{{ item.quantity_kg.toLocaleString('th-TH') }} กก.</div>
-                                                <div v-if="item.quantity_bags">{{ item.quantity_bags.toLocaleString('th-TH') }} กระสอบ</div>
+                                                <div>{{ item.quantity.toLocaleString('th-TH') }} {{ item.unit_type === 'kg' ? 'กก.' : 'กระสอบ' }}</div>
                                             </div>
                                         </TableCell>
                                         <TableCell class="text-right">{{ Number(item.unit_price || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</TableCell>

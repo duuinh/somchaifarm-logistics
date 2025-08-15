@@ -78,10 +78,9 @@ class DeliveryNoteController extends Controller
             'transport_fee' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required|exists:items,id',
-            'items.*.quantity_kg' => 'nullable|numeric|min:0',
-            'items.*.quantity_bags' => 'nullable|numeric|min:0',
-            'items.*.unit_multiplier' => 'nullable|numeric|min:0',
-            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.quantity' => 'required|numeric|min:0',
+            'items.*.unit_type' => 'required|in:kg,bags',
+            'items.*.price_per_unit' => 'required|numeric|min:0',
             'items.*.total_price' => 'required|numeric|min:0',
         ]);
 
@@ -90,7 +89,7 @@ class DeliveryNoteController extends Controller
             // Pre-fetch all items that need kg_per_bag_conversion to avoid N+1 queries
             $itemIds = collect($validated['items'])
                 ->filter(function ($item) {
-                    return isset($item['quantity_bags']) && !isset($item['quantity_kg']);
+                    return $item['unit_type'] === 'bags';
                 })
                 ->pluck('item_id')
                 ->unique();
@@ -106,12 +105,12 @@ class DeliveryNoteController extends Controller
             foreach ($validated['items'] as $item) {
                 $totalAmount += $item['total_price'];
                 
-                // Calculate weight (all items are now materials)
-                if (isset($item['quantity_kg'])) {
-                    $totalWeight += $item['quantity_kg'];
-                } elseif (isset($item['quantity_bags']) && isset($itemsMap[$item['item_id']])) {
+                // Calculate weight based on unit type
+                if ($item['unit_type'] === 'kg') {
+                    $totalWeight += $item['quantity'];
+                } elseif ($item['unit_type'] === 'bags' && isset($itemsMap[$item['item_id']])) {
                     $itemModel = $itemsMap[$item['item_id']];
-                    $totalWeight += $item['quantity_bags'] * $itemModel->kg_per_bag_conversion;
+                    $totalWeight += $item['quantity'] * $itemModel->kg_per_bag_conversion;
                 }
             }
 
@@ -144,10 +143,9 @@ class DeliveryNoteController extends Controller
                 DeliveryNoteItem::create([
                     'delivery_note_id' => $deliveryNote->id,
                     'item_id' => $item['item_id'],
-                    'quantity_kg' => $item['quantity_kg'] ?? null,
-                    'quantity_bags' => $item['quantity_bags'] ?? null,
-                    'unit_multiplier' => $item['unit_multiplier'] ?? 1,
-                    'unit_price' => $item['unit_price'],
+                    'quantity' => $item['quantity'],
+                    'unit_type' => $item['unit_type'],
+                    'price_per_unit' => $item['price_per_unit'],
                     'total_price' => $item['total_price'],
                 ]);
             }
@@ -213,10 +211,9 @@ class DeliveryNoteController extends Controller
             'transport_fee' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required|exists:items,id',
-            'items.*.quantity_kg' => 'nullable|numeric|min:0',
-            'items.*.quantity_bags' => 'nullable|numeric|min:0',
-            'items.*.unit_multiplier' => 'nullable|numeric|min:0',
-            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.quantity' => 'required|numeric|min:0',
+            'items.*.unit_type' => 'required|in:kg,bags',
+            'items.*.price_per_unit' => 'required|numeric|min:0',
             'items.*.total_price' => 'required|numeric|min:0',
         ]);
 
@@ -225,7 +222,7 @@ class DeliveryNoteController extends Controller
             // Pre-fetch all items that need kg_per_bag_conversion to avoid N+1 queries
             $itemIds = collect($validated['items'])
                 ->filter(function ($item) {
-                    return isset($item['quantity_bags']) && !isset($item['quantity_kg']);
+                    return $item['unit_type'] === 'bags';
                 })
                 ->pluck('item_id')
                 ->unique();
@@ -241,12 +238,12 @@ class DeliveryNoteController extends Controller
             foreach ($validated['items'] as $item) {
                 $totalAmount += $item['total_price'];
                 
-                // Calculate weight (all items are now materials)
-                if (isset($item['quantity_kg'])) {
-                    $totalWeight += $item['quantity_kg'];
-                } elseif (isset($item['quantity_bags']) && isset($itemsMap[$item['item_id']])) {
+                // Calculate weight based on unit type
+                if ($item['unit_type'] === 'kg') {
+                    $totalWeight += $item['quantity'];
+                } elseif ($item['unit_type'] === 'bags' && isset($itemsMap[$item['item_id']])) {
                     $itemModel = $itemsMap[$item['item_id']];
-                    $totalWeight += $item['quantity_bags'] * $itemModel->kg_per_bag_conversion;
+                    $totalWeight += $item['quantity'] * $itemModel->kg_per_bag_conversion;
                 }
             }
 
@@ -280,10 +277,9 @@ class DeliveryNoteController extends Controller
                 DeliveryNoteItem::create([
                     'delivery_note_id' => $deliveryNote->id,
                     'item_id' => $item['item_id'],
-                    'quantity_kg' => $item['quantity_kg'] ?? null,
-                    'quantity_bags' => $item['quantity_bags'] ?? null,
-                    'unit_multiplier' => $item['unit_multiplier'] ?? 1,
-                    'unit_price' => $item['unit_price'],
+                    'quantity' => $item['quantity'],
+                    'unit_type' => $item['unit_type'],
+                    'price_per_unit' => $item['price_per_unit'],
                     'total_price' => $item['total_price'],
                 ]);
             }
