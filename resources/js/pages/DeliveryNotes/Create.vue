@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Save, FileText } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { generateNotesTemplate } from '@/utils/notesTemplate';
 
 // Import types
@@ -32,6 +32,9 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+// Local pricing type state (UI only)
+const pricingType = ref<'regular' | 'credit'>('regular');
 
 // Use the composable
 const {
@@ -266,34 +269,9 @@ const transportFee = computed(() => {
                 <!-- Items Section -->
                 <Card>
                     <CardHeader>
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <CardTitle>รายการสินค้า</CardTitle>
-                                <CardDescription>เพิ่มสินค้าที่จะส่ง</CardDescription>
-                            </div>
-                            <div class="space-y-2">
-                                <Label class="text-sm font-medium">ประเภทราคา *</Label>
-                                <div class="flex gap-4">
-                                    <label class="flex items-center space-x-2">
-                                        <input
-                                            v-model="form.pricing_type"
-                                            type="radio"
-                                            value="regular"
-                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-                                        />
-                                        <span class="text-sm font-medium">ราคาปกติ</span>
-                                    </label>
-                                    <label class="flex items-center space-x-2">
-                                        <input
-                                            v-model="form.pricing_type"
-                                            type="radio"
-                                            value="credit"
-                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-                                        />
-                                        <span class="text-sm font-medium">ราคาเครดิต</span>
-                                    </label>
-                                </div>
-                            </div>
+                        <div>
+                            <CardTitle>รายการสินค้า</CardTitle>
+                            <CardDescription>เพิ่มสินค้าที่จะส่ง</CardDescription>
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -313,10 +291,12 @@ const transportFee = computed(() => {
                             :quantity="newQuantity"
                             :unit-price="newUnitPrice"
                             :selected-item-info="getSelectedItemInfo()"
+                            :pricing-type="pricingType"
                             @update:item-id="newItemId = $event"
                             @update:unit-type="newUnitType = $event"
                             @update:quantity="newQuantity = typeof $event === 'string' ? (parseFloat($event) || null) : $event"
                             @update:unit-price="newUnitPrice = typeof $event === 'string' ? (parseFloat($event) || null) : $event"
+                            @update:pricing-type="pricingType = $event"
                             @add-item="addItem"
                         />
 

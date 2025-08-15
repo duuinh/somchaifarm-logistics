@@ -57,7 +57,6 @@ class DeliveryNoteControllerTest extends TestCase
             'client_id' => $this->client->id,
             'created_by' => $this->user->id,
             'delivery_date' => now(),
-            'pricing_type' => 'regular',
             'total_weight' => 100,
             'total_amount' => 1000,
         ]);
@@ -80,7 +79,6 @@ class DeliveryNoteControllerTest extends TestCase
             'driver_id' => $this->driver->id,
             'vehicle_id' => $this->vehicle->id,
             'delivery_date' => now()->format('Y-m-d'),
-            'pricing_type' => 'regular',
             'notes' => 'Test notes',
             'items' => [
                 [
@@ -105,7 +103,6 @@ class DeliveryNoteControllerTest extends TestCase
         $this->assertDatabaseHas('delivery_notes', [
             'client_id' => $this->client->id,
             'created_by' => $this->user->id,
-            'pricing_type' => 'regular',
         ]);
     }
 
@@ -116,7 +113,6 @@ class DeliveryNoteControllerTest extends TestCase
             'client_id' => $this->client->id,
             'created_by' => $this->user->id,
             'delivery_date' => now(),
-            'pricing_type' => 'regular',
             'total_weight' => 100,
             'total_amount' => 1000,
         ]);

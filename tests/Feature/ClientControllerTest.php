@@ -137,7 +137,6 @@ class ClientControllerTest extends TestCase
             'client_id' => $client->id,
             'created_by' => $this->user->id,
             'delivery_date' => now(),
-            'pricing_type' => 'regular',
         ]);
 
         $response = $this->actingAs($this->user)

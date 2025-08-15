@@ -46,7 +46,6 @@ export interface DeliveryNote {
     driver_id?: number;
     vehicle_id?: number;
     delivery_date: string;
-    pricing_type: 'regular' | 'credit';
     total_weight?: number;
     total_amount?: number;
     service_fee?: number;
@@ -72,7 +71,6 @@ export interface DeliveryNoteFormData {
     driver_id: string;
     vehicle_id: string;
     delivery_date: string;
-    pricing_type: PricingType;
     notes: string;
     service_fee: number;
     service_fee_tons: number;

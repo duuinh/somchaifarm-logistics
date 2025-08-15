@@ -29,7 +29,6 @@ export function useDeliveryNote(
                 driver_id: props.deliveryNote.driver_id?.toString() || '',
                 vehicle_id: props.deliveryNote.vehicle_id?.toString() || '',
                 delivery_date: new Date(props.deliveryNote.delivery_date).toISOString().split('T')[0], // Format as YYYY-MM-DD
-                pricing_type: props.deliveryNote.pricing_type,
                 notes: props.deliveryNote.notes || '',
                 service_fee: props.deliveryNote.service_fee || props.defaultServiceFee,
                 service_fee_tons: props.deliveryNote.service_fee_per_ton ? 
@@ -53,7 +52,6 @@ export function useDeliveryNote(
                 driver_id: '',
                 vehicle_id: '',
                 delivery_date: new Date().toISOString().split('T')[0],
-                pricing_type: 'regular',
                 notes: '',
                 service_fee: props.defaultServiceFee,
                 service_fee_tons: 0,
@@ -132,17 +130,6 @@ export function useDeliveryNote(
         return props.items.find(i => i.id.toString() === newItemId.value.toString()) || null;
     };
 
-    const calculateItemPrice = (item: Item, quantity: number, unitType: UnitType): number => {
-        const pricingType = form.pricing_type;
-        
-        if (unitType === 'kg') {
-            const pricePerKg = pricingType === 'credit' ? item.credit_price_per_kg : item.regular_price_per_kg;
-            return (pricePerKg || 0) * quantity;
-        } else {
-            const pricePerBag = pricingType === 'credit' ? item.credit_price_per_bag : item.regular_price_per_bag;
-            return (pricePerBag || 0) * quantity;
-        }
-    };
 
     const formatBahtText = (amount: number): string => {
         try {
@@ -194,43 +181,9 @@ export function useDeliveryNote(
         const client = props.clients?.find(c => c.id.toString() === clientId);
         if (client) {
             selectedClient.value = client;
-            form.pricing_type = 'regular';
         }
     });
 
-    watch([() => newItemId.value, () => newUnitType.value, () => form.pricing_type], () => {
-        if (!newItemId.value || !props.items) return;
-        
-        const item = props.items.find(i => i.id.toString() === newItemId.value.toString());
-        if (!item) return;
-
-        const pricingType = form.pricing_type;
-        if (newUnitType.value === 'kg') {
-            const price = pricingType === 'credit' ? item.credit_price_per_kg : item.regular_price_per_kg;
-            newUnitPrice.value = price ? parseFloat(String(price)) : null;
-        } else {
-            const price = pricingType === 'credit' ? item.credit_price_per_bag : item.regular_price_per_bag;
-            newUnitPrice.value = price ? parseFloat(String(price)) : null;
-        }
-    });
-
-    watch(() => form.pricing_type, () => {
-        if (!form.items || !props.items) return;
-        
-        form.items = form.items.map(formItem => {
-            const item = props.items.find(i => i.id === formItem.item_id);
-            if (!item) return formItem;
-            
-            const totalPrice = calculateItemPrice(item, formItem.quantity, formItem.unit_type);
-            const pricePerUnit = totalPrice / formItem.quantity;
-            
-            return {
-                ...formItem,
-                price_per_unit: Number(pricePerUnit) || 0,
-                total_price: Number(totalPrice) || 0,
-            };
-        });
-    });
 
     // Update form service fee based on checkbox states
     watch([includeServiceFee, includeBagFee, includeTransportFee], () => {

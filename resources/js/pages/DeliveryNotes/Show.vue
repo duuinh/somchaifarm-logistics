@@ -51,7 +51,6 @@ interface DeliveryNoteItem {
 interface DeliveryNote {
     id: number;
     delivery_date: string;
-    pricing_type: 'regular' | 'credit';
     total_weight?: number;
     total_amount?: number;
     service_fee?: number;
@@ -88,13 +87,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const getPricingTypeBadge = (type: string) => {
-    const badges = {
-        regular: { label: 'ราคาปกติ', class: 'bg-blue-100 text-blue-800 hover:bg-blue-100' },
-        credit: { label: 'ราคาเครดิต', class: 'bg-green-100 text-green-800 hover:bg-green-100' },
-    };
-    return badges[type as keyof typeof badges] || badges.regular;
-};
 
 
 const formatDate = (dateString: string) => {
@@ -164,12 +156,6 @@ const formatBahtText = (amount: number) => {
                             <div>
                                 <h3 class="text-sm font-medium text-muted-foreground mb-1">วันที่ส่ง</h3>
                                 <p class="text-sm">{{ formatDate(deliveryNote.delivery_date) }}</p>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-medium text-muted-foreground mb-1">ประเภทราคา</h3>
-                                <Badge :class="getPricingTypeBadge(deliveryNote.pricing_type).class">
-                                    {{ getPricingTypeBadge(deliveryNote.pricing_type).label }}
-                                </Badge>
                             </div>
                             <div>
                                 <h3 class="text-sm font-medium text-muted-foreground mb-1">น้ำหนักรวม</h3>

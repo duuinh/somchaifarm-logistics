@@ -14,7 +14,6 @@ class DeliveryNote extends Model
         'vehicle_id',
         'created_by',
         'delivery_date',
-        'pricing_type',
         'total_weight',
         'total_amount',
         'service_fee_per_ton',
@@ -26,7 +25,6 @@ class DeliveryNote extends Model
 
     protected $casts = [
         'delivery_date' => 'date',
-        'pricing_type' => 'string',
         'total_weight' => 'float',
         'total_amount' => 'float',
         'service_fee_per_ton' => 'float',

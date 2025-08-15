@@ -27,7 +27,6 @@ class DeliveryNoteTest extends TestCase
             'client_id' => $client->id,
             'created_by' => $user->id,
             'delivery_date' => now(),
-            'pricing_type' => 'regular',
             'total_weight' => 1000.00,
             'total_amount' => 5000.00,
             'notes' => 'Test delivery note',
@@ -36,7 +35,6 @@ class DeliveryNoteTest extends TestCase
         $this->assertDatabaseHas('delivery_notes', [
             'client_id' => $client->id,
             'created_by' => $user->id,
-            'pricing_type' => 'regular',
         ]);
         $this->assertEquals(1000.00, $deliveryNote->total_weight);
         $this->assertEquals(5000.00, $deliveryNote->total_amount);
@@ -55,7 +53,6 @@ class DeliveryNoteTest extends TestCase
             'client_id' => $client->id,
             'created_by' => $user->id,
             'delivery_date' => now(),
-            'pricing_type' => 'regular',
         ]);
 
         $this->assertInstanceOf(Client::class, $deliveryNote->client);
@@ -75,7 +72,6 @@ class DeliveryNoteTest extends TestCase
             'client_id' => $client->id,
             'created_by' => $user->id,
             'delivery_date' => now(),
-            'pricing_type' => 'regular',
         ]);
 
         $this->assertInstanceOf(User::class, $deliveryNote->creator);
@@ -95,7 +91,6 @@ class DeliveryNoteTest extends TestCase
             'client_id' => $client->id,
             'created_by' => $user->id,
             'delivery_date' => now(),
-            'pricing_type' => 'regular',
             'driver_id' => null,
             'vehicle_id' => null,
         ]);
@@ -117,7 +112,6 @@ class DeliveryNoteTest extends TestCase
             'client_id' => $client->id,
             'created_by' => $user->id,
             'delivery_date' => now(),
-            'pricing_type' => 'regular',
         ]);
 
         $item1 = Item::create([
@@ -154,26 +148,4 @@ class DeliveryNoteTest extends TestCase
         $this->assertInstanceOf(DeliveryNoteItem::class, $deliveryNote->items->first());
     }
 
-    /** @test */
-    public function it_validates_pricing_type()
-    {
-        $user = User::factory()->create();
-        $client = Client::create([
-            'name' => 'Test Client',
-            'customer_type' => 'regular',
-        ]);
-
-        $validTypes = ['regular', 'credit'];
-
-        foreach ($validTypes as $type) {
-            $deliveryNote = DeliveryNote::create([
-                'client_id' => $client->id,
-                'created_by' => $user->id,
-                'delivery_date' => now(),
-                'pricing_type' => $type,
-            ]);
-
-            $this->assertEquals($type, $deliveryNote->pricing_type);
-        }
-    }
 }

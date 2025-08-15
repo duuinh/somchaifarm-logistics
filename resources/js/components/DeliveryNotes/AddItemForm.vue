@@ -1,10 +1,37 @@
 <template>
     <div class="mb-6">
         <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-5">
-            <h4 class="text-sm font-semibold text-blue-900 mb-4 flex items-center">
-                <Plus class="mr-2 h-4 w-4" />
-                เพิ่มสินค้าใหม่
-            </h4>
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-semibold text-blue-900 flex items-center">
+                    <Plus class="mr-2 h-4 w-4" />
+                    เพิ่มสินค้าใหม่
+                </h4>
+                <div class="space-y-2">
+                    <Label class="text-xs font-medium text-blue-900">ประเภทราคา *</Label>
+                    <div class="flex gap-3">
+                        <label class="flex items-center space-x-2">
+                            <input
+                                :value="pricingType"
+                                @change="$emit('update:pricingType', 'regular')"
+                                type="radio"
+                                :checked="pricingType === 'regular'"
+                                class="w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                            />
+                            <span class="text-xs font-medium text-blue-900">ราคาปกติ</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input
+                                :value="pricingType"
+                                @change="$emit('update:pricingType', 'credit')"
+                                type="radio"
+                                :checked="pricingType === 'credit'"
+                                class="w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                            />
+                            <span class="text-xs font-medium text-blue-900">ราคาเครดิต</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                 <div class="md:col-span-4 space-y-2">
                     <Label class="text-blue-900">เลือกสินค้า *</Label>
@@ -130,6 +157,7 @@ interface Props {
     quantity: number | null;
     unitPrice: number | null;
     selectedItemInfo: Item | null;
+    pricingType: 'regular' | 'credit';
 }
 
 const props = defineProps<Props>();
@@ -186,6 +214,7 @@ const emit = defineEmits<{
     'update:unitType': [value: UnitType];
     'update:quantity': [value: number | null];
     'update:unitPrice': [value: number | null];
+    'update:pricingType': [value: 'regular' | 'credit'];
     addItem: [];
 }>();
 
@@ -220,6 +249,28 @@ watch(() => props.unitPrice, (newVal) => {
 watch(unitPriceInput, (newVal) => {
     const num = newVal === '' ? null : parseFloat(newVal) || null;
     emit('update:unitPrice', num);
+});
+
+// Auto-set price based on pricing type when item or unit type changes
+watch([() => props.itemId, () => props.unitType, () => props.pricingType], () => {
+    if (props.selectedItemInfo && props.itemId) {
+        let price: number | null = null;
+        
+        if (props.unitType === 'kg') {
+            price = props.pricingType === 'credit' 
+                ? props.selectedItemInfo.credit_price_per_kg 
+                : props.selectedItemInfo.regular_price_per_kg;
+        } else {
+            price = props.pricingType === 'credit' 
+                ? props.selectedItemInfo.credit_price_per_bag 
+                : props.selectedItemInfo.regular_price_per_bag;
+        }
+        
+        if (price !== null && price !== undefined) {
+            setUnitPriceValue(price.toString());
+            emit('update:unitPrice', price);
+        }
+    }
 });
 
 // Check if form can be submitted
