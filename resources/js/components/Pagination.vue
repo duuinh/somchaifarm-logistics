@@ -125,7 +125,7 @@ const showingText = computed(() => {
                 <span v-if="page === -1" class="px-2 text-muted-foreground">...</span>
                 <Link
                     v-else-if="page !== data.current_page"
-                    :href="`${data.path}?page=${page}`"
+                    :href="`?page=${page}`"
                     preserve-scroll
                     preserve-state
                 >
