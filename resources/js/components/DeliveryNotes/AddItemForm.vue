@@ -1,6 +1,6 @@
 <template>
     <div class="mb-6">
-        <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-5">
+        <VeeForm class="bg-blue-50 border-2 border-blue-200 rounded-lg p-5">
             <div class="flex items-center justify-between mb-4">
                 <h4 class="text-sm font-semibold text-blue-900 flex items-center">
                     <Plus class="mr-2 h-4 w-4" />
@@ -48,48 +48,58 @@
                     <Label class="text-blue-900">หน่วย</Label>
                     <select
                         :value="unitType"
-                        @change="$emit('update:unitType', $event.target.value)"
-                        class="flex h-10 w-full items-center justify-between whitespace-nowrap rounded-md border-2 border-blue-200 bg-white px-3 py-2 text-sm shadow-sm hover:border-blue-300 focus:border-blue-400"
+                        @change="$emit('update:unitType', ($event.target as HTMLSelectElement).value)"
+                        class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 border-2 border-blue-200 focus:border-blue-400"
                     >
-                        <option value="kg">กิโลกรัม</option>
+                        <option value="kg">กิโลกรัม (กก.)</option>
                         <option value="bags">กระสอบ</option>
                     </select>
                 </div>
 
                 <div class="md:col-span-2 space-y-2">
                     <Label class="text-blue-900">จำนวน *</Label>
-                    <Input
-                        v-model="quantityInput"
-                        type="text"
-                        inputmode="decimal"
-                        :placeholder="unitType === 'kg' ? '0.00 กก.' : '0 กระสอบ'"
-                        :class="{
-                            'border-2 border-green-200 focus:border-green-400 bg-green-50': !quantityError,
-                            'border-2 border-red-200 focus:border-red-400 bg-red-50': quantityError
-                        }"
-                        required
-                    />
-                    <div v-if="quantityError" class="text-sm text-red-500">
-                        {{ quantityError }}
-                    </div>
+                    <VeeField
+                        name="quantity"
+                        :rules="quantityValidationRule"
+                        v-slot="{ field, errorMessage }"
+                        :model-value="quantityInput"
+                    >
+                        <Input
+                            v-bind="field"
+                            v-model="quantityInput"
+                            type="text"
+                            inputmode="decimal"
+                            :placeholder="unitType === 'kg' ? '0.00 กก.' : '0 กระสอบ'"
+                            :class="{
+                                'border-2 border-blue-200 focus:border-blue-400': !errorMessage,
+                                'border-2 border-red-200 focus:border-red-400 bg-red-50': errorMessage
+                            }"
+                        />
+                        <ErrorMessage name="quantity" class="text-sm text-red-500" />
+                    </VeeField>
                 </div>
 
                 <div class="md:col-span-2 space-y-2">
                     <Label class="text-blue-900">ราคาต่อหน่วย *</Label>
-                    <Input
-                        v-model="unitPriceInput"
-                        type="text"
-                        inputmode="decimal"
-                        placeholder="0.00 บาท"
-                        :class="{
-                            'border-2 border-blue-200 focus:border-blue-400': !unitPriceError,
-                            'border-2 border-red-200 focus:border-red-400 bg-red-50': unitPriceError
-                        }"
-                        required
-                    />
-                    <div v-if="unitPriceError" class="text-sm text-red-500">
-                        {{ unitPriceError }}
-                    </div>
+                    <VeeField
+                        name="unitPrice"
+                        :rules="unitPriceValidationRule"
+                        v-slot="{ field, errorMessage }"
+                        :model-value="unitPriceInput"
+                    >
+                        <Input
+                            v-bind="field"
+                            v-model="unitPriceInput"
+                            type="text"
+                            inputmode="decimal"
+                            placeholder="0.00 บาท"
+                            :class="{
+                                'border-2 border-blue-200 focus:border-blue-400': !errorMessage,
+                                'border-2 border-red-200 focus:border-red-400 bg-red-50': errorMessage
+                            }"
+                        />
+                        <ErrorMessage name="unitPrice" class="text-sm text-red-500" />
+                    </VeeField>
                 </div>
 
                 <div class="md:col-span-2">
@@ -104,10 +114,13 @@
                     </Button>
                 </div>
             </div>
-
             <!-- Item Preview -->
             <div v-if="itemId && selectedItemInfo" class="mt-3 p-3 bg-white rounded-md border border-blue-100">
-                <div class="grid grid-cols-2 gap-4 text-sm">
+                <div class="text-sm space-y-1">
+                    <div>
+                        <span class="text-gray-500">สินค้า:</span>
+                        <span class="font-medium ml-1">{{ selectedItemInfo.name }}</span>
+                    </div>
                     <div>
                         <span class="text-gray-500">ราคาปกติ ({{ unitType === 'kg' ? 'กก.' : 'กระสอบ' }}):</span>
                         <span class="font-medium ml-1 text-green-600">
@@ -136,7 +149,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </VeeForm>
     </div>
 </template>
 
@@ -148,7 +161,7 @@ import { Plus } from 'lucide-vue-next';
 import { Combobox } from '@/components/ui/combobox';
 import { computed, ref, watch } from 'vue';
 import type { Item, UnitType } from '@/types/delivery-notes';
-import { useField } from 'vee-validate';
+import { Form as VeeForm, Field as VeeField, ErrorMessage } from 'vee-validate';
 
 interface Props {
     items: Item[];
@@ -162,11 +175,15 @@ interface Props {
 
 const props = defineProps<Props>();
 
-// VeeValidate field for quantity with dynamic validation
+// Local reactive values for form inputs
+const quantityInput = ref(props.quantity?.toString() || '');
+const unitPriceInput = ref(props.unitPrice?.toString() || '');
+
+// Validation rules for VeeValidate (isolated within VeeForm)
 const quantityValidationRule = computed(() => {
     const pattern = props.unitType === 'kg' ? /^[0-9]*\.?[0-9]{0,2}$/ : /^[0-9]*$/;
     return (value: string) => {
-        if (!value) return true; // Allow empty
+        if (!value) return true; // Allow empty - only validate when user wants to add
         if (!pattern.test(value)) {
             return props.unitType === 'kg' 
                 ? 'จำนวนต้องเป็นตัวเลข (ทศนิยม 2 ตำแหน่ง)' 
@@ -183,44 +200,8 @@ const quantityValidationRule = computed(() => {
     };
 });
 
-const {
-    value: quantityInput,
-    errorMessage: quantityError,
-    setValue: setQuantityValue
-} = useField('quantity', quantityValidationRule, {
-    initialValue: props.quantity?.toString() || ''
-});
-
-// Watch for prop changes to update field value
-watch(() => props.quantity, (newVal) => {
-    setQuantityValue(newVal?.toString() || '');
-}, { immediate: true });
-
-// Watch field value and emit changes
-watch(quantityInput, (newVal) => {
-    const num = newVal === '' ? null : parseFloat(newVal) || null;
-    emit('update:quantity', num);
-});
-
-const itemOptions = computed(() => {
-    return props.items.map(item => ({
-        value: item.id.toString(),
-        label: `${String(item.id).padStart(3, '0')} - ${item.name} (${item.kg_per_bag_conversion} กก./กระสอบ)`
-    }));
-});
-
-const emit = defineEmits<{
-    'update:itemId': [value: string];
-    'update:unitType': [value: UnitType];
-    'update:quantity': [value: number | null];
-    'update:unitPrice': [value: number | null];
-    'update:pricingType': [value: 'regular' | 'credit'];
-    addItem: [];
-}>();
-
-// VeeValidate field for unit price
 const unitPriceValidationRule = (value: string) => {
-    if (!value) return true; // Allow empty
+    if (!value) return true; // Allow empty - only validate when user wants to add
     const pattern = /^[0-9]*\.?[0-9]{0,2}$/;
     if (!pattern.test(value)) {
         return 'ราคาต้องเป็นตัวเลข (ทศนิยม 2 ตำแหน่ง)';
@@ -232,20 +213,35 @@ const unitPriceValidationRule = (value: string) => {
     return true;
 };
 
-const {
-    value: unitPriceInput,
-    errorMessage: unitPriceError,
-    setValue: setUnitPriceValue
-} = useField('unitPrice', unitPriceValidationRule, {
-    initialValue: props.unitPrice?.toString() || ''
-});
-
-// Watch for prop changes to update field value
-watch(() => props.unitPrice, (newVal) => {
-    setUnitPriceValue(newVal?.toString() || '');
+// Watch for prop changes to update field values
+watch(() => props.quantity, (newVal) => {
+    quantityInput.value = newVal?.toString() || '';
 }, { immediate: true });
 
-// Watch field value and emit changes
+watch(() => props.unitPrice, (newVal) => {
+    unitPriceInput.value = newVal?.toString() || '';
+}, { immediate: true });
+
+// Clear inputs when unit type changes
+watch(() => props.unitType, () => {
+    quantityInput.value = '';
+});
+
+const emit = defineEmits<{
+    'update:itemId': [value: string];
+    'update:unitType': [value: UnitType];
+    'update:quantity': [value: number | null];
+    'update:unitPrice': [value: number | null];
+    'update:pricingType': [value: 'regular' | 'credit'];
+    addItem: [];
+}>();
+
+// Watch field values and emit changes
+watch(quantityInput, (newVal) => {
+    const num = newVal === '' ? null : parseFloat(newVal) || null;
+    emit('update:quantity', num);
+});
+
 watch(unitPriceInput, (newVal) => {
     const num = newVal === '' ? null : parseFloat(newVal) || null;
     emit('update:unitPrice', num);
@@ -267,10 +263,18 @@ watch([() => props.itemId, () => props.unitType, () => props.pricingType], () =>
         }
         
         if (price !== null && price !== undefined) {
-            setUnitPriceValue(price.toString());
+            unitPriceInput.value = price.toString();
             emit('update:unitPrice', price);
         }
     }
+});
+
+// Item options for combobox
+const itemOptions = computed(() => {
+    return props.items.map(item => ({
+        value: item.id.toString(),
+        label: `${String(item.id).padStart(3, '0')} - ${item.name}`
+    }));
 });
 
 // Check if form can be submitted
@@ -279,17 +283,14 @@ const canAddItem = computed(() => {
            props.quantity && 
            props.quantity > 0 && 
            props.unitPrice !== null && 
-           props.unitPrice >= 0 && 
-           !quantityError.value && 
-           !unitPriceError.value;
+           props.unitPrice >= 0;
 });
 
-// Handle add item with validation
+// Handle add item 
 const handleAddItem = () => {
     if (canAddItem.value) {
         emit('addItem');
     }
 };
-
 
 </script>

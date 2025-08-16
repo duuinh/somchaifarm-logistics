@@ -195,6 +195,7 @@ const emit = defineEmits<{
 
 // VeeValidate fields for service fees
 const serviceTonsValidationRule = (value: string) => {
+    if (!props.includeServiceFee) return true; // Skip validation if not enabled
     if (!value) return true; // Allow empty
     const pattern = /^[0-9]+$/;
     if (!pattern.test(value)) {
@@ -207,7 +208,36 @@ const serviceTonsValidationRule = (value: string) => {
     return true;
 };
 
-const feeValidationRule = (value: string) => {
+const serviceFeePerTonValidationRule = (value: string) => {
+    if (!props.includeServiceFee) return true; // Skip validation if not enabled
+    if (!value) return true; // Allow empty
+    const pattern = /^[0-9]*\.?[0-9]{0,2}$/;
+    if (!pattern.test(value)) {
+        return 'ราคาต้องเป็นตัวเลข (ทศนิยม 2 ตำแหน่ง)';
+    }
+    const num = parseFloat(value);
+    if (num < 0) {
+        return 'ราคาต้องไม่น้อยกว่า 0';
+    }
+    return true;
+};
+
+const bagFeeValidationRule = (value: string) => {
+    if (!props.includeBagFee) return true; // Skip validation if not enabled
+    if (!value) return true; // Allow empty
+    const pattern = /^[0-9]*\.?[0-9]{0,2}$/;
+    if (!pattern.test(value)) {
+        return 'ราคาต้องเป็นตัวเลข (ทศนิยม 2 ตำแหน่ง)';
+    }
+    const num = parseFloat(value);
+    if (num < 0) {
+        return 'ราคาต้องไม่น้อยกว่า 0';
+    }
+    return true;
+};
+
+const transportFeeValidationRule = (value: string) => {
+    if (!props.includeTransportFee) return true; // Skip validation if not enabled
     if (!value) return true; // Allow empty
     const pattern = /^[0-9]*\.?[0-9]{0,2}$/;
     if (!pattern.test(value)) {
@@ -232,7 +262,7 @@ const {
 const {
     value: serviceFeePerTonInput,
     errorMessage: serviceFeePerTonError
-} = useField('serviceFeePerTon', feeValidationRule, {
+} = useField('serviceFeePerTon', serviceFeePerTonValidationRule, {
     initialValue: props.serviceFeePerTon?.toString() || ''
 });
 
@@ -240,7 +270,7 @@ const {
 const {
     value: bagFeeInput,
     errorMessage: bagFeeError
-} = useField('bagFee', feeValidationRule, {
+} = useField('bagFee', bagFeeValidationRule, {
     initialValue: props.bagFee?.toString() || ''
 });
 
@@ -248,7 +278,7 @@ const {
 const {
     value: transportFeeInput,
     errorMessage: transportFeeError
-} = useField('transportFee', feeValidationRule, {
+} = useField('transportFee', transportFeeValidationRule, {
     initialValue: props.transportFee?.toString() || ''
 });
 

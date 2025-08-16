@@ -83,13 +83,9 @@ class DeliveryNoteControllerTest extends TestCase
             'items' => [
                 [
                     'item_id' => $this->item->id,
-                    'item_type' => 'material',
-                    'quantity_kg' => 100,
-                    'quantity_bags' => null,
-                    'quantity_tons' => null,
-                    'quantity_units' => null,
-                    'unit_multiplier' => 1,
-                    'unit_price' => 10.00,
+                    'quantity' => 100,
+                    'unit_type' => 'kg',
+                    'price_per_unit' => 10.00,
                     'total_price' => 1000.00,
                 ],
             ],
