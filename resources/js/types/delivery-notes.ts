@@ -52,6 +52,8 @@ export interface DeliveryNote {
     service_fee_per_ton?: number;
     bag_fee?: number;
     transport_fee?: number;
+    cash_amount?: number;
+    transfer_amount?: number;
     notes?: string;
     items: DeliveryNoteItem[];
     created_at?: string;
@@ -77,5 +79,7 @@ export interface DeliveryNoteFormData {
     service_fee_per_ton: number;
     bag_fee: number;
     transport_fee: number;
+    cash_amount: number;
+    transfer_amount: number;
     items: DeliveryNoteItem[];
 }

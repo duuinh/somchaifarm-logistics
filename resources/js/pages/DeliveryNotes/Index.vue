@@ -38,6 +38,8 @@ interface DeliveryNote {
     pricing_type: 'regular' | 'credit';
     total_weight: number;
     total_amount: number;
+    cash_amount?: number;
+    transfer_amount?: number;
     client: Client;
     driver?: Driver;
     vehicle?: Vehicle;
@@ -116,6 +118,22 @@ const formatDate = (dateString: string) => {
     const year = date.getFullYear() + 543; // Convert to Buddhist Era
     return `${day}/${month}/${year}`;
 };
+
+const getPaymentStatus = (note: DeliveryNote) => {
+    const totalPayments = (note.cash_amount || 0) + (note.transfer_amount || 0);
+    const totalAmount = note.total_amount || 0;
+    const difference = Math.abs(totalPayments - totalAmount);
+    
+    if (totalPayments === 0) {
+        return { label: 'ยังไม่ระบุ', class: 'bg-gray-100 text-gray-800 hover:bg-gray-100' };
+    } else if (difference < 0.01) {
+        return { label: 'ครบถ้วน', class: 'bg-green-100 text-green-800 hover:bg-green-100' };
+    } else if (totalPayments > totalAmount) {
+        return { label: 'เกินจ่าย', class: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' };
+    } else {
+        return { label: 'ขาด', class: 'bg-red-100 text-red-800 hover:bg-red-100' };
+    }
+};
 </script>
 
 <template>
@@ -162,6 +180,7 @@ const formatDate = (dateString: string) => {
                                     <TableHead>ประเภทราคา</TableHead>
                                     <TableHead>น้ำหนัก (กก.)</TableHead>
                                     <TableHead>จำนวนเงิน</TableHead>
+                                    <TableHead>สถานะการชำระ</TableHead>
                                     <TableHead>คนออกบิล</TableHead>
                                     <TableHead class="text-right">การดำเนินการ</TableHead>
                                 </TableRow>
@@ -178,6 +197,11 @@ const formatDate = (dateString: string) => {
                                     </TableCell>
                                     <TableCell>{{ note.total_weight?.toLocaleString() || '-' }}</TableCell>
                                     <TableCell>{{ note.total_amount?.toLocaleString() }} บาท</TableCell>
+                                    <TableCell>
+                                        <Badge :class="getPaymentStatus(note).class">
+                                            {{ getPaymentStatus(note).label }}
+                                        </Badge>
+                                    </TableCell>
                                     <TableCell>{{ note.creator.name }}</TableCell>
                                     <TableCell class="text-right">
                                         <div class="flex justify-end gap-2">

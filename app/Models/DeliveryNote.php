@@ -20,6 +20,8 @@ class DeliveryNote extends Model
         'service_fee',
         'bag_fee',
         'transport_fee',
+        'cash_amount',
+        'transfer_amount',
         'notes',
     ];
 
@@ -31,6 +33,8 @@ class DeliveryNote extends Model
         'service_fee' => 'float',
         'bag_fee' => 'float',
         'transport_fee' => 'float',
+        'cash_amount' => 'float',
+        'transfer_amount' => 'float',
     ];
 
     public function client(): BelongsTo

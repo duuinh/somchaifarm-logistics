@@ -36,6 +36,8 @@ export function useDeliveryNote(
                 service_fee_per_ton: props.deliveryNote.service_fee_per_ton || props.defaultServiceFee,
                 bag_fee: props.deliveryNote.bag_fee || 0,
                 transport_fee: props.deliveryNote.transport_fee || 0,
+                cash_amount: props.deliveryNote.cash_amount || 0,
+                transfer_amount: props.deliveryNote.transfer_amount || 0,
                 items: props.deliveryNote.items.map(item => ({
                     id: item.id,
                     item_id: item.item_id,
@@ -58,6 +60,8 @@ export function useDeliveryNote(
                 service_fee_per_ton: props.defaultServiceFee,
                 bag_fee: 0,
                 transport_fee: 0,
+                cash_amount: 0,
+                transfer_amount: 0,
                 items: [],
             };
         }

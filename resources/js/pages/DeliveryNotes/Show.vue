@@ -57,6 +57,8 @@ interface DeliveryNote {
     service_fee_per_ton?: number;
     bag_fee?: number;
     transport_fee?: number;
+    cash_amount?: number;
+    transfer_amount?: number;
     notes?: string;
     client: Client;
     driver?: Driver;
@@ -345,6 +347,51 @@ const formatBahtText = (amount: number) => {
                                         <span class="text-2xl font-bold text-primary">{{ deliveryNote.total_amount?.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00' }} บาท</span>
                                     </div>
                                     <BahtTextDisplay :baht-text="formatBahtText(deliveryNote.total_amount || 0)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Amounts Section -->
+                        <div v-if="deliveryNote.cash_amount || deliveryNote.transfer_amount" class="mt-6 border-2 border-green-200 rounded-lg overflow-hidden">
+                            <div class="bg-green-50 px-4 py-2 border-b border-green-200">
+                                <h3 class="text-sm font-semibold text-green-700">จำนวนเงินที่ได้รับ</h3>
+                            </div>
+                            <div class="p-4">
+                                <div class="space-y-3">
+                                    <div v-if="deliveryNote.cash_amount" class="flex justify-between">
+                                        <span class="text-sm text-green-700">เงินสด</span>
+                                        <span class="font-medium text-green-800">{{ Number(deliveryNote.cash_amount).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท</span>
+                                    </div>
+                                    <div v-if="deliveryNote.transfer_amount" class="flex justify-between">
+                                        <span class="text-sm text-green-700">เงินโอน</span>
+                                        <span class="font-medium text-green-800">{{ Number(deliveryNote.transfer_amount).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท</span>
+                                    </div>
+                                    <div class="border-t border-green-200 pt-3">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm font-semibold text-green-700">รวมเงินที่ได้รับ</span>
+                                            <span class="text-lg font-bold text-green-800">
+                                                {{ ((deliveryNote.cash_amount || 0) + (deliveryNote.transfer_amount || 0)).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท
+                                            </span>
+                                        </div>
+                                        <!-- Payment Status -->
+                                        <div class="mt-2 p-2 rounded" :class="{
+                                            'bg-green-100 text-green-800': Math.abs(((deliveryNote.cash_amount || 0) + (deliveryNote.transfer_amount || 0)) - (deliveryNote.total_amount || 0)) < 0.01,
+                                            'bg-yellow-100 text-yellow-800': ((deliveryNote.cash_amount || 0) + (deliveryNote.transfer_amount || 0)) > (deliveryNote.total_amount || 0),
+                                            'bg-red-100 text-red-800': ((deliveryNote.cash_amount || 0) + (deliveryNote.transfer_amount || 0)) < (deliveryNote.total_amount || 0)
+                                        }">
+                                            <div class="text-xs text-center font-medium">
+                                                <span v-if="Math.abs(((deliveryNote.cash_amount || 0) + (deliveryNote.transfer_amount || 0)) - (deliveryNote.total_amount || 0)) < 0.01">
+                                                    ✓ ชำระครบถ้วน
+                                                </span>
+                                                <span v-else-if="((deliveryNote.cash_amount || 0) + (deliveryNote.transfer_amount || 0)) > (deliveryNote.total_amount || 0)">
+                                                    เกินจ่าย {{ (((deliveryNote.cash_amount || 0) + (deliveryNote.transfer_amount || 0)) - (deliveryNote.total_amount || 0)).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท
+                                                </span>
+                                                <span v-else>
+                                                    ขาด {{ ((deliveryNote.total_amount || 0) - ((deliveryNote.cash_amount || 0) + (deliveryNote.transfer_amount || 0))).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

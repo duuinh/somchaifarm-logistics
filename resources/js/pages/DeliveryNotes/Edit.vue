@@ -20,6 +20,7 @@ import { useDeliveryNote } from '@/composables/useDeliveryNote';
 import ItemsTable from '@/components/DeliveryNotes/ItemsTable.vue';
 import AddItemForm from '@/components/DeliveryNotes/AddItemForm.vue';
 import ServiceFeesTable from '@/components/DeliveryNotes/ServiceFeesTable.vue';
+import PaymentAmountsSection from '@/components/DeliveryNotes/PaymentAmountsSection.vue';
 import SummarySection from '@/components/DeliveryNotes/SummarySection.vue';
 import { Combobox } from '@/components/ui/combobox';
 
@@ -335,6 +336,15 @@ const transportFee = computed(() => {
                             :transport-fee="transportFee"
                             :total-amount="totalAmount"
                             :baht-text="formatBahtText(totalAmount)"
+                        />
+
+                        <!-- Payment Amounts Section -->
+                        <PaymentAmountsSection
+                            :cash-amount="form.cash_amount"
+                            :transfer-amount="form.transfer_amount"
+                            :total-amount="totalAmount"
+                            @update:cash-amount="form.cash_amount = $event"
+                            @update:transfer-amount="form.transfer_amount = $event"
                         />
                     </CardContent>
                 </Card>
