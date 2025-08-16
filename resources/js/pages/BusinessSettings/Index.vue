@@ -54,6 +54,7 @@ const getLabel = (key: string) => {
         'company_phone': 'เบอร์โทรศัพท์บริษัท',
         'company_fax': 'แฟกซ์',
         'company_tax_id': 'เลขประจำตัวผู้เสียภาษีอากร',
+        'delivery_note_starting_number': 'เลขที่เริ่มต้นของใบส่งของ',
     };
     return labels[key] || key;
 };
@@ -182,8 +183,16 @@ const getLabel = (key: string) => {
                                             {{ getLabel(setting.key) }}
                                         </Label>
 
+                                        <div v-if="setting.key === 'delivery_note_starting_number'" class="space-y-1">
+                                            <div class="flex h-9 w-full rounded-md border border-input bg-gray-50 px-3 py-1 text-sm text-gray-600 items-center">
+                                                {{ form.settings[index].value }}
+                                            </div>
+                                            <p class="text-xs text-gray-500">
+                                                เลขที่เริ่มต้นไม่สามารถแก้ไขได้หลังจากตั้งค่าแล้ว
+                                            </p>
+                                        </div>
                                         <Input
-                                            v-if="setting.type === 'number'"
+                                            v-else-if="setting.type === 'number'"
                                             :id="setting.key"
                                             v-model.number="form.settings[index].value"
                                             type="number"

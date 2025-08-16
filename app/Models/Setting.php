@@ -36,7 +36,7 @@ class Setting extends Model
         });
     }
 
-    public static function set(string $key, mixed $value, string $type = 'string', string $description = null): void
+    public static function set(string $key, mixed $value, string $type = 'string', ?string $description = null): void
     {
         $stringValue = match ($type) {
             'number' => (string) $value,
