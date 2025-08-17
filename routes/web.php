@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\DailyRouteHistoryController;
 use App\Http\Controllers\DeliveryNoteController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\ItemController;
@@ -64,6 +65,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('business-settings', [SettingController::class, 'index'])->name('business-settings.index');
     Route::put('business-settings', [SettingController::class, 'update'])->name('business-settings.update');
     Route::get('api/settings/{key}', [SettingController::class, 'getValue'])->name('settings.get');
+    
+    // Daily Route History
+    Route::get('daily-route-history', [DailyRouteHistoryController::class, 'index'])->name('daily-route-history.index');
 });
 
 require __DIR__.'/settings.php';
