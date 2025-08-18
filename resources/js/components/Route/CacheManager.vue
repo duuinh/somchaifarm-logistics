@@ -8,6 +8,7 @@
                     variant="ghost"
                     size="sm"
                     class="text-blue-600 hover:text-blue-700 h-5 p-1 text-xs"
+                    title="รีเฟรชข้อมูลแคช"
                 >
                     <RefreshCw class="h-2 w-2" />
                 </Button>
@@ -16,6 +17,7 @@
                     variant="ghost"
                     size="sm"
                     class="text-red-600 hover:text-red-700 h-5 p-1 text-xs"
+                    title="ล้างข้อมูลแคชทั้งหมด"
                 >
                     <Database class="h-2 w-2 mr-1" />
                     ล้าง
@@ -25,22 +27,19 @@
         
         <!-- IndexedDB Stats -->
         <div v-if="cacheInitialized" class="text-xs space-y-1">
-            <div class="text-green-600 font-medium">
-                📦 IndexedDB: {{ cacheStats.indexedDB.count }} รายการ, {{ cacheStats.indexedDB.estimatedSize }}KB
-            </div>
-            <div v-if="cacheStats.indexedDB.oldestEntry" class="text-gray-400">
-                เก่าสุด: {{ new Date(cacheStats.indexedDB.oldestEntry).toLocaleDateString('th-TH') }}
+            <div class="text-green-600 font-medium" title="ข้อมูลเส้นทางที่เก็บไว้ในเครื่องเพื่อความเร็ว">
+                📦 แคชในเครื่อง: {{ cacheStats.indexedDB.count }} รายการ, {{ formatFileSize(cacheStats.indexedDB.estimatedSize) }}
             </div>
         </div>
         
         <!-- Cache Error Warning -->
-        <div v-if="cacheError" class="text-xs text-red-600 bg-red-50 p-1 rounded">
+        <div v-if="cacheError" class="text-xs text-red-600 bg-red-50 p-1 rounded" title="ข้อผิดพลาดในการใช้งานแคช">
             ⚠️ {{ cacheError }}
         </div>
         
         <!-- Cache Status -->
-        <div v-if="!cacheInitialized" class="text-xs text-orange-600 bg-orange-50 p-1 rounded">
-            ⚠️ กำลังเริ่มต้นแคช IndexedDB...
+        <div v-if="!cacheInitialized" class="text-xs text-orange-600 bg-orange-50 p-1 rounded" title="กำลังเตรียมระบบแคชในเครื่อง">
+            ⏳ กำลังเริ่มต้นแคช...
         </div>
     </div>
 </template>
@@ -59,7 +58,7 @@ interface Props {
         };
     };
     cacheInitialized: boolean;
-    cacheError: string;
+    cacheError: string | null;
 }
 
 defineProps<Props>();
@@ -68,4 +67,25 @@ defineEmits<{
     'update-stats': [];
     'clear-cache': [];
 }>();
+
+// Format file size in human readable format
+const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
+
+// Format date in Thai Buddhist calendar
+const formatThaiDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('th-TH', {
+        day: 'numeric',
+        month: 'numeric', 
+        year: 'numeric'
+    });
+};
 </script>

@@ -100,7 +100,7 @@ interface Props {
     isLoading: boolean;
     cacheStats: any;
     cacheInitialized: boolean;
-    cacheError: string;
+    cacheError: string | null;
     routeDataCollection: Record<number, any>;
     routeHistory: any[];
     routeVisibility: Record<number, boolean>;

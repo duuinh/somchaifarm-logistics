@@ -96,7 +96,8 @@
         <!-- Action Buttons and Cache Status -->
         <div class="pt-2 space-y-2">
             <!-- Cache status indicator -->
-            <div v-if="hasCachedData" class="text-xs text-green-600 bg-green-50 p-1.5 rounded border">
+            <div v-if="hasCachedData" class="text-xs text-green-600 bg-green-50 p-1.5 rounded border" 
+                 :title="`มีข้อมูลแคชสำหรับ ${cachedVehicleCount} คันจากทั้งหมด ${selectedDeviceIds.length} คันที่เลือก`">
                 📦 แคช {{ cachedVehicleCount }}/{{ selectedDeviceIds.length }}
             </div>
             
@@ -151,7 +152,7 @@ interface Props {
     isLoading: boolean;
     cacheStats: any;
     cacheInitialized: boolean;
-    cacheError: string;
+    cacheError: string | null;
 }
 
 const props = defineProps<Props>();

@@ -59,7 +59,7 @@ class IndexedDBCache {
         });
     }
 
-    async get(deviceId: number, date: string, maxAge: number = 90 * 24 * 60 * 60 * 1000): Promise<any> {
+    async get(deviceId: number, date: string): Promise<any> {
         if (!this.db) throw new Error('Database not initialized');
 
         return new Promise((resolve, reject) => {
@@ -72,6 +72,17 @@ class IndexedDBCache {
                 
                 if (result) {
                     const age = Date.now() - result.timestamp;
+                    
+                    // Check if this is today's date
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                    
+                    // Different expiration for today vs older dates
+                    const maxAge = date === todayStr 
+                        ? 24 * 60 * 60 * 1000  // 24 hours for today's data
+                        : 30 * 24 * 60 * 60 * 1000;  // 30 days for older data
+                    
                     if (age < maxAge) {
                         resolve(result.data);
                     } else {
@@ -150,27 +161,37 @@ class IndexedDBCache {
         });
     }
 
-    async clearExpired(maxAge: number = 90 * 24 * 60 * 60 * 1000): Promise<number> {
+    async clearExpired(): Promise<number> {
         if (!this.db) throw new Error('Database not initialized');
 
         return new Promise((resolve, reject) => {
             const transaction = this.db!.transaction([this.storeName], 'readwrite');
             const store = transaction.objectStore(this.storeName);
-            const index = store.index('timestamp');
-            const cutoffTime = Date.now() - maxAge;
+            const request = store.getAll();
             
-            const request = index.openCursor(IDBKeyRange.upperBound(cutoffTime));
-            let deletedCount = 0;
-
-            request.onsuccess = (event) => {
-                const cursor = (event.target as IDBRequest).result;
-                if (cursor) {
-                    cursor.delete();
-                    deletedCount++;
-                    cursor.continue();
-                } else {
-                    resolve(deletedCount);
+            request.onsuccess = async () => {
+                const entries = request.result as CacheEntry[];
+                let deletedCount = 0;
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                
+                for (const entry of entries) {
+                    const age = Date.now() - entry.timestamp;
+                    
+                    // Different expiration for today vs older dates
+                    const maxAge = entry.date === todayStr 
+                        ? 24 * 60 * 60 * 1000  // 24 hours for today's data
+                        : 30 * 24 * 60 * 60 * 1000;  // 30 days for older data
+                    
+                    if (age > maxAge) {
+                        await this.delete(entry.deviceId, entry.date);
+                        deletedCount++;
+                    }
                 }
+                
+                resolve(deletedCount);
             };
             request.onerror = () => reject(request.error);
         });
