@@ -41,6 +41,7 @@ const selectedDate = ref('');
 
 // API State
 const routeDataCollection = ref<Record<number, any>>({});
+const isLoadingRouteData = ref(false);
 
 // Initialize Route API
 const {
@@ -212,8 +213,8 @@ watch(activeTab, (newTab) => {
             if (routeViewTabRef.value?.routeMapRef?.plotRouteOnMap && Object.keys(routeDataCollection.value).length > 0) {
                 // Force a complete replot when switching back to route view
                 routeViewTabRef.value.routeMapRef.plotRouteOnMap();
-            } else if (Object.keys(routeDataCollection.value).length === 0 && selectedDeviceIds.value.length > 0 && selectedDate.value) {
-                // If no route data but we have selections, try to load data
+            } else if (Object.keys(routeDataCollection.value).length === 0 && selectedDeviceIds.value.length > 0 && selectedDate.value && !isLoadingRouteData.value) {
+                // If no route data but we have selections and not already loading, try to load data
                 console.log('No route data available, attempting to load...');
                 loadRouteData().catch(error => {
                     console.error('Failed to load route data on tab switch:', error);
@@ -281,9 +282,19 @@ const selectQuickDate = (type: string) => {
 
 // Wrapper for fetching route data
 const loadRouteData = async (forceFresh = false) => {
-    const data = await fetchRouteData(selectedDeviceIds.value, selectedDate.value, forceFresh);
-    // Force update the collection to ensure UI refreshes
-    routeDataCollection.value = { ...data };
+    if (isLoadingRouteData.value) {
+        console.log('Route data loading already in progress, skipping...');
+        return;
+    }
+    
+    isLoadingRouteData.value = true;
+    try {
+        const data = await fetchRouteData(selectedDeviceIds.value, selectedDate.value, forceFresh);
+        // Force update the collection to ensure UI refreshes
+        routeDataCollection.value = { ...data };
+    } finally {
+        isLoadingRouteData.value = false;
+    }
 };
 
 const loadFreshRouteData = async () => {

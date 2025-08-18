@@ -634,39 +634,30 @@ watch([showOffice, showPickupPoints, showDeliveryPoints, showStopPins], () => {
     updateMarkersBasedOnCheckboxes();
 });
 
-// Watch for route analysis radius changes to update route history
-watch(() => props.routeAnalysisRadius, () => {
-    // Route history is computed, so it will automatically update when the radius changes
-    // But we need to update the invisible markers for popups
-    if (Object.keys(props.routeDataCollection).length > 0) {
-        nextTick(() => {
+// Debounced plot function to prevent multiple rapid redraws
+let plotTimeout: NodeJS.Timeout | null = null;
+const debouncedPlotRoute = () => {
+    if (plotTimeout) clearTimeout(plotTimeout);
+    plotTimeout = setTimeout(() => {
+        if (Object.keys(props.routeDataCollection).length > 0) {
             plotRouteOnMap();
-        });
-    }
-});
+        }
+    }, 100);
+};
+
+// Consolidated watcher for all route-affecting changes
+watch([
+    () => props.routeDataCollection,
+    () => props.selectedDeviceIds, 
+    () => props.routeAnalysisRadius
+], () => {
+    debouncedPlotRoute();
+}, { immediate: true, deep: true });
 
 // Watch for office hour changes to update utilization calculation
 watch([() => props.officeHourStart, () => props.officeHourEnd], () => {
     // Utilization stats will automatically recalculate due to computed property
 });
-
-// Watch for route data collection changes
-watch(() => props.routeDataCollection, () => {
-    if (Object.keys(props.routeDataCollection).length > 0) {
-        nextTick(() => {
-            plotRouteOnMap();
-        });
-    }
-}, { immediate: true, deep: true });
-
-// Watch for selected device changes
-watch(() => props.selectedDeviceIds, () => {
-    if (Object.keys(props.routeDataCollection).length > 0) {
-        nextTick(() => {
-            plotRouteOnMap();
-        });
-    }
-}, { immediate: true });
 
 // Expose methods for parent component
 defineExpose({
