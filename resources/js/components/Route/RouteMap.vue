@@ -562,7 +562,7 @@ const plotRouteOnMap = async () => {
                 <div style="font-size: 12px;">
                     <strong>${stop.location}</strong><br>
                     รถ: ${stop.vehicleName}<br>
-                    ระยะเวลาหยุด: ${durationFormatted}<br>
+                    ระยะเวลา: ${durationFormatted}<br>
                     เริ่ม: ${stop.startTime}<br>
                     สิ้นสุด: ${stop.endTime}
                 </div>

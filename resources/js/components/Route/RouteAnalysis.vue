@@ -161,7 +161,7 @@
                 </div>
                 <div class="flex items-center gap-1">
                     <Clock class="w-3 h-3 text-gray-600" />
-                    <span>ระยะเวลาหยุด</span>
+                    <span>ระยะเวลา</span>
                 </div>
                 <div class="flex items-center gap-1">
                     <Car class="w-3 h-3 text-blue-600" />
