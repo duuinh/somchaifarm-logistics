@@ -139,19 +139,19 @@
                         class="rounded border-gray-300 text-primary focus:ring-primary text-xs"
                     />
                     <div class="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div>
-                    <span>แวะ (00:05-00:14)</span>
+                    <span>สั้นๆ (00:05-00:14)</span>
                 </label>
                 <div class="flex items-center gap-1">
                     <div class="w-3 h-3 bg-orange-100 border border-orange-300 rounded"></div>
-                    <span>จอดไม่นาน (00:15-00:59)</span>
+                    <span>ไม่นาน (00:15-00:59)</span>
                 </div>
                 <div class="flex items-center gap-1">
                     <div class="w-3 h-3 bg-red-100 border border-red-400 rounded"></div>
-                    <span>จอดนาน (01:00-01:59)</span>
+                    <span>นาน (01:00-01:59)</span>
                 </div>
                 <div class="flex items-center gap-1">
                     <div class="w-3 h-3 bg-purple-100 border-2 border-purple-500 rounded"></div>
-                    <span class="font-medium text-purple-700">จอดนานมาก (02:00+)</span>
+                    <span class="font-medium text-purple-700">นานมาก (02:00+)</span>
                 </div>
                 <div class="flex items-center gap-1">
                     <span class="text-xs bg-yellow-100 text-yellow-800 px-1 rounded flex items-center">
@@ -362,11 +362,9 @@ const utilizationStats = computed(() => {
         return { utilization: 0, movingTime: 0, totalTime: 0 };
     }
     
-    const firstOfficePoint = officeHourData[0];
-    const lastOfficePoint = officeHourData[officeHourData.length - 1];
-    
-    // Total office time from first to last GPS point during office hours
-    const totalOfficeTime = (new Date(lastOfficePoint.event_stamp).getTime() - new Date(firstOfficePoint.event_stamp).getTime()) / (1000 * 60);
+    // Use theoretical office hours instead of GPS timestamps
+    const theoreticalOfficeHours = props.officeHourEnd - props.officeHourStart; // hours
+    const totalOfficeTime = theoreticalOfficeHours * 60; // convert to minutes
     
     // Deduct lunch break time (assume 1 hour lunch break from 12:00-13:00)
     const lunchBreakMinutes = 60;

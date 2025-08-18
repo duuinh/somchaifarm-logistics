@@ -83,6 +83,7 @@ interface Props {
     officeHourStart: number;
     officeHourEnd: number;
     routeHistory?: any[]; // Pre-calculated route history
+    routeVisibility?: Record<number, boolean>; // Route visibility controls
 }
 
 const props = defineProps<Props>();
@@ -124,41 +125,26 @@ let pickupMarkers: any[] = [];
 let deliveryMarkers: any[] = [];
 let stopMarkers: any[] = [];
 
-// Individual route visibility controls
-const routeVisibility = ref<Record<number, boolean>>({});
+// Use route visibility from parent component
+const routeVisibility = computed(() => props.routeVisibility || {});
 
-// Initialize route visibility for all selected devices
-const initializeRouteVisibility = () => {
-    props.selectedDeviceIds.forEach(deviceId => {
-        if (!(deviceId in routeVisibility.value)) {
-            routeVisibility.value[deviceId] = true; // Default to visible
-        }
-    });
+// Watch for route visibility changes and update map
+watch(() => props.routeVisibility, (newVisibility) => {
+    if (!newVisibility || !map.value) return;
     
-    // Remove visibility for unselected devices
-    Object.keys(routeVisibility.value).forEach(deviceIdStr => {
+    Object.entries(newVisibility).forEach(([deviceIdStr, isVisible]) => {
         const deviceId = parseInt(deviceIdStr);
-        if (!props.selectedDeviceIds.includes(deviceId)) {
-            delete routeVisibility.value[deviceId];
+        const polyline = routePolylines[deviceId];
+        
+        if (polyline) {
+            if (isVisible && !map.value.hasLayer(polyline)) {
+                polyline.addTo(map.value);
+            } else if (!isVisible && map.value.hasLayer(polyline)) {
+                map.value.removeLayer(polyline);
+            }
         }
     });
-};
-
-// Toggle route visibility
-const toggleRouteVisibility = (deviceId: number) => {
-    routeVisibility.value[deviceId] = !routeVisibility.value[deviceId];
-    
-    const polyline = routePolylines[deviceId];
-    if (polyline && map.value) {
-        if (routeVisibility.value[deviceId]) {
-            // Show route
-            polyline.addTo(map.value);
-        } else {
-            // Hide route
-            map.value.removeLayer(polyline);
-        }
-    }
-};
+}, { deep: true });
 
 
 // Helper functions now use filtered data from props
@@ -511,9 +497,6 @@ const plotRouteOnMap = async () => {
     }
     
     const allRouteCoordinates: number[][] = [];
-    
-    // Initialize route visibility
-    initializeRouteVisibility();
     
     // Plot routes for each vehicle with different colors
     props.selectedDeviceIds.forEach((deviceId, index) => {
