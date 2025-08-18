@@ -4,7 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CalendarDays } from 'lucide-vue-next';
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import RouteViewTab from '@/components/Route/RouteViewTab.vue';
 import AnalyticsTab from '@/components/Route/AnalyticsTab.vue';
 import { useRouteAPI } from '@/composables/route/useRouteAPI';
@@ -127,7 +127,7 @@ const clearAllRouteCache = async () => {
 // Initialize cache and cleanup on mount
 onMounted(async () => {
     await initCache();
-    await clearOldCache();
+    // await clearOldCache(); // Disabled: Keep all cached data
     await updateCacheStats();
 });
 
@@ -155,10 +155,26 @@ watch(selectedDeviceIds, (newDeviceIds) => {
 });
 
 // Wrapper function for fetching utilization data
-const loadUtilizationData = async () => {
+const loadUtilizationData = async (days: number = 7, startDate?: string, endDate?: string) => {
     loadingUtilization.value = true;
     try {
-        const data = await fetchUtilizationData(selectedDeviceIds.value, officeHourStart.value, officeHourEnd.value);
+        const data = await fetchUtilizationData(selectedDeviceIds.value, officeHourStart.value, officeHourEnd.value, days, startDate, endDate);
+        utilizationData.value = data;
+    } finally {
+        loadingUtilization.value = false;
+    }
+};
+
+// Handle custom date range selection
+const loadUtilizationDataByDateRange = async (startDate: string, endDate: string) => {
+    await loadUtilizationData(7, startDate, endDate); // days param ignored when date range provided
+};
+
+// Load utilization data for analytics (uses all vehicles by default)
+const loadUtilizationDataForAnalytics = async (vehicleIds: number[], days: number = 7, startDate?: string, endDate?: string) => {
+    loadingUtilization.value = true;
+    try {
+        const data = await fetchUtilizationData(vehicleIds, officeHourStart.value, officeHourEnd.value, days, startDate, endDate);
         utilizationData.value = data;
     } finally {
         loadingUtilization.value = false;
@@ -167,8 +183,43 @@ const loadUtilizationData = async () => {
 
 // Watch for tab change to analytics
 watch(activeTab, (newTab) => {
-    if (newTab === 'analytics' && Object.keys(utilizationData.value).length === 0 && selectedDeviceIds.value.length > 0) {
-        loadUtilizationData();
+    if (newTab === 'analytics' && Object.keys(utilizationData.value).length === 0) {
+        // Load analytics for all vehicles by default
+        const allVehicleIds = devices.map(d => d.id);
+        loadUtilizationDataForAnalytics(allVehicleIds);
+    }
+    
+    // When switching to route-view, refresh the map
+    if (newTab === 'route-view') {
+        // Initialize visibility for new devices only (don't override existing preferences)
+        selectedDeviceIds.value.forEach(deviceId => {
+            if (!(deviceId in routeVisibility.value)) {
+                routeVisibility.value[deviceId] = true;
+            }
+        });
+        
+        // Use a longer delay to ensure the tab content is fully rendered
+        setTimeout(() => {
+            console.log('Switching to route-view tab, checking map data:', {
+                hasRouteViewTab: !!routeViewTabRef.value,
+                hasRouteMap: !!routeViewTabRef.value?.routeMapRef,
+                hasPlotFunction: !!routeViewTabRef.value?.routeMapRef?.plotRouteOnMap,
+                routeDataKeys: Object.keys(routeDataCollection.value),
+                selectedDevices: selectedDeviceIds.value,
+                routeVisibility: { ...routeVisibility.value }
+            });
+            
+            if (routeViewTabRef.value?.routeMapRef?.plotRouteOnMap && Object.keys(routeDataCollection.value).length > 0) {
+                // Force a complete replot when switching back to route view
+                routeViewTabRef.value.routeMapRef.plotRouteOnMap();
+            } else if (Object.keys(routeDataCollection.value).length === 0 && selectedDeviceIds.value.length > 0 && selectedDate.value) {
+                // If no route data but we have selections, try to load data
+                console.log('No route data available, attempting to load...');
+                loadRouteData().catch(error => {
+                    console.error('Failed to load route data on tab switch:', error);
+                });
+            }
+        }, 300);
     }
 });
 
@@ -323,11 +374,13 @@ const loadFreshRouteData = async () => {
                     <!-- Analytics Tab -->
                     <AnalyticsTab
                         v-else-if="activeTab === 'analytics'"
-                        :selected-device-ids="selectedDeviceIds"
+                        :selected-device-ids="devices.map(d => d.id)"
                         :devices="devices"
                         :vehicle-colors="vehicleColors"
                         :loading-utilization="loadingUtilization"
                         :utilization-data="utilizationData"
+                        @period-change="(days) => loadUtilizationDataForAnalytics(devices.map(d => d.id), days)"
+                        @date-range-change="(start, end) => loadUtilizationDataForAnalytics(devices.map(d => d.id), 7, start, end)"
                     />
                 </CardContent>
             </Card>

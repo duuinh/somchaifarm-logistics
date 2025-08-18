@@ -212,11 +212,12 @@ export function useRouteAPI() {
         const movingTimeRatio = officeHourData.length > 0 ? movingPoints / officeHourData.length : 0;
         const movingTime = totalOfficeTime * movingTimeRatio;
         
-        return effectiveWorkTime > 0 ? Math.round((movingTime / effectiveWorkTime) * 100) : 0;
+        const utilization = effectiveWorkTime > 0 ? Math.round((movingTime / effectiveWorkTime) * 100) : 0;
+        return Math.min(utilization, 100); // Cap at 100%
     };
 
-    // Fetch utilization data for past 7 days
-    const fetchUtilizationData = async (selectedDeviceIds: number[], officeHourStart: number, officeHourEnd: number) => {
+    // Fetch utilization data for past N days or date range
+    const fetchUtilizationData = async (selectedDeviceIds: number[], officeHourStart: number, officeHourEnd: number, days: number = 7, startDate?: string, endDate?: string) => {
         if (selectedDeviceIds.length === 0) {
             return {};
         }
@@ -224,12 +225,23 @@ export function useRouteAPI() {
         const results: Record<string, any> = {};
         
         try {
-            // Get dates for past 7 days
+            // Get dates - either from date range or past N days
             const dates = [];
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                dates.push(date.toISOString().split('T')[0]);
+            if (startDate && endDate) {
+                // Use custom date range
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    dates.push(d.toISOString().split('T')[0]);
+                }
+            } else {
+                // Use past N days
+                for (let i = days - 1; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    dates.push(date.toISOString().split('T')[0]);
+                }
             }
             
             // Fetch data for each date and vehicle
