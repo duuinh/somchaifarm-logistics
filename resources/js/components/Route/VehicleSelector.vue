@@ -26,7 +26,6 @@
                             type="checkbox"
                             :id="`group-${group.type}`"
                             :checked="isGroupSelected(group.type)"
-                            :indeterminate="isGroupIndeterminate(group.type)"
                             @change="toggleGroup(group.type)"
                             class="rounded border-gray-300 text-primary focus:ring-primary"
                         />
@@ -50,7 +49,7 @@
                                 :style="{ backgroundColor: getVehicleColor(vehicle.id) }"
                             ></div>
                             <label :for="`vehicle-${vehicle.id}`" class="text-xs text-gray-600 cursor-pointer truncate flex-1" :title="vehicle.name">
-                                {{ vehicle.name.replace(/^🚛\s*|^🚚\s*/, '') }}
+                                {{ vehicle.name.replace(/^🚛\s*|^🚚\s*/, '').replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim() }}
                             </label>
                         </div>
                     </div>
@@ -64,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, nextTick, onMounted, watch } from 'vue';
 import { Label } from '@/components/ui/label';
 
 interface Vehicle {
@@ -114,7 +113,10 @@ const devicesByType = computed(() => {
 // Get vehicle color
 const getVehicleColor = (deviceId: number) => {
     const index = props.modelValue.indexOf(deviceId);
-    return index >= 0 ? props.vehicleColors[index % props.vehicleColors.length] : '#0000FF';
+    if (index >= 0 && props.vehicleColors.length > 0) {
+        return props.vehicleColors[index % props.vehicleColors.length];
+    }
+    return '#0000FF'; // Default blue color
 };
 
 // Check if group is selected
@@ -181,4 +183,22 @@ const selectAll = () => {
 const clearSelection = () => {
     emit('update:modelValue', []);
 };
+
+// Update indeterminate states for group checkboxes
+const updateIndeterminateStates = () => {
+    nextTick(() => {
+        devicesByType.value.forEach(group => {
+            const checkbox = document.getElementById(`group-${group.type}`) as HTMLInputElement;
+            if (checkbox) {
+                checkbox.indeterminate = isGroupIndeterminate(group.type);
+            }
+        });
+    });
+};
+
+// Watch for selection changes to update indeterminate states
+watch(() => props.modelValue, updateIndeterminateStates, { immediate: true });
+
+// Update indeterminate states on mount
+onMounted(updateIndeterminateStates);
 </script>

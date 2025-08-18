@@ -488,7 +488,13 @@ const plotRouteOnMap = async () => {
     console.log('plotRouteOnMap called:', {
         hasMap: !!map.value,
         vehicleCount: props.selectedDeviceIds.length,
-        routeDataCollectionKeys: Object.keys(props.routeDataCollection)
+        routeDataCollectionKeys: Object.keys(props.routeDataCollection),
+        selectedDeviceIds: props.selectedDeviceIds,
+        routeDataSample: Object.keys(props.routeDataCollection).map(key => ({
+            deviceId: key,
+            hasData: !!props.routeDataCollection[key],
+            dataLength: props.routeDataCollection[key]?.list?.length || 0
+        }))
     });
     
     if (Object.keys(props.routeDataCollection).length === 0) {
@@ -662,8 +668,9 @@ watch(() => props.selectedDeviceIds, () => {
     }
 }, { immediate: true });
 
-// Expose showStopPopup method for parent component
+// Expose methods for parent component
 defineExpose({
-    showStopPopup
+    showStopPopup,
+    plotRouteOnMap
 });
 </script>

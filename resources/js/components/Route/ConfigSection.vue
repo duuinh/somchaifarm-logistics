@@ -139,18 +139,35 @@ import DateSelector from './DateSelector.vue';
 import CacheManager from './CacheManager.vue';
 import { useRouteAPI } from '@/composables/route/useRouteAPI';
 
+interface Vehicle {
+    id: number;
+    name: string;
+    type: string;
+    category: string;
+    shortname?: string;
+}
+
+interface CacheStats {
+    indexedDB: {
+        count: number;
+        estimatedSize: number;
+        oldestEntry: string | null;
+        newestEntry: string | null;
+    };
+}
+
 interface Props {
     selectedDeviceIds: number[];
     selectedDate: string;
     routeAnalysisRadius: number;
     officeHourStart: number;
     officeHourEnd: number;
-    devices: Array<any>;
+    devices: Vehicle[];
     vehicleColors: string[];
     hasCachedData: boolean;
     cachedVehicleCount: number;
     isLoading: boolean;
-    cacheStats: any;
+    cacheStats: CacheStats;
     cacheInitialized: boolean;
     cacheError: string | null;
 }
