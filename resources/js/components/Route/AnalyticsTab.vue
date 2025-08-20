@@ -79,14 +79,6 @@
                     :devices="devices"
                 />
             </div>
-            
-            <!-- Future Analytics Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
-                <div class="p-4 border rounded-lg bg-gray-50">
-                    <h4 class="font-medium text-sm mb-2">ต้นทุนและทรัพยากร</h4>
-                    <p class="text-xs text-gray-600">วิเคราะห์ประสิทธิภาพน้ำมัน</p>
-                </div>
-            </div>
         </div>
     </div>
 </template>
