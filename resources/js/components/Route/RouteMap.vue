@@ -570,7 +570,8 @@ const plotRouteOnMap = async () => {
                     รถ: ${stop.vehicleName}<br>
                     ระยะเวลา: ${durationFormatted}<br>
                     เริ่ม: ${stop.startTime}<br>
-                    สิ้นสุด: ${stop.endTime}
+                    สิ้นสุด: ${stop.endTime}<br>
+                    พิกัด: ${stop.latitude.toFixed(6)}, ${stop.longitude.toFixed(6)}
                 </div>
             `);
             
@@ -659,9 +660,10 @@ watch([() => props.officeHourStart, () => props.officeHourEnd], () => {
     // Utilization stats will automatically recalculate due to computed property
 });
 
-// Expose methods for parent component
+// Expose methods and map instance for parent component
 defineExpose({
     showStopPopup,
-    plotRouteOnMap
+    plotRouteOnMap,
+    map
 });
 </script>

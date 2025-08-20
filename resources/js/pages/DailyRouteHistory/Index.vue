@@ -7,6 +7,8 @@ import { CalendarDays } from 'lucide-vue-next';
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import RouteViewTab from '@/components/Route/RouteViewTab.vue';
 import AnalyticsTab from '@/components/Route/AnalyticsTab.vue';
+import StopEfficiencyTab from '@/components/Route/StopEfficiencyTab.vue';
+import RealtimeMonitoringTab from '@/components/Route/RealtimeMonitoringTab.vue';
 import { useRouteAPI } from '@/composables/route/useRouteAPI';
 import { useVehicleConfig } from '@/composables/route/useVehicleConfig';
 import { useCalendar } from '@/composables/route/useCalendar';
@@ -28,12 +30,14 @@ const {
     devices,
     vehicleColors,
     devicesByType,
-    routeAnalysisRadius,
     officeHourStart,
     officeHourEnd,
     getVehicleColor,
     getDefaultDate
 } = useVehicleConfig();
+
+// Make routeAnalysisRadius reactive
+const routeAnalysisRadius = ref(200);
 
 // Form data
 const selectedDeviceIds = ref<number[]>([]);
@@ -60,11 +64,15 @@ const {
     cacheError
 } = useRouteAPI();
 // Tab management
-const activeTab = ref('route-view');
+const activeTab = ref('realtime');
 
 // Analytics data
 const utilizationData = ref<Record<string, any>>({});
 const loadingUtilization = ref(false);
+
+// Stop efficiency time range state
+const stopEfficiencyDateRange = ref<{startDate: string, endDate: string} | null>(null);
+const stopEfficiencyRouteData = ref<Record<number, any>>({});
 
 // Route visibility controls
 const routeVisibility = ref<Record<number, boolean>>({});
@@ -222,6 +230,11 @@ watch(activeTab, (newTab) => {
             }
         }, 300);
     }
+    
+    // When switching to stop-efficiency, auto-select all vehicles if none selected
+    if (newTab === 'stop-efficiency' && selectedDeviceIds.value.length === 0) {
+        selectedDeviceIds.value = devices.map(d => d.id);
+    }
 });
 
 // Auto-load cached route data when devices or date change
@@ -254,6 +267,24 @@ const { stopPoints, allRouteHistory, getVehicleRouteHistory } = useRouteHistory(
     devices,
     routeAnalysisRadius
 );
+
+// Route history for stop efficiency (supports time ranges)
+const stopEfficiencyRouteHistory = computed(() => {
+    if (!stopEfficiencyDateRange.value) {
+        // Default to current route history if no date range selected
+        return allRouteHistory.value;
+    }
+    
+    // Use the useRouteHistory composable with stop efficiency data
+    const { allRouteHistory: rangeRouteHistory } = useRouteHistory(
+        selectedDeviceIds,
+        ref(stopEfficiencyRouteData.value),
+        devices,
+        routeAnalysisRadius
+    );
+    
+    return rangeRouteHistory.value;
+});
 // Route view tab reference
 const routeViewTabRef = ref(null);
 
@@ -305,6 +336,195 @@ const loadFreshRouteData = async () => {
     });
     await loadRouteData(true);
 };
+
+// Load route data for multiple dates (for stop efficiency analysis)
+const loadRouteDataForDateRange = async (startDate: string, endDate: string) => {
+    if (selectedDeviceIds.value.length === 0) return;
+    
+    console.log(`Loading route data for date range: ${startDate} to ${endDate}`);
+    stopEfficiencyRouteData.value = {};
+    
+    // Generate array of dates in the range
+    const dates: string[] = [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        dates.push(d.toISOString().split('T')[0]);
+    }
+    
+    // Load data for each date
+    for (const date of dates) {
+        try {
+            const data = await fetchRouteData(selectedDeviceIds.value, date, false);
+            // Merge data for each vehicle across dates
+            Object.entries(data).forEach(([deviceId, routeData]) => {
+                if (!stopEfficiencyRouteData.value[deviceId]) {
+                    stopEfficiencyRouteData.value[deviceId] = { list: [] };
+                }
+                if (routeData?.list) {
+                    stopEfficiencyRouteData.value[deviceId].list.push(...routeData.list);
+                }
+            });
+        } catch (error) {
+            console.error(`Failed to load data for ${date}:`, error);
+        }
+    }
+    
+    console.log('Completed loading route data for date range');
+};
+
+// Handle stop efficiency time range changes
+const handleStopEfficiencyPeriodChange = async (days: number) => {
+    const endDate = new Date();
+    const startDate = new Date();
+    
+    if (days === 1) {
+        // Today only - use current selectedDate
+        stopEfficiencyDateRange.value = null; // Use default route history
+        return;
+    }
+    
+    startDate.setDate(startDate.getDate() - days + 1);
+    
+    const start = startDate.toISOString().split('T')[0];
+    const end = endDate.toISOString().split('T')[0];
+    
+    stopEfficiencyDateRange.value = { startDate: start, endDate: end };
+    await loadRouteDataForDateRange(start, end);
+};
+
+const handleStopEfficiencyDateRangeChange = async (startDate: string, endDate: string) => {
+    stopEfficiencyDateRange.value = { startDate, endDate };
+    await loadRouteDataForDateRange(startDate, endDate);
+};
+
+// Handle showing stop location on map
+const handleShowStopOnMap = async (stop: any) => {
+    console.log('Showing stop on map:', stop);
+    console.log('Stop data:', {
+        startTime: stop.startTime,
+        endTime: stop.endTime,
+        deviceId: stop.deviceId,
+        location: stop.location,
+        coordinates: { lat: stop.latitude, lng: stop.longitude }
+    });
+    
+    // Extract date from stop data - ALWAYS extract from the stop's timestamp
+    let stopDate = selectedDate.value; // Default fallback
+    
+    // Always try to extract date from the stop's startTime
+    if (stop.startTime) {
+        console.log('Raw startTime:', stop.startTime);
+        
+        if (stop.startTime.includes(' ')) {
+            const timeParts = stop.startTime.split(' ');
+            console.log('Time parts:', timeParts);
+            
+            if (timeParts.length > 1) {
+                // Parse "HH:MM DD/MM/YYYY" format
+                const dateStr = timeParts[1]; // "DD/MM/YYYY"
+                if (dateStr && dateStr.includes('/')) {
+                    const [day, month, year] = dateStr.split('/');
+                    console.log('Date components:', { day, month, year });
+                    
+                    if (day && month && year) {
+                        // Convert to YYYY-MM-DD format
+                        stopDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                        console.log('Extracted date from stop:', stopDate);
+                    }
+                }
+            }
+        } else {
+            console.log('No space in startTime, might be time only');
+        }
+    } else if (stop.date) {
+        // Fallback if there's a separate date field
+        stopDate = stop.date;
+        console.log('Using date field from stop:', stopDate);
+    }
+    
+    console.log('Stop date to use:', stopDate, 'Current selected date:', selectedDate.value);
+    
+    // Ensure the device is selected
+    if (!selectedDeviceIds.value.includes(stop.deviceId)) {
+        selectedDeviceIds.value = [...selectedDeviceIds.value, stop.deviceId];
+    } else {
+        // Device already selected, just ensure we have the right ones
+        selectedDeviceIds.value = [...selectedDeviceIds.value];
+    }
+    
+    // Clear multi-day data first
+    stopEfficiencyDateRange.value = null;
+    stopEfficiencyRouteData.value = {};
+    
+    // Update selected date to match the stop's date - this should trigger data loading
+    if (selectedDate.value !== stopDate) {
+        console.log('Changing date from', selectedDate.value, 'to', stopDate);
+        selectedDate.value = stopDate;
+        // Date change will trigger the watcher to load data
+    }
+    
+    // Switch to route-view tab
+    activeTab.value = 'route-view';
+    
+    // Wait for date change and data loading
+    await nextTick();
+    
+    // Give time for data to load via the watcher
+    setTimeout(async () => {
+        console.log('Checking route data after date change:', {
+            date: selectedDate.value,
+            hasData: !!routeDataCollection.value[stop.deviceId],
+            dataKeys: Object.keys(routeDataCollection.value)
+        });
+        
+        // Wait for route data to be processed and map to update
+        await nextTick();
+        
+        // Now focus on the location after data is loaded
+        setTimeout(async () => {
+            if (routeViewTabRef.value?.routeMapRef) {
+                const mapInstance = routeViewTabRef.value.routeMapRef.map;
+                if (mapInstance) {
+                    console.log('Focusing map on coordinates:', stop.latitude, stop.longitude);
+                    
+                    // Import Leaflet
+                    const L = await import('leaflet');
+                    
+                    // Pan to the stop location
+                    mapInstance.setView([stop.latitude, stop.longitude], 17);
+                    
+                    // Remove any previous highlight circle
+                    if (window.highlightCircle) {
+                        mapInstance.removeLayer(window.highlightCircle);
+                    }
+                    
+                    // Add a highlight circle around the stop location
+                    window.highlightCircle = L.circle([stop.latitude, stop.longitude], {
+                        color: '#FFD700',
+                        fillColor: '#FFD700',
+                        fillOpacity: 0.2,
+                        radius: 50, // 50 meter radius
+                        weight: 3
+                    })
+                    .bindPopup(`
+                        <div style="font-size: 12px;">
+                            <strong>จุดหยุดที่เลือก</strong><br>
+                            ${stop.location}<br>
+                            รถ: ${stop.vehicleName}<br>
+                            เวลา: ${stop.startTime}<br>
+                            ระยะเวลา: ${stop.duration} นาที<br>
+                            พิกัด: ${stop.latitude.toFixed(6)}, ${stop.longitude.toFixed(6)}
+                        </div>
+                    `)
+                    .addTo(mapInstance)
+                    .openPopup();
+                }
+            }
+        }, 500);
+    }, 500);
+};
 </script>
 
 <template>
@@ -318,8 +538,7 @@ const loadFreshRouteData = async () => {
                     <div class="flex items-center gap-2">
                         <CalendarDays class="h-4 w-4 text-primary" />
                         <div>
-                            <CardTitle class="text-lg">ประวัติการเดินรถรายวัน</CardTitle>
-                            <CardDescription class="text-xs">ดูเส้นทางการเดินรถ</CardDescription>
+                            <CardTitle class="text-lg">ติดตามรถ</CardTitle>
                         </div>
                     </div>
                 </CardHeader>
@@ -327,6 +546,17 @@ const loadFreshRouteData = async () => {
                 <!-- Tab Navigation -->
                 <div class="border-b border-gray-200">
                     <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                        <button
+                            @click="activeTab = 'realtime'"
+                            :class="[
+                                activeTab === 'realtime' 
+                                    ? 'border-blue-500 text-blue-600' 
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                                'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm'
+                            ]"
+                        >
+                            ติดตามแบบเรียลไทม์
+                        </button>
                         <button
                             @click="activeTab = 'route-view'"
                             :class="[
@@ -336,7 +566,7 @@ const loadFreshRouteData = async () => {
                                 'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm'
                             ]"
                         >
-                            แผนที่และเส้นทาง
+                            ประวัติการเดินรถรายวัน
                         </button>
                         <button
                             @click="activeTab = 'analytics'"
@@ -347,15 +577,33 @@ const loadFreshRouteData = async () => {
                                 'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm'
                             ]"
                         >
-                            วิเคราะห์ข้อมูล
+                            ภาพรวมการใช้รถ
+                        </button>
+                        <button
+                            @click="activeTab = 'stop-efficiency'"
+                            :class="[
+                                activeTab === 'stop-efficiency' 
+                                    ? 'border-blue-500 text-blue-600' 
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                                'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm'
+                            ]"
+                        >
+                            การวิเคราะห์จุดหยุด
                         </button>
                     </nav>
                 </div>
                 
                 <CardContent class="pt-0">
+                    <!-- Realtime Monitoring Tab -->
+                    <RealtimeMonitoringTab
+                        v-if="activeTab === 'realtime'"
+                        :devices="devices"
+                        :vehicle-colors="vehicleColors"
+                    />
+                    
                     <!-- Route View Tab -->
                     <RouteViewTab
-                        v-if="activeTab === 'route-view'"
+                        v-else-if="activeTab === 'route-view'"
                         ref="routeViewTabRef"
                         v-model:selected-device-ids="selectedDeviceIds"
                         v-model:selected-date="selectedDate"
@@ -392,6 +640,22 @@ const loadFreshRouteData = async () => {
                         :utilization-data="utilizationData"
                         @period-change="(days) => loadUtilizationDataForAnalytics(devices.map(d => d.id), days)"
                         @date-range-change="(start, end) => loadUtilizationDataForAnalytics(devices.map(d => d.id), 7, start, end)"
+                    />
+                    
+                    <!-- Stop Efficiency Tab -->
+                    <StopEfficiencyTab
+                        v-else-if="activeTab === 'stop-efficiency'"
+                        :selected-device-ids="selectedDeviceIds"
+                        :selected-date="selectedDate"
+                        :devices="devices"
+                        :vehicle-colors="vehicleColors"
+                        :route-history="stopEfficiencyRouteHistory"
+                        :route-analysis-radius="routeAnalysisRadius"
+                        :get-vehicle-color="getVehicleColor"
+                        @period-change="handleStopEfficiencyPeriodChange"
+                        @date-range-change="handleStopEfficiencyDateRangeChange"
+                        @radius-change="(radius) => routeAnalysisRadius = radius"
+                        @show-on-map="handleShowStopOnMap"
                     />
                 </CardContent>
             </Card>
