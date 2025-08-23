@@ -28,11 +28,6 @@ const mainNavItems: NavItem[] = [
         icon: FileText,
     },
     {
-        title: 'ประวัติการเดินรถรายวัน',
-        href: '/daily-route-history',
-        icon: CalendarDays,
-    },
-    {
         title: 'จัดการลูกค้า',
         href: '/clients',
         icon: Users,

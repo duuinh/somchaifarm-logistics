@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\ClientController;
-use App\Http\Controllers\DailyRouteHistoryController;
 use App\Http\Controllers\DeliveryNoteController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\ItemController;
@@ -73,8 +72,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('realtime/listByVehicleId/{vehicleId}', [App\Http\Controllers\Api\SiamGpsController::class, 'getRealtimeDataByVehicleId'])->name('api.siamgps.realtime.listByVehicleId');
     });
     
-    // Daily Route History
-    Route::get('daily-route-history', [DailyRouteHistoryController::class, 'index'])->name('daily-route-history.index');
 });
 
 require __DIR__.'/settings.php';

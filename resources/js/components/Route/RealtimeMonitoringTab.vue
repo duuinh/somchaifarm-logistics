@@ -1,49 +1,8 @@
 <template>
     <div class="space-y-6">
-        <!-- Header Section -->
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-lg font-semibold text-gray-900">ติดตามแบบเรียลไทม์</h2>
-                <p class="text-sm text-gray-600">ติดตามตำแหน่งและสถานะรถแบบเรียลไทม์</p>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-1">
-                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span class="text-sm text-gray-600">อัพเดทล่าสุด: {{ lastUpdateTime }}</span>
-                </div>
-                
-                <!-- Route History Toggle -->
-                <label class="flex items-center gap-2 text-sm">
-                    <input 
-                        type="checkbox" 
-                        v-model="showRouteHistory" 
-                        @change="toggleRouteHistory"
-                        class="rounded"
-                    />
-                    <span class="text-gray-700">แสดงเส้นทางวันนี้</span>
-                </label>
-                
-                <button 
-                    @click="refreshData"
-                    :disabled="isRefreshing"
-                    class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                >
-                    <svg 
-                        class="w-4 h-4" 
-                        :class="{ 'animate-spin': isRefreshing }"
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    รีเฟรช
-                </button>
-            </div>
-        </div>
 
         <!-- Status Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="bg-white p-4 rounded-lg border shadow-sm">
                 <div class="text-sm font-medium text-gray-600">รถทั้งหมด</div>
                 <div class="text-2xl font-bold text-blue-600">{{ totalVehicles }}</div>
@@ -60,10 +19,6 @@
                 <div class="text-sm font-medium text-gray-600">จอดสำนักงาน</div>
                 <div class="text-2xl font-bold text-purple-600">{{ stoppedAtOfficeVehicles }}</div>
             </div>
-            <div class="bg-white p-4 rounded-lg border shadow-sm">
-                <div class="text-sm font-medium text-gray-600">ออฟไลน์</div>
-                <div class="text-2xl font-bold text-gray-600">{{ offlineVehicles }}</div>
-            </div>
         </div>
 
 
@@ -72,7 +27,13 @@
             <!-- Vehicle List (Left side - 1/4) -->
             <div class="bg-white rounded-lg border shadow-sm">
                 <div class="p-4 border-b">
-                    <h3 class="font-medium">รายการรถ</h3>
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-medium">รายการรถ</h3>
+                        <div class="flex items-center gap-1">
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span class="text-xs text-gray-600">อัพเดทล่าสุด: {{ lastUpdateTime }}</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="max-h-[600px] overflow-y-auto">
                     <div v-for="group in filteredVehicles" :key="group.type" class="mb-2">
@@ -168,6 +129,34 @@
                                 <div class="w-2 h-2 rounded-full bg-blue-300 border border-purple-500"></div>
                                 <span>ที่สำนักงาน</span>
                             </div>
+                            
+                            <!-- Route History Toggle -->
+                            <label class="flex items-center gap-2 text-sm ml-4 border-l pl-4">
+                                <input 
+                                    type="checkbox" 
+                                    v-model="showRouteHistory" 
+                                    @change="toggleRouteHistory"
+                                    class="rounded"
+                                />
+                                <span class="text-gray-700">แสดงเส้นทางวันนี้</span>
+                            </label>
+                            
+                            <button 
+                                @click="refreshData"
+                                :disabled="isRefreshing"
+                                class="p-1 text-gray-600 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="รีเฟรช"
+                            >
+                                <svg 
+                                    class="w-4 h-4" 
+                                    :class="{ 'animate-spin': isRefreshing }"
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -295,9 +284,8 @@ const isAtOffice = (vehicle: any) => {
 // Computed
 const totalVehicles = computed(() => vehiclesData.value.length);
 const runningVehicles = computed(() => vehiclesData.value.filter(v => v.status === 'running').length);
-const stoppedOutsideVehicles = computed(() => vehiclesData.value.filter(v => v.status === 'stopped' && !isAtOffice(v)).length);
-const stoppedAtOfficeVehicles = computed(() => vehiclesData.value.filter(v => v.status === 'stopped' && isAtOffice(v)).length);
-const offlineVehicles = computed(() => vehiclesData.value.filter(v => v.status === 'offline').length);
+const stoppedOutsideVehicles = computed(() => vehiclesData.value.filter(v => (v.status === 'stopped' || v.status === 'offline') && !isAtOffice(v)).length);
+const stoppedAtOfficeVehicles = computed(() => vehiclesData.value.filter(v => (v.status === 'stopped' || v.status === 'offline') && isAtOffice(v)).length);
 
 const filteredVehicles = computed(() => {
     // Group vehicles by type
