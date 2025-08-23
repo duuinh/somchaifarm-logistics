@@ -16,42 +16,38 @@
             <div class="flex flex-wrap items-center gap-2 text-sm">
                 <!-- Time Period -->
                 <span class="font-medium text-gray-700">เวลา:</span>
-                <button 
+                <Button 
                     @click="selectYesterday()"
-                    :class="[
-                        isYesterday && !customDateRange ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border',
-                        'px-2 py-1 text-sm rounded hover:bg-blue-50'
-                    ]"
+                    :variant="isYesterday && !customDateRange ? 'default' : 'outline'"
+                    size="sm"
+                    class="h-7 px-3 text-xs"
                 >
                     เมื่อวาน
-                </button>
-                <button 
+                </Button>
+                <Button 
                     @click="selectQuickPeriod(1)"
-                    :class="[
-                        selectedPeriod === 1 && !customDateRange && !isYesterday ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border',
-                        'px-2 py-1 text-sm rounded hover:bg-blue-50'
-                    ]"
+                    :variant="selectedPeriod === 1 && !customDateRange && !isYesterday ? 'default' : 'outline'"
+                    size="sm"
+                    class="h-7 px-3 text-xs"
                 >
                     วันนี้
-                </button>
-                <button 
+                </Button>
+                <Button 
                     @click="selectQuickPeriod(7)"
-                    :class="[
-                        selectedPeriod === 7 && !customDateRange ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border',
-                        'px-2 py-1 text-sm rounded hover:bg-blue-50'
-                    ]"
+                    :variant="selectedPeriod === 7 && !customDateRange ? 'default' : 'outline'"
+                    size="sm"
+                    class="h-7 px-3 text-xs"
                 >
-                    7วัน
-                </button>
-                <button 
+                    7 วัน
+                </Button>
+                <Button 
                     @click="selectQuickPeriod(30)"
-                    :class="[
-                        selectedPeriod === 30 && !customDateRange ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border',
-                        'px-2 py-1 text-sm rounded hover:bg-blue-50'
-                    ]"
+                    :variant="selectedPeriod === 30 && !customDateRange ? 'default' : 'outline'"
+                    size="sm"
+                    class="h-7 px-3 text-xs"
                 >
-                    30วัน
-                </button>
+                    30 วัน
+                </Button>
                 
                 <!-- Custom Date Range -->
                 <input
@@ -68,15 +64,14 @@
                     :max="today"
                     class="h-7 px-2 text-sm border border-gray-300 rounded"
                 />
-                <button 
+                <Button 
                     @click="applyCustomDateRange"
-                    :class="[
-                        customDateRange ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border',
-                        'px-2 py-1 text-sm rounded hover:bg-blue-50'
-                    ]"
+                    :variant="customDateRange ? 'default' : 'outline'"
+                    size="sm"
+                    class="h-7 px-3 text-xs"
                 >
                     ใช้
-                </button>
+                </Button>
                 
                 <!-- Separator -->
                 <span class="text-gray-400 mx-1">|</span>
@@ -106,42 +101,38 @@
                 
                 <!-- Point Type -->
                 <span class="font-medium text-gray-700">ประเภท:</span>
-                <button
+                <Button
                     @click="togglePointTypeFilter('all')"
-                    :class="[
-                        pointTypeFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border',
-                        'px-2 py-1 text-sm rounded hover:bg-blue-50'
-                    ]"
+                    :variant="pointTypeFilter === 'all' ? 'default' : 'outline'"
+                    size="sm"
+                    class="h-7 px-3 text-xs"
                 >
                     ทั้งหมด
-                </button>
-                <button
+                </Button>
+                <Button
                     @click="togglePointTypeFilter('known')"
-                    :class="[
-                        pointTypeFilter === 'known' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 border',
-                        'px-2 py-1 text-sm rounded hover:bg-green-50'
-                    ]"
+                    :variant="pointTypeFilter === 'known' ? 'default' : 'outline'"
+                    size="sm"
+                    class="h-7 px-3 text-xs"
                 >
                     รู้จัก({{ knownLocationCount }})
-                </button>
-                <button
+                </Button>
+                <Button
                     @click="togglePointTypeFilter('unknown')"
-                    :class="[
-                        pointTypeFilter === 'unknown' ? 'bg-orange-600 text-white' : 'bg-white text-gray-600 border',
-                        'px-2 py-1 text-sm rounded hover:bg-orange-50'
-                    ]"
+                    :variant="pointTypeFilter === 'unknown' ? 'default' : 'outline'"
+                    size="sm"
+                    class="h-7 px-3 text-xs"
                 >
                     ไม่รู้จัก({{ unknownLocationCount }})
-                </button>
-                <button
+                </Button>
+                <Button
                     @click="togglePointTypeFilter('office')"
-                    :class="[
-                        pointTypeFilter === 'office' ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 border',
-                        'px-2 py-1 text-sm rounded hover:bg-purple-50'
-                    ]"
+                    :variant="pointTypeFilter === 'office' ? 'default' : 'outline'"
+                    size="sm"
+                    class="h-7 px-3 text-xs"
                 >
                     สำนักงาน({{ officeLocationCount }})
-                </button>
+                </Button>
             </div>
         </div>
 
@@ -450,28 +441,29 @@
                 
                 <div class="flex items-center gap-1">
                     <!-- Previous button -->
-                    <button
+                    <Button
                         @click="currentPage--"
                         :disabled="currentPage === 1"
-                        class="px-3 py-1 text-sm rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        variant="outline"
+                        size="sm"
+                        class="h-8 px-3"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                         </svg>
-                    </button>
+                    </Button>
                     
                     <!-- Page numbers -->
                     <template v-for="page in totalPages" :key="page">
-                        <button
+                        <Button
                             v-if="page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)"
                             @click="currentPage = page"
-                            :class="[
-                                'px-3 py-1 text-sm rounded border',
-                                currentPage === page ? 'bg-blue-600 text-white' : 'hover:bg-gray-50'
-                            ]"
+                            :variant="currentPage === page ? 'default' : 'outline'"
+                            size="sm"
+                            class="h-8 px-3"
                         >
                             {{ page }}
-                        </button>
+                        </Button>
                         <span 
                             v-else-if="page === currentPage - 2 || page === currentPage + 2"
                             class="px-2 text-gray-500"
@@ -481,15 +473,17 @@
                     </template>
                     
                     <!-- Next button -->
-                    <button
+                    <Button
                         @click="currentPage++"
                         :disabled="currentPage === totalPages"
-                        class="px-3 py-1 text-sm rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        variant="outline"
+                        size="sm"
+                        class="h-8 px-3"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>
@@ -500,6 +494,7 @@
 import { computed, ref, watch, onMounted, nextTick } from 'vue';
 import { officeCoordinates, calculateDistance, pickupLocations, deliveryLocations } from '@/composables/useRouteFiltering';
 import { useStopAnalysis } from '@/composables/route/useStopAnalysis';
+import { Button } from '@/components/ui/button';
 
 interface Props {
     selectedDeviceIds: number[];
