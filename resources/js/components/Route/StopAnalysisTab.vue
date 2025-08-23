@@ -1175,7 +1175,7 @@ const inefficientStopDetails = computed(() => {
         .slice(start, end)
         .map(stop => ({
             ...stop,
-            vehicleColor: props.getVehicleColor(props.selectedDeviceIds, stop.deviceId)
+            vehicleColor: props.getVehicleColor(stop.deviceId)
         }));
 });
 
