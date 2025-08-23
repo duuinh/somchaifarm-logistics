@@ -11,16 +11,25 @@
 
         <!-- Route Analysis Radius -->
         <div>
-            <Label for="routeAnalysisRadius" class="text-xs font-medium">รัศมี (ม.)</Label>
-            <Input
-                id="routeAnalysisRadius"
-                v-model.number="routeAnalysisRadius"
-                type="number"
-                min="50"
-                max="1000"
-                step="50"
-                class="h-8 mt-1"
-            />
+            <Label class="text-xs font-medium">รัศมี (ม.)</Label>
+            <div class="flex items-center gap-2 mt-1">
+                <input
+                    type="range"
+                    v-model.number="routeAnalysisRadius"
+                    min="50"
+                    max="1000"
+                    step="50"
+                    class="flex-1"
+                />
+                <input
+                    type="number"
+                    v-model.number="routeAnalysisRadius"
+                    min="50"
+                    max="1000"
+                    step="50"
+                    class="h-8 w-16 px-2 text-center border border-gray-300 rounded text-sm"
+                />
+            </div>
         </div>
         
         <!-- Office Hours -->
@@ -150,19 +159,20 @@ const selectedDate = computed({
     set: (value) => emit('update:selectedDate', value)
 });
 
-const routeAnalysisRadius = computed({
-    get: () => props.routeAnalysisRadius,
-    set: (value) => emit('update:routeAnalysisRadius', value)
-});
 
 const officeHourStart = computed({
     get: () => props.officeHourStart,
-    set: (value) => emit('update:officeHourStart', value)
+    set: (value) => emit('update:officeHourStart', Number(value))
+});
+
+const routeAnalysisRadius = computed({
+    get: () => props.routeAnalysisRadius,
+    set: (value) => emit('update:routeAnalysisRadius', Number(value))
 });
 
 const officeHourEnd = computed({
     get: () => props.officeHourEnd,
-    set: (value) => emit('update:officeHourEnd', value)
+    set: (value) => emit('update:officeHourEnd', Number(value))
 });
 
 

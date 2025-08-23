@@ -8,6 +8,7 @@ export function useRouteHistory(
     routeAnalysisRadius: any
 ) {
     const { analyzeRouteStops, processStops } = useStopAnalysis();
+    
 
     // Extract stop points from all route data
     const stopPoints = computed(() => {
@@ -25,14 +26,18 @@ export function useRouteHistory(
     // Centralized route history calculation
     const allRouteHistory = computed(() => {
         const allStops = [];
+        // Properly access the reactive radius value
+        const currentRadius = unref(routeAnalysisRadius);
+            
+        
         selectedDeviceIds.value.forEach(deviceId => {
             const routeData = routeDataCollection.value[deviceId];
             const dataToAnalyze = routeData?.list;
             if (!dataToAnalyze || dataToAnalyze.length === 0) return;
             const devicesArray = unref(devices) || [];
             const vehicleName = devicesArray.find(d => d.id === deviceId)?.name || `Vehicle ${deviceId}`;
-            const rawStops = analyzeRouteStops(dataToAnalyze, routeAnalysisRadius.value, deviceId, vehicleName);
-            const processedStops = processStops(rawStops, 5);
+            const rawStops = analyzeRouteStops(dataToAnalyze, currentRadius, deviceId, vehicleName);
+            const processedStops = processStops(rawStops, 5, currentRadius);
             allStops.push(...processedStops);
         });
         return allStops.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());

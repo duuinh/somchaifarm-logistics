@@ -697,15 +697,14 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <!-- Stop Analysis Tab -->
                     <StopAnalysisTab
                         v-else-if="activeTab === 'stop-efficiency'"
+                        v-model:route-analysis-radius="routeAnalysisRadius"
                         :selected-device-ids="selectedDeviceIds"
                         :selected-date="selectedDate"
                         :devices="devices"
                         :route-history="stopEfficiencyRouteHistory"
-                        :route-analysis-radius="routeAnalysisRadius"
                         :get-vehicle-color="getVehicleColor"
                         @period-change="handleStopEfficiencyPeriodChange"
                         @date-range-change="handleStopEfficiencyDateRangeChange"
-                        @radius-change="(radius) => routeAnalysisRadius = radius"
                     />
                     
                     <!-- API Settings Tab -->

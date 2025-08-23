@@ -313,7 +313,7 @@ const routeHistory = computed(() => {
         props.deviceName
     );
     
-    const processedStops = processStops(rawStops, 5);
+    const processedStops = processStops(rawStops, 5, props.routeAnalysisRadius);
     
     if (!showShortStops.value) {
         return processedStops.filter(stop => stop.duration >= 15);

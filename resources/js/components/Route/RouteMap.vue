@@ -172,7 +172,7 @@ const routeHistory = computed(() => {
             vehicleName
         );
         
-        const processedStops = processStops(rawStops, 5);
+        const processedStops = processStops(rawStops, 5, props.routeAnalysisRadius);
         allStops.push(...processedStops);
     });
     

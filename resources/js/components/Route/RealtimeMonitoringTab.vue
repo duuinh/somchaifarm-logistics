@@ -246,8 +246,8 @@ const routeHistoryData = ref<Record<number, any>>({});
 const isLoadingRouteHistory = ref(false);
 const showRouteHistory = ref(true);
 
-// Route analysis radius (fixed at 200m for realtime monitoring)
-const routeAnalysisRadius = ref(200);
+// Route analysis radius (using shared constant)
+const routeAnalysisRadius = ref(LOCATION_RADIUS);
 
 // Initialize route history composable for stop detection
 const selectedDeviceIds = ref<number[]>([]);
@@ -715,7 +715,7 @@ const updateMapMarkers = async () => {
     });
     vehicleMarkers.value = {};
     
-    // Group vehicles by location (within 200 meters of each other)
+    // Group vehicles by location (within location radius of each other)
     const locationGroups: Record<string, any[]> = {};
     
     vehiclesData.value.forEach(vehicle => {
@@ -835,9 +835,10 @@ const updateMapMarkers = async () => {
                 });
             }
             
-            marker.addTo(map.value);
-            
-            vehicleMarkers.value[vehicle.id] = marker;
+            if (map.value && map.value.getContainer()) {
+                marker.addTo(map.value);
+                vehicleMarkers.value[vehicle.id] = marker;
+            }
         } else {
             // Multiple vehicles - create cluster marker with count
             // Only count stopped/offline vehicles for office locations
@@ -871,11 +872,13 @@ const updateMapMarkers = async () => {
             const marker = L.marker([lat, lng], { 
                 icon: clusterIcon,
                 title: `${displayCount} คัน`
-            })
-            .addTo(map.value);
+            });
             
-            // Store marker for the first vehicle (for cleanup)
-            vehicleMarkers.value[vehicles[0].id] = marker;
+            if (map.value && map.value.getContainer()) {
+                marker.addTo(map.value);
+                // Store marker for the first vehicle (for cleanup)
+                vehicleMarkers.value[vehicles[0].id] = marker;
+            }
         }
     });
     
@@ -928,7 +931,11 @@ watch(devices, async (newDevices) => {
             const realtimeData = await fetchRealtimeData();
             vehiclesData.value = realtimeData;
             lastUpdateTime.value = new Date().toLocaleTimeString('th-TH');
-            await updateMapMarkers();
+            
+            // Only update map if it's properly initialized
+            if (map.value && map.value.getContainer()) {
+                await updateMapMarkers();
+            }
         } catch (error) {
             console.error('Error in devices watcher:', error);
         }

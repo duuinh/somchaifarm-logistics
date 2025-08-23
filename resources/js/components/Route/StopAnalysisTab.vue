@@ -80,16 +80,16 @@
                 <span class="font-medium text-gray-700">รัศมี:</span>
                 <input
                     type="range"
-                    v-model="stopRadius"
-                    min="200"
+                    v-model.number="routeAnalysisRadius"
+                    min="50"
                     max="1000"
                     step="50"
                     class="w-20"
                 />
                 <input
                     type="number"
-                    v-model="stopRadius"
-                    min="200"
+                    v-model.number="routeAnalysisRadius"
+                    min="50"
                     max="1000"
                     step="50"
                     class="w-16 px-2 py-1 text-sm border border-gray-300 rounded"
@@ -492,7 +492,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, nextTick } from 'vue';
-import { officeCoordinates, calculateDistance, pickupLocations, deliveryLocations } from '@/composables/useRouteFiltering';
+import { officeCoordinates, calculateDistance, pickupLocations, deliveryLocations, LOCATION_RADIUS } from '@/composables/useRouteFiltering';
 import { useStopAnalysis } from '@/composables/route/useStopAnalysis';
 import { Button } from '@/components/ui/button';
 
@@ -502,7 +502,7 @@ interface Props {
     devices: Array<{ id: number; name: string; type: string }>;
     routeHistory: any[];
     getVehicleColor: (deviceId: number) => string;
-    routeAnalysisRadius?: number;
+    routeAnalysisRadius: number;
 }
 
 const props = defineProps<Props>();
@@ -510,13 +510,16 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
     'period-change': [days: number];
     'date-range-change': [startDate: string, endDate: string];
-    'radius-change': [radius: number];
+    'update:routeAnalysisRadius': [radius: number];
 }>();
 
 const { analyzeRouteStops, processStops } = useStopAnalysis();
 
-// Stop radius state
-const stopRadius = ref(props.routeAnalysisRadius || 1000);
+// Use v-model for route analysis radius
+const routeAnalysisRadius = computed({
+    get: () => props.routeAnalysisRadius,
+    set: (value) => emit('update:routeAnalysisRadius', value)
+});
 
 // Point type filter state
 const pointTypeFilter = ref<'all' | 'known' | 'unknown' | 'office'>('all');
@@ -538,10 +541,7 @@ const currentPage = ref(1);
 const itemsPerPage = ref(10);
 const totalPages = computed(() => Math.ceil(inefficientStopsCount.value / itemsPerPage.value));
 
-// Watch for radius changes
-watch(stopRadius, (newRadius) => {
-    emit('radius-change', newRadius);
-});
+// No longer needed - using v-model instead
 
 // Time control state - preserve the period selection
 const selectedPeriod = ref(props.selectedDate ? 1 : 1); // Default to current day
@@ -711,7 +711,7 @@ const isOfficeStop = (stop: any): boolean => {
         officeCoordinates.value.lat,
         officeCoordinates.value.lng
     );
-    return distance <= 100; // 100 meters radius around office
+    return distance <= LOCATION_RADIUS;
 };
 
 // Helper function to check if stop is at pickup location
@@ -738,7 +738,7 @@ const isPickupStop = (stop: any): boolean => {
             pickup.lat,
             pickup.lng
         );
-        if (distance <= stopRadius.value) { // Use user-adjustable radius
+        if (distance <= routeAnalysisRadius.value) { // Use user-adjustable radius
             return true;
         }
     }
@@ -772,7 +772,7 @@ const isDeliveryStop = (stop: any): boolean => {
             delivery.lat,
             delivery.lng
         );
-        if (distance <= stopRadius.value) { // Use user-adjustable radius
+        if (distance <= routeAnalysisRadius.value) { // Use user-adjustable radius
             return true;
         }
     }
@@ -812,7 +812,7 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 
 // Function to filter by clicked location
 const filterByLocation = (latitude: number, longitude: number, radius?: number) => {
-    const filterRadius = radius || stopRadius.value;
+    const filterRadius = radius || routeAnalysisRadius.value;
     selectedLocationFilter.value = { latitude, longitude, radius: filterRadius };
     
     // Reset point type filter to show all when filtering by location
@@ -1065,7 +1065,7 @@ const locationStatistics = computed(() => {
         // Find existing group within radius
         let foundGroup = locationGroups.find(group => {
             const distance = calculateDistance(stopLat, stopLng, group.latitude, group.longitude);
-            return distance <= stopRadius.value;
+            return distance <= routeAnalysisRadius.value;
         });
         
         if (!foundGroup) {

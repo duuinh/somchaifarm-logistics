@@ -37,30 +37,25 @@ export const findClosestStopPoint = (latitude: number, longitude: number, radius
 
 // Helper function to get location name for a GPS point
 export const getLocationName = (point: any, index: number, radius: number) => {
+    
     const closestStopPoint = findClosestStopPoint(point.latitude, point.longitude, radius);
     
-    // Priority: 1) Closest known location, 2) Siam GPS sGeO, 3) Address, 4) Generic point number
+    // Priority: 1) Closest known location, 2) Previously saved name for same coordinates, 3) Siam GPS sGeO, 4) Address, 5) Generic point number
     if (closestStopPoint) {
         return closestStopPoint.name;
     }
     
-    // Debug point data to see what's available
-    if (index < 3) {
-        console.log('Point data in getLocationName:', {
-            index,
-            geoLocation: point.geoLocation,
-            address: point.address,
-            hasGeoLocation: !!point.geoLocation,
-            sGeO: point.geoLocation?.sGeO
-        });
-    }
+    // Check if we've seen this location before and have a saved name
+    // This could be implemented by checking a location cache/database
+    // For now, use the GPS provider data as the "saved" name
     
-    // Use Siam GPS sGeO field directly
-    if (point.geoLocation?.sGeO) {
+    // Use Siam GPS sGeO field as saved name (this is provider's saved location name)
+    if (point.geoLocation?.sGeO && point.geoLocation.sGeO.trim() !== '' && point.geoLocation.sGeO !== 'ไม่ระบุตำแหน่ง') {
         return point.geoLocation.sGeO;
     }
     
-    if (point.address && point.address !== 'ไม่ระบุตำแหน่ง') {
+    // Use address field as saved name
+    if (point.address && point.address.trim() !== '' && point.address !== 'ไม่ระบุตำแหน่ง') {
         return point.address;
     }
     
@@ -141,7 +136,8 @@ export const analyzeRouteStops = (
 };
 
 // Filter and combine stops
-export const processStops = (stops: StopPoint[], minDuration: number = 5): StopPoint[] => {
+export const processStops = (stops: StopPoint[], minDuration: number = 5, radius: number = 50): StopPoint[] => {
+    
     // Filter out very brief stops
     const filteredStops = stops.filter(stop => stop.duration >= minDuration);
     
@@ -152,14 +148,39 @@ export const processStops = (stops: StopPoint[], minDuration: number = 5): StopP
         const currentStop = filteredStops[i];
         
         // Check if this stop is at the same location as the previous one
-        if (combinedStops.length > 0 && 
-            combinedStops[combinedStops.length - 1].location === currentStop.location &&
-            combinedStops[combinedStops.length - 1].deviceId === currentStop.deviceId) {
+        // Use both location name AND GPS coordinate proximity for grouping
+        const shouldCombine = combinedStops.length > 0 && 
+            combinedStops[combinedStops.length - 1].deviceId === currentStop.deviceId && (
+                // Same location name
+                combinedStops[combinedStops.length - 1].location === currentStop.location ||
+                // OR GPS coordinates are very close (within configurable radius)
+                calculateDistance(
+                    combinedStops[combinedStops.length - 1].latitude,
+                    combinedStops[combinedStops.length - 1].longitude,
+                    currentStop.latitude,
+                    currentStop.longitude
+                ) <= radius
+            );
+            
+        if (shouldCombine) {
             // Combine with previous stop
             const prevStop = combinedStops[combinedStops.length - 1];
             prevStop.endTime = currentStop.endTime;
             prevStop.duration += currentStop.duration;
             prevStop.durationFormatted = formatDuration(prevStop.duration);
+            
+            // Use the better location name (prefer known locations > addresses > generic)
+            const prevIsGeneric = prevStop.location.startsWith('จุดที่');
+            const currentIsGeneric = currentStop.location.startsWith('จุดที่');
+            const prevIsKnown = ['สำนักงาน', 'จุดรับสินค้า', 'จุดส่งสินค้า'].some(type => prevStop.location.includes(type));
+            const currentIsKnown = ['สำนักงาน', 'จุดรับสินค้า', 'จุดส่งสินค้า'].some(type => currentStop.location.includes(type));
+            
+            // Priority: Known locations > Addresses > Generic names
+            if (currentIsKnown && !prevIsKnown) {
+                prevStop.location = currentStop.location;
+            } else if (!currentIsGeneric && prevIsGeneric) {
+                prevStop.location = currentStop.location;
+            }
         } else {
             // Add as new stop with distance calculation
             const stopWithDistance = { ...currentStop };
