@@ -198,19 +198,23 @@ import { officeCoordinates, pickupLocations, deliveryLocations } from '@/composa
 import { useRouteAPI } from '@/composables/route/useRouteAPI';
 import { useVehicleConfig } from '@/composables/route/useVehicleConfig';
 import { useRouteHistory } from '@/composables/route/useRouteHistory';
+import { useMultiProviderAPI } from '@/composables/route/useMultiProviderAPI';
 
 interface Props {
-    devices: Array<{ id: number; name: string; type: string; shortname: string }>;
+    devices: Array<{ id: number; name: string; type: string; shortname: string; provider?: string; vehicleId?: number }>;
     vehicleColors: string[];
 }
 
 const props = defineProps<Props>();
 
 // Get API headers and route fetching functions
-const { authorizationHeader, tokenHeader, fetchRouteData } = useRouteAPI();
+const { authorizationHeader, tokenHeader, fetchRouteData } = useRouteAPI(props.devices);
 
 // Get vehicle config for default date
 const { getDefaultDate } = useVehicleConfig();
+
+// Initialize multi-provider API
+const { fetchRealtimeDataForProvider } = useMultiProviderAPI(props.devices);
 
 // State
 const isRefreshing = ref(false);
@@ -330,94 +334,110 @@ const selectVehicle = (vehicle: any) => {
     }
 };
 
-// Fetch real-time data from API
+// Fetch real-time data from multiple API providers
 const fetchRealtimeData = async () => {
     try {
-        console.log('Fetching realtime data...');
-        console.log('Using headers:', {
-            hasAuth: !!authorizationHeader.value,
-            hasToken: !!tokenHeader.value
-        });
+        console.log('Fetching realtime data from multiple providers...');
         
-        const response = await fetch('https://apitracking.andamantracking.dev/web/v1/home', {
-            method: 'GET',
-            headers: {
-                'Authorization': authorizationHeader.value,
-                'Token': tokenHeader.value,
+        // Group devices by provider
+        const devicesByProvider = props.devices.reduce((acc, device) => {
+            const provider = device.provider || 'andaman';
+            if (!acc[provider]) {
+                acc[provider] = [];
             }
-        });
+            acc[provider].push(device.id);
+            return acc;
+        }, {} as Record<string, number[]>);
         
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status} ${response.statusText}`);
-        }
+        console.log('Devices by provider:', devicesByProvider);
         
-        const apiData = await response.json();
-        console.log('API Data:', apiData);
-        console.log('Device config:', props.devices);
+        // Fetch data from each provider
+        const allVehicleData: any[] = [];
         
-        // Transform API data to match our format
-        const transformedData = apiData.map((vehicle: any) => {
-            // Find matching device config
-            const deviceConfig = props.devices.find(d => d.id === vehicle.device_id);
-            
-            // Determine status based on API data
-            let status = 'offline';
-            if (vehicle.online === 1) {
-                if (vehicle.status_name === 'Stop') {
-                    status = 'stopped';
-                } else if (parseFloat(vehicle.speed) > 0) {
-                    status = 'running';
-                } else {
-                    status = 'stopped';
+        for (const [provider, deviceIds] of Object.entries(devicesByProvider)) {
+            try {
+                console.log(`Fetching from ${provider} for devices:`, deviceIds);
+                const providerData = await fetchRealtimeDataForProvider(provider, deviceIds);
+                
+                if (provider === 'andaman') {
+                    // Transform Andaman data to our format
+                    const transformedData = providerData.map((vehicle: any) => {
+                        const deviceConfig = props.devices.find(d => d.id === vehicle.device_id);
+                        
+                        let status = 'offline';
+                        if (vehicle.online === 1) {
+                            if (vehicle.status_name === 'Stop') {
+                                status = 'stopped';
+                            } else if (parseFloat(vehicle.speed) > 0) {
+                                status = 'running';
+                            } else {
+                                status = 'stopped';
+                            }
+                        }
+                        
+                        return {
+                            id: vehicle.device_id,
+                            name: deviceConfig?.name || vehicle.name,
+                            licensePlate: deviceConfig?.shortname || vehicle.name,
+                            driver: vehicle.employee || vehicle.employee2 || '-',
+                            status: status,
+                            speed: Math.round(parseFloat(vehicle.speed) || 0),
+                            latitude: parseFloat(vehicle.latitude),
+                            longitude: parseFloat(vehicle.longitude),
+                            location: vehicle.address || 'ไม่ระบุ',
+                            lastUpdate: new Date(vehicle.event_stamp),
+                            todayDistance: Math.round(vehicle.odoToday || 0),
+                            fuel: vehicle.fuel_liters !== '-' ? `${vehicle.fuel_liters}L` : '-',
+                            ignition: vehicle.ignition,
+                            satellites: vehicle.satellites,
+                            signalStrength: vehicle.fld_signalStrength,
+                            provider: provider
+                        };
+                    });
+                    allVehicleData.push(...transformedData);
+                } else if (provider === 'siamgps') {
+                    // Transform Siam GPS data (assuming it's already transformed by the provider)
+                    const transformedData = providerData.map((vehicle: any) => {
+                        const deviceConfig = props.devices.find(d => d.id === vehicle.device_id);
+                        
+                        let status = 'offline';
+                        if (vehicle.online === 1) {
+                            if (parseFloat(vehicle.speed) > 0) {
+                                status = 'running';
+                            } else {
+                                status = 'stopped';
+                            }
+                        }
+                        
+                        return {
+                            id: vehicle.device_id,
+                            name: deviceConfig?.name || vehicle.name,
+                            licensePlate: deviceConfig?.shortname || vehicle.name,
+                            driver: '-',
+                            status: status,
+                            speed: Math.round(parseFloat(vehicle.speed) || 0),
+                            latitude: parseFloat(vehicle.latitude),
+                            longitude: parseFloat(vehicle.longitude),
+                            location: vehicle.address || 'ไม่ระบุ',
+                            lastUpdate: new Date(vehicle.event_stamp),
+                            todayDistance: 0,
+                            fuel: vehicle.fuel_liters !== '-' ? `${vehicle.fuel_liters}L` : '-',
+                            ignition: vehicle.ignition,
+                            satellites: vehicle.satellites,
+                            signalStrength: 0,
+                            provider: provider
+                        };
+                    });
+                    allVehicleData.push(...transformedData);
                 }
+            } catch (error) {
+                console.error(`Error fetching data from ${provider}:`, error);
+                // Continue with other providers even if one fails
             }
-            
-            const transformed = {
-                id: vehicle.device_id,
-                name: deviceConfig?.name || vehicle.name,
-                licensePlate: deviceConfig?.shortname || vehicle.name,
-                driver: vehicle.employee || vehicle.employee2 || '-',
-                status: status,
-                speed: Math.round(parseFloat(vehicle.speed) || 0),
-                latitude: parseFloat(vehicle.latitude),
-                longitude: parseFloat(vehicle.longitude),
-                location: vehicle.address || 'ไม่ระบุ',
-                lastUpdate: new Date(vehicle.event_stamp),
-                todayDistance: Math.round(vehicle.odoToday || 0),
-                fuel: vehicle.fuel_liters !== '-' ? `${vehicle.fuel_liters}L` : '-',
-                ignition: vehicle.ignition,
-                satellites: vehicle.satellites,
-                signalStrength: vehicle.fld_signalStrength
-            };
-            
-            console.log(`Vehicle ${vehicle.device_id}:`, {
-                apiVehicle: vehicle.device_id,
-                configMatch: !!deviceConfig,
-                transformed: transformed
-            });
-            
-            return transformed;
-        });
-        
-        // Debug the matching process
-        console.log('Device IDs in config:', props.devices.map(d => ({ id: d.id, name: d.name })));
-        console.log('Device IDs from API:', apiData.map((v: any) => ({ id: v.device_id, name: v.name })));
-        
-        const filteredData = transformedData.filter((vehicle: any) => {
-            const hasMatch = props.devices.some(d => d.id === vehicle.id);
-            console.log(`Vehicle ${vehicle.id} (${vehicle.name}): ${hasMatch ? 'MATCHED' : 'NO MATCH'}`);
-            return hasMatch;
-        });
-        
-        console.log('Filtered data count:', filteredData.length, 'out of', transformedData.length);
-        
-        // If no matches found, show all vehicles for debugging
-        if (filteredData.length === 0) {
-            console.log('No vehicles matched config, showing all API vehicles for debugging');
-            return transformedData;
         }
         
-        return filteredData;
+        console.log('Combined vehicle data:', allVehicleData);
+        return allVehicleData;
     } catch (error) {
         console.error('Error fetching realtime data:', error);
         return [];
@@ -782,12 +802,13 @@ const updateMapMarkers = async () => {
             const clusterIcon = L.divIcon({
                 html: `<div style="
                     width: 32px; height: 32px; border-radius: 8px; 
-                    background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
-                    border: 2px solid white; 
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                    background: rgba(102, 126, 234, 0.3);
+                    border: 2px solid rgba(255, 255, 255, 0.8); 
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
                     display: flex; align-items: center; justify-content: center;
-                    color: white; font-weight: bold; font-size: 14px;
+                    color: #374151; font-weight: bold; font-size: 14px;
                     position: relative; z-index: 1000;
+                    backdrop-filter: blur(4px);
                 ">${vehicleCount}</div>`,
                 iconSize: [32, 32],
                 iconAnchor: [16, 16],

@@ -47,51 +47,6 @@
             </div>
         </div>
 
-        <!-- API Configuration -->
-        <div class="pt-2 border-t space-y-2">
-            <div class="flex items-center justify-between">
-                <button
-                    @click="showApiConfig = !showApiConfig"
-                    class="flex items-center gap-1 text-xs font-medium hover:text-blue-600"
-                >
-                    API Config
-                    <ChevronDown v-if="!showApiConfig" class="h-3 w-3" />
-                    <ChevronUp v-else class="h-3 w-3" />
-                </button>
-                <Button
-                    v-if="showApiConfig"
-                    @click="clearTokens"
-                    variant="ghost"
-                    size="sm"
-                    class="text-red-600 hover:text-red-700 h-5 p-1"
-                >
-                    <Trash2 class="h-2 w-2 mr-1" />
-                    Clear
-                </Button>
-            </div>
-            <div v-if="showApiConfig" class="grid grid-cols-1 gap-2">
-                <div>
-                    <Label for="authorization" class="text-xs">Authorization</Label>
-                    <Input
-                        id="authorization"
-                        v-model="authorizationHeader"
-                        type="text"
-                        placeholder="Bearer token..."
-                        class="h-8 mt-1 text-xs"
-                    />
-                </div>
-                <div>
-                    <Label for="token" class="text-xs">Token</Label>
-                    <Input
-                        id="token"
-                        v-model="tokenHeader"
-                        type="text"
-                        placeholder="Token value..."
-                        class="h-8 mt-1 text-xs"
-                    />
-                </div>
-            </div>
-        </div>
 
         <!-- Action Buttons and Cache Status -->
         <div class="pt-2 space-y-2">
@@ -104,7 +59,7 @@
             <div class="flex gap-2">
                 <Button 
                     @click="handleLoadFreshData"
-                    :disabled="isLoading || selectedDeviceIds.length === 0 || !selectedDate || !authorizationHeader || !tokenHeader"
+                    :disabled="isLoading || selectedDeviceIds.length === 0 || !selectedDate"
                     variant="default"
                     size="sm"
                     class="h-7 flex-1 cursor-pointer"
@@ -133,11 +88,10 @@ import { ref, computed } from 'vue';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Trash2, Loader2, Play, RefreshCw } from 'lucide-vue-next';
+import { Loader2, Play, RefreshCw } from 'lucide-vue-next';
 import VehicleSelector from './VehicleSelector.vue';
 import DateSelector from './DateSelector.vue';
 import CacheManager from './CacheManager.vue';
-import { useRouteAPI } from '@/composables/route/useRouteAPI';
 
 interface Vehicle {
     id: number;
@@ -185,11 +139,7 @@ const emit = defineEmits<{
     'clear-cache': [];
 }>();
 
-// Use RouteAPI composable for tokens
-const { authorizationHeader, tokenHeader } = useRouteAPI();
-
-// Local state
-const showApiConfig = ref(false);
+// Local state (removed API config)
 
 // v-model bindings
 const selectedDeviceIds = computed({
@@ -217,11 +167,6 @@ const officeHourEnd = computed({
     set: (value) => emit('update:officeHourEnd', value)
 });
 
-// Clear tokens handler
-const clearTokens = () => {
-    authorizationHeader.value = '';
-    tokenHeader.value = '';
-};
 
 // Click handler for fresh data
 const handleLoadFreshData = () => {

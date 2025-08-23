@@ -13,6 +13,7 @@ import { useRouteAPI } from '@/composables/route/useRouteAPI';
 import { useVehicleConfig } from '@/composables/route/useVehicleConfig';
 import { useCalendar } from '@/composables/route/useCalendar';
 import { useRouteHistory } from '@/composables/route/useRouteHistory';
+import { useMultiProviderAPI } from '@/composables/route/useMultiProviderAPI';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -47,7 +48,7 @@ const selectedDate = ref('');
 const routeDataCollection = ref<Record<number, any>>({});
 const isLoadingRouteData = ref(false);
 
-// Initialize Route API
+// Initialize Route API with devices for multi-provider support
 const {
     isLoading,
     authorizationHeader,
@@ -62,9 +63,15 @@ const {
     initCache,
     cacheInitialized,
     cacheError
-} = useRouteAPI();
+} = useRouteAPI(devices);
 // Tab management
 const activeTab = ref('realtime');
+
+// API Settings state
+const siamGpsToken = ref(localStorage.getItem('siamgps-authorization') || '');
+
+// Initialize multi-provider API for credential management
+const { refreshCredentials } = useMultiProviderAPI(devices);
 
 // Analytics data
 const utilizationData = ref<Record<string, any>>({});
@@ -525,6 +532,26 @@ const handleShowStopOnMap = async (stop: any) => {
         }, 500);
     }, 500);
 };
+
+// Save API credentials to localStorage
+const saveApiCredentials = () => {
+    // Save Andaman credentials (already handled by watchers in useRouteAPI)
+    // These are automatically saved when the reactive refs change
+    
+    // Save Siam GPS credentials
+    if (siamGpsToken.value) {
+        localStorage.setItem('siamgps-authorization', siamGpsToken.value);
+    } else {
+        localStorage.removeItem('siamgps-authorization');
+    }
+    
+    // Refresh multi-provider credentials
+    refreshCredentials();
+    
+    // Show success message (you could add a toast notification here)
+    console.log('API credentials saved successfully');
+    alert('บันทึกการตั้งค่า API เรียบร้อยแล้ว');
+};
 </script>
 
 <template>
@@ -589,6 +616,17 @@ const handleShowStopOnMap = async (stop: any) => {
                             ]"
                         >
                             การวิเคราะห์จุดหยุด
+                        </button>
+                        <button
+                            @click="activeTab = 'settings'"
+                            :class="[
+                                activeTab === 'settings' 
+                                    ? 'border-blue-500 text-blue-600' 
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                                'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm'
+                            ]"
+                        >
+                            ตั้งค่า API
                         </button>
                     </nav>
                 </div>
@@ -657,6 +695,116 @@ const handleShowStopOnMap = async (stop: any) => {
                         @radius-change="(radius) => routeAnalysisRadius = radius"
                         @show-on-map="handleShowStopOnMap"
                     />
+                    
+                    <!-- API Settings Tab -->
+                    <div v-else-if="activeTab === 'settings'" class="space-y-6 p-6">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">การตั้งค่า API Credentials</h3>
+                            <p class="text-sm text-gray-600 mb-6">จัดการ API tokens สำหรับผู้ให้บริการ GPS ต่างๆ</p>
+                        </div>
+
+                        <!-- Andaman Tracking API -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium text-gray-900 mb-3">Andaman Tracking API</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="andaman-auth" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Authorization Header
+                                    </label>
+                                    <input
+                                        id="andaman-auth"
+                                        v-model="authorizationHeader"
+                                        type="password"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Bearer token..."
+                                    />
+                                </div>
+                                <div>
+                                    <label for="andaman-token" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Token Header
+                                    </label>
+                                    <input
+                                        id="andaman-token"
+                                        v-model="tokenHeader"
+                                        type="password"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="API token..."
+                                    />
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <p class="text-xs text-gray-500">
+                                    ใช้สำหรับรถ: {{ devices.filter(d => (d.provider || 'andaman') === 'andaman').map(d => d.shortname).join(', ') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Siam GPS Track API -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium text-gray-900 mb-3">Siam GPS Track API</h4>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div>
+                                    <label for="siamgps-auth" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Authorization Bearer Token
+                                    </label>
+                                    <input
+                                        id="siamgps-auth"
+                                        v-model="siamGpsToken"
+                                        type="password"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="your_token_here"
+                                    />
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        ใส่เฉพาะ token (ระบบจะเพิ่ม "Bearer " ให้อัตโนมัติ)
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <p class="text-xs text-gray-500">
+                                    ใช้สำหรับรถ: {{ devices.filter(d => d.provider === 'siamgps').map(d => d.shortname).join(', ') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Save Button -->
+                        <div class="flex justify-end">
+                            <button
+                                @click="saveApiCredentials"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            >
+                                บันทึกการตั้งค่า
+                            </button>
+                        </div>
+
+                        <!-- Connection Status -->
+                        <div class="border-t pt-4">
+                            <h4 class="font-medium text-gray-900 mb-3">สถานะการเชื่อมต่อ</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <div 
+                                        :class="[
+                                            'w-2 h-2 rounded-full',
+                                            authorizationHeader && tokenHeader ? 'bg-green-500' : 'bg-red-500'
+                                        ]"
+                                    ></div>
+                                    <span class="text-sm">
+                                        Andaman Tracking: {{ authorizationHeader && tokenHeader ? 'เชื่อมต่อแล้ว' : 'ไม่ได้เชื่อมต่อ' }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div 
+                                        :class="[
+                                            'w-2 h-2 rounded-full',
+                                            siamGpsToken ? 'bg-green-500' : 'bg-red-500'
+                                        ]"
+                                    ></div>
+                                    <span class="text-sm">
+                                        Siam GPS Track: {{ siamGpsToken ? 'เชื่อมต่อแล้ว' : 'ไม่ได้เชื่อมต่อ' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
 

@@ -38,7 +38,33 @@ export const findClosestStopPoint = (latitude: number, longitude: number, radius
 // Helper function to get location name for a GPS point
 export const getLocationName = (point: any, index: number, radius: number) => {
     const closestStopPoint = findClosestStopPoint(point.latitude, point.longitude, radius);
-    return closestStopPoint ? closestStopPoint.name : (point.address || `จุดที่ ${index + 1}`);
+    
+    // Priority: 1) Closest known location, 2) Siam GPS sGeO, 3) Address, 4) Generic point number
+    if (closestStopPoint) {
+        return closestStopPoint.name;
+    }
+    
+    // Debug point data to see what's available
+    if (index < 3) {
+        console.log('Point data in getLocationName:', {
+            index,
+            geoLocation: point.geoLocation,
+            address: point.address,
+            hasGeoLocation: !!point.geoLocation,
+            sGeO: point.geoLocation?.sGeO
+        });
+    }
+    
+    // Use Siam GPS sGeO field directly
+    if (point.geoLocation?.sGeO) {
+        return point.geoLocation.sGeO;
+    }
+    
+    if (point.address && point.address !== 'ไม่ระบุตำแหน่ง') {
+        return point.address;
+    }
+    
+    return `จุดที่ ${index + 1}`;
 };
 
 // Helper function to format duration

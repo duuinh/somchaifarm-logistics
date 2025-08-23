@@ -66,6 +66,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('business-settings', [SettingController::class, 'update'])->name('business-settings.update');
     Route::get('api/settings/{key}', [SettingController::class, 'getValue'])->name('settings.get');
     
+    // Siam GPS API Proxy
+    Route::prefix('api/siamgps')->group(function () {
+        Route::post('route-history', [App\Http\Controllers\Api\SiamGpsController::class, 'getRouteHistory'])->name('api.siamgps.route-history');
+        Route::post('realtime', [App\Http\Controllers\Api\SiamGpsController::class, 'getRealtimeData'])->name('api.siamgps.realtime');
+    });
+    
     // Daily Route History
     Route::get('daily-route-history', [DailyRouteHistoryController::class, 'index'])->name('daily-route-history.index');
 });

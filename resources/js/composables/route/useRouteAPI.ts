@@ -1,5 +1,6 @@
 import { ref, watch } from 'vue';
 import { useIndexedDBCache } from './useIndexedDBCache';
+import { useMultiProviderAPI } from './useMultiProviderAPI';
 
 // API Configuration (single source of truth)
 const authorizationHeader = ref(localStorage.getItem('route-history-auth') || '');
@@ -42,10 +43,15 @@ const {
     clearExpiredCache
 } = useIndexedDBCache();
 
-export function useRouteAPI() {
+export function useRouteAPI(devices: any[] = []) {
     const isLoading = ref(false);
     const apiError = ref('');
     const loadingStates = ref<Record<number, boolean>>({});
+    
+    // Initialize multi-provider API if devices are provided
+    const { fetchRouteDataForProvider } = devices.length > 0 
+        ? useMultiProviderAPI(devices) 
+        : { fetchRouteDataForProvider: null };
 
     // Cache management (IndexedDB only)
     const getCachedData = async (deviceId: number, date: string) => {
@@ -100,27 +106,38 @@ export function useRouteAPI() {
                 }
             }
             
-            // Fetch fresh data
-            console.log(`Fetching fresh data for device ${deviceId} on ${date}`);
-            const response = await fetch('https://apitracking.andamantracking.dev/web/v1/passroute', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': authorizationHeader.value,
-                    'Token': tokenHeader.value,
-                },
-                body: JSON.stringify({
-                    deviceId: deviceId,
-                    start: new Date(date + 'T00:00:00').getTime(),
-                    end: new Date(date + 'T23:59:59').getTime()
-                })
-            });
+            // Determine provider for this device
+            const deviceConfig = devices.find(d => d.id === deviceId);
+            const provider = deviceConfig?.provider || 'andaman';
+            
+            let data;
+            if (fetchRouteDataForProvider && deviceConfig?.provider) {
+                // Use multi-provider system
+                console.log(`Fetching fresh data for device ${deviceId} on ${date} from provider: ${provider}`);
+                data = await fetchRouteDataForProvider(provider, deviceId, date);
+            } else {
+                // Fallback to legacy Andaman API
+                console.log(`Fetching fresh data for device ${deviceId} on ${date} using legacy API`);
+                const response = await fetch('https://apitracking.andamantracking.dev/web/v1/passroute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': authorizationHeader.value,
+                        'Token': tokenHeader.value,
+                    },
+                    body: JSON.stringify({
+                        deviceId: deviceId,
+                        start: new Date(date + 'T00:00:00').getTime(),
+                        end: new Date(date + 'T23:59:59').getTime()
+                    })
+                });
 
-            if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
+                data = await response.json();
             }
-
-            const data = await response.json();
             
             // Cache the successful response
             await setCachedData(deviceId, date, data);
@@ -141,8 +158,12 @@ export function useRouteAPI() {
             return {};
         }
 
-        if (!authorizationHeader.value || !tokenHeader.value) {
-            apiError.value = 'กรุณากรอก Authorization และ Token';
+        // Check if we have credentials for at least one provider
+        const hasAndamanCreds = authorizationHeader.value && tokenHeader.value;
+        const hasSiamGpsCreds = localStorage.getItem('siamgps-authorization');
+        
+        if (!hasAndamanCreds && !hasSiamGpsCreds) {
+            apiError.value = 'กรุณากรอกข้อมูล API credentials';
             return {};
         }
 
@@ -151,9 +172,13 @@ export function useRouteAPI() {
         const routeDataCollection: Record<number, any> = {};
 
         try {
-            // Store tokens
-            localStorage.setItem('route-history-auth', authorizationHeader.value);
-            localStorage.setItem('route-history-token', tokenHeader.value);
+            // Store tokens (only if they exist)
+            if (authorizationHeader.value) {
+                localStorage.setItem('route-history-auth', authorizationHeader.value);
+            }
+            if (tokenHeader.value) {
+                localStorage.setItem('route-history-token', tokenHeader.value);
+            }
 
             // Fetch data for all selected vehicles concurrently
             const promises = selectedDeviceIds.map(deviceId => 
