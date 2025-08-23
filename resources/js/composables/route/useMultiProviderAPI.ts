@@ -81,7 +81,8 @@ export function useMultiProviderAPI(devices: any[] = []) {
     });
 
     // Fetch realtime data from appropriate provider
-    const fetchRealtimeDataForProvider = async (provider: string, deviceIds: number[]) => {
+    const fetchRealtimeDataForProvider = async (provider: string, deviceIds: number[], currentDevices?: any[]) => {
+        const devicesToUse = currentDevices || devices;
         const config = API_PROVIDERS[provider];
         if (!config) {
             console.error(`Unknown provider: ${provider}`);
@@ -114,9 +115,9 @@ export function useMultiProviderAPI(devices: any[] = []) {
                 const allVehicleData = [];
                 
                 for (const deviceId of deviceIds) {
-                    const deviceConfig = devices.find(d => d.id === deviceId);
+                    const deviceConfig = devicesToUse.find(d => d.id === deviceId);
                     if (!deviceConfig) {
-                        console.warn(`No device config found for device ${deviceId}`);
+                        console.warn(`No device config found for device ${deviceId}. Available devices:`, devicesToUse.map(d => ({id: d.id, name: d.name})));
                         continue;
                     }
                     

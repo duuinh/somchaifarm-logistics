@@ -1301,7 +1301,7 @@ const showStopOnMap = async (stop: any) => {
             <strong>จุดจอดที่เลือก</strong><br>
             ${stop.location}<br>
             รถ: ${vehicleName}<br>
-            เวลา: ${stop.startTime}<br>
+            เวลา: ${formatStartTimeWithDayOfWeek(stop.startTime)}<br>
             ระยะเวลา: ${formatDuration(stop.duration)}<br>
             ประเภท: ${getStopLocationType(stop)}<br>
             พิกัด: ${parseFloat(stop.latitude).toFixed(6)}, ${parseFloat(stop.longitude).toFixed(6)}
@@ -1396,7 +1396,7 @@ const updateMapMarkers = async () => {
             <div style="font-size: 12px;">
                 <strong>${stop.location}</strong><br>
                 รถ: ${vehicleName}<br>
-                เวลา: ${stop.startTime}<br>
+                เวลา: ${formatStartTimeWithDayOfWeek(stop.startTime)}<br>
                 ระยะเวลา: ${formatDuration(stop.duration)}<br>
                 ประเภท: ${getStopLocationType(stop)}<br>
                 พิกัด: ${parseFloat(stop.latitude).toFixed(6)}, ${parseFloat(stop.longitude).toFixed(6)}<br>

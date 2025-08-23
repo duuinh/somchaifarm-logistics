@@ -209,7 +209,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, unref } from 'vue';
 import { officeCoordinates, pickupLocations, deliveryLocations } from '@/composables/useRouteFiltering';
 import { useRouteAPI } from '@/composables/route/useRouteAPI';
 import { useVehicleConfig } from '@/composables/route/useVehicleConfig';
@@ -226,7 +226,7 @@ const { devices, getVehicleColor, getDefaultDate } = useVehicleConfig();
 const { authorizationHeader, tokenHeader, fetchRouteData } = useRouteAPI(devices.value);
 
 // Initialize multi-provider API
-const { fetchRealtimeDataForProvider } = useMultiProviderAPI(devices.value);
+const { fetchRealtimeDataForProvider } = useMultiProviderAPI(unref(devices) || []);
 
 // State
 const isRefreshing = ref(false);
@@ -281,7 +281,11 @@ const isAtOffice = (vehicle: any) => {
 const totalVehicles = computed(() => vehiclesData.value.length);
 const runningVehicles = computed(() => vehiclesData.value.filter(v => v.status === 'running').length);
 const stoppedOutsideVehicles = computed(() => vehiclesData.value.filter(v => (v.status === 'stopped' || v.status === 'offline') && !isAtOffice(v)).length);
-const stoppedAtOfficeVehicles = computed(() => vehiclesData.value.filter(v => (v.status === 'stopped' || v.status === 'offline') && isAtOffice(v)).length);
+const stoppedAtOfficeVehicles = computed(() => {
+    const result = vehiclesData.value.filter(v => (v.status === 'stopped' || v.status === 'offline') && isAtOffice(v));
+    console.log('Office vehicles:', result.length, result.map(v => ({id: v.id, license: v.licensePlate, status: v.status, lat: v.latitude, lng: v.longitude})));
+    return result.length;
+});
 
 const filteredVehicles = computed(() => {
     // Group vehicles by type
@@ -362,7 +366,7 @@ const fetchRealtimeData = async () => {
         for (const [provider, deviceIds] of Object.entries(devicesByProvider)) {
             try {
                 console.log(`Fetching from ${provider} for devices:`, deviceIds);
-                const providerData = await fetchRealtimeDataForProvider(provider, deviceIds);
+                const providerData = await fetchRealtimeDataForProvider(provider, deviceIds, devices.value);
                 
                 if (provider === 'andaman') {
                     // Transform Andaman data to our format
@@ -625,10 +629,13 @@ const updateMapWithRouteHistory = async () => {
         const color = device?.color || '#0000FF';
         
         // Create polyline from route points
-        const routePoints = routeData.list.map((point: any) => [
-            parseFloat(point.latitude),
-            parseFloat(point.longitude)
-        ]);
+        const routePoints = routeData.list
+            .filter((point: any) => point.latitude && point.longitude)
+            .map((point: any) => [
+                parseFloat(point.latitude),
+                parseFloat(point.longitude)
+            ])
+            .filter(([lat, lng]) => !isNaN(lat) && !isNaN(lng));
         
         if (routePoints.length > 1 && showRouteHistory.value) {
             const polyline = L.polyline(routePoints, {
@@ -670,8 +677,8 @@ const updateMapWithRouteHistory = async () => {
                         <div style="font-size: 12px;">
                             <strong>จุดหยุด #${stopIndex + 1}</strong><br>
                             รถ: ${devices.value.find(d => d.id === deviceId)?.shortname || 'ไม่ระบุ'}<br>
-                            เวลาเริ่ม: ${stop.startTime}<br>
-                            เวลาสิ้นสุด: ${stop.endTime}<br>
+                            เวลาเริ่ม: ${formatTime(stop.startTime)}<br>
+                            เวลาสิ้นสุด: ${formatTime(stop.endTime)}<br>
                             ระยะเวลา: ${stop.duration} นาที<br>
                             ตำแหน่ง: ${stop.location}<br>
                             พิกัด: ${parseFloat(stop.latitude).toFixed(6)}, ${parseFloat(stop.longitude).toFixed(6)}
@@ -826,6 +833,13 @@ const updateMapMarkers = async () => {
             vehicleMarkers.value[vehicle.id] = marker;
         } else {
             // Multiple vehicles - create cluster marker with count
+            // Only count stopped/offline vehicles for office locations
+            const isOfficeLocation = vehicles.some(v => isAtOffice(v));
+            const stoppedAtThisLocation = vehicles.filter(v => (v.status === 'stopped' || v.status === 'offline'));
+            const displayCount = isOfficeLocation ? stoppedAtOfficeVehicles.value : vehicleCount;
+            
+            console.log(`Cluster at ${lat},${lng}: isOffice=${isOfficeLocation}, total=${vehicleCount}, stopped=${stoppedAtThisLocation.length}, displaying=${displayCount}`);
+            
             const hasOfficeVehicle = vehicles.some(v => isAtOffice(v));
             const borderColor = hasOfficeVehicle ? '#A855F7' : 'white';
             const borderWidth = hasOfficeVehicle ? '3px' : '2px';
@@ -840,7 +854,7 @@ const updateMapMarkers = async () => {
                     color: #374151; font-weight: bold; font-size: 14px;
                     position: relative; z-index: 1000;
                     backdrop-filter: blur(4px);
-                ">${vehicleCount}</div>`,
+                ">${displayCount}</div>`,
                 iconSize: [32, 32],
                 iconAnchor: [16, 16],
                 popupAnchor: [0, -16],
@@ -849,7 +863,7 @@ const updateMapMarkers = async () => {
             
             const marker = L.marker([lat, lng], { 
                 icon: clusterIcon,
-                title: `${vehicleCount} คัน`
+                title: `${displayCount} คัน`
             })
             .addTo(map.value);
             
