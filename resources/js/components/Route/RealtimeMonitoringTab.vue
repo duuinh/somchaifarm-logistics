@@ -66,6 +66,7 @@
             </div>
         </div>
 
+
         <!-- Main Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <!-- Vehicle List (Left side - 1/4) -->
@@ -142,7 +143,33 @@
             <!-- Map (Right side - 3/4) -->
             <div class="lg:col-span-3 bg-white rounded-lg border shadow-sm">
                 <div class="p-4 border-b">
-                    <h3 class="font-medium">แผนที่ติดตาม</h3>
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-medium">แผนที่ติดตาม</h3>
+                        <!-- Status Color Legend -->
+                        <div class="flex items-center gap-4 text-xs">
+                            <span class="font-medium text-gray-600">สีสถานะ:</span>
+                            <div class="flex items-center gap-1">
+                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                <span>วิ่ง</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                                <span>จอด</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                                <span>ติดเครื่อง</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <div class="w-2 h-2 rounded-full bg-gray-500"></div>
+                                <span>ไม่ทราบ</span>
+                            </div>
+                            <div class="flex items-center gap-1 ml-2 border-l pl-2">
+                                <div class="w-2 h-2 rounded-full bg-blue-300 border border-purple-500"></div>
+                                <span>ที่สำนักงาน</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div 
                     ref="realtimeMapContainer"
@@ -751,7 +778,34 @@ const updateMapMarkers = async () => {
             const vehicleType = deviceInfo?.type || 'unknown';
             const atOffice = isAtOffice(vehicle);
             
-            const markerColor = vehicleType === 'รถบรรทุก' ? '#3B82F6' : vehicleType === 'รถกระบะ' ? '#10B981' : '#EF4444';
+            // Color based on vehicle status
+            const getStatusColor = (vehicle: any) => {
+                // Check different status field names and normalize to lowercase
+                const status = (vehicle.status_name || vehicle.vehicleStatus || vehicle.status || '').toLowerCase();
+                
+                // Debug log to see what status we're getting
+                console.log('Vehicle status:', vehicle.id, status, { 
+                    status_name: vehicle.status_name, 
+                    vehicleStatus: vehicle.vehicleStatus, 
+                    status: vehicle.status,
+                    speed: vehicle.speed 
+                });
+                
+                // Check for moving/running status
+                if (status === 'running' || status === 'moving' || vehicle.speed > 0) {
+                    return '#10B981'; // Green for moving
+                } else if (status === 'stopped' || status === 'stop' || status === 'park') {
+                    return '#EF4444'; // Red for stopped
+                } else if (status === 'idle') {
+                    return '#F59E0B'; // Amber for idle
+                } else if (status === 'offline') {
+                    return '#DC2626'; // Dark red for offline
+                } else {
+                    return '#6B7280'; // Gray for unknown
+                }
+            };
+            
+            const markerColor = getStatusColor(vehicle);
             const borderColor = atOffice ? '#A855F7' : 'white';
             const borderWidth = atOffice ? '3px' : '2px';
             
