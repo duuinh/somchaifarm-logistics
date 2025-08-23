@@ -7,7 +7,7 @@ import { CalendarDays } from 'lucide-vue-next';
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import RouteViewTab from '@/components/Route/RouteViewTab.vue';
 import AnalyticsTab from '@/components/Route/AnalyticsTab.vue';
-import StopEfficiencyTab from '@/components/Route/StopEfficiencyTab.vue';
+import StopAnalysisTab from '@/components/Route/StopAnalysisTab.vue';
 import RealtimeMonitoringTab from '@/components/Route/RealtimeMonitoringTab.vue';
 import { useRouteAPI } from '@/composables/route/useRouteAPI';
 import { useVehicleConfig } from '@/composables/route/useVehicleConfig';
@@ -38,7 +38,7 @@ const {
 } = useVehicleConfig();
 
 // Make routeAnalysisRadius reactive
-const routeAnalysisRadius = ref(200);
+const routeAnalysisRadius = ref(1000);
 
 // Form data
 const selectedDeviceIds = ref<number[]>([]);
@@ -517,7 +517,7 @@ const handleShowStopOnMap = async (stop: any) => {
                     })
                     .bindPopup(`
                         <div style="font-size: 12px;">
-                            <strong>จุดหยุดที่เลือก</strong><br>
+                            <strong>จุดจอดที่เลือก</strong><br>
                             ${stop.location}<br>
                             รถ: ${stop.vehicleName}<br>
                             เวลา: ${stop.startTime}<br>
@@ -615,7 +615,7 @@ const saveApiCredentials = () => {
                                 'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm'
                             ]"
                         >
-                            การวิเคราะห์จุดหยุด
+                            การวิเคราะห์จุดจอด
                         </button>
                         <button
                             @click="activeTab = 'settings'"
@@ -680,8 +680,8 @@ const saveApiCredentials = () => {
                         @date-range-change="(start, end) => loadUtilizationDataForAnalytics(devices.map(d => d.id), 7, start, end)"
                     />
                     
-                    <!-- Stop Efficiency Tab -->
-                    <StopEfficiencyTab
+                    <!-- Stop Analysis Tab -->
+                    <StopAnalysisTab
                         v-else-if="activeTab === 'stop-efficiency'"
                         :selected-device-ids="selectedDeviceIds"
                         :selected-date="selectedDate"
@@ -693,7 +693,6 @@ const saveApiCredentials = () => {
                         @period-change="handleStopEfficiencyPeriodChange"
                         @date-range-change="handleStopEfficiencyDateRangeChange"
                         @radius-change="(radius) => routeAnalysisRadius = radius"
-                        @show-on-map="handleShowStopOnMap"
                     />
                     
                     <!-- API Settings Tab -->
