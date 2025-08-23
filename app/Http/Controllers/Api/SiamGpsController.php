@@ -83,4 +83,37 @@ class SiamGpsController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get realtime vehicle data using the new endpoint format
+     */
+    public function getRealtimeDataByVehicleId(Request $request, int $vehicleId): JsonResponse
+    {
+        $request->validate([
+            'authorization' => 'required|string',
+        ]);
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => $request->authorization,
+                'Accept' => 'application/json',
+            ])->get("https://services.siamgpstrack.com/realtime/listByVehicleId/{$vehicleId}");
+
+            if (!$response->successful()) {
+                return response()->json([
+                    'error' => 'Siam GPS API error',
+                    'status' => $response->status(),
+                    'message' => $response->body()
+                ], $response->status());
+            }
+
+            return response()->json($response->json());
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch from Siam GPS',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

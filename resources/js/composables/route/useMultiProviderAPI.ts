@@ -13,7 +13,7 @@ const API_PROVIDERS = {
         name: 'Siam GPS Track',
         baseUrl: '/api/siamgps', // Use Laravel proxy
         routeUrl: '/api/siamgps/route-history',
-        realtimeUrl: '/api/siamgps/realtime',
+        realtimeUrl: '/api/siamgps/realtime/listByVehicleId',
         requiresAuth: true,
         authHeaders: ['Authorization'],
         transformRouteResponse: (data: any) => {
@@ -124,36 +124,58 @@ export function useMultiProviderAPI(devices: any[] = []) {
                     const siamGpsVehicleId = deviceId;
                     
                     try {
-                        // Call Laravel proxy endpoint
-                        const vehicleResponse = await fetch(config.realtimeUrl, {
+                        // Call Laravel proxy endpoint with vehicle ID in URL
+                        const vehicleResponse = await fetch(`${config.realtimeUrl}/${siamGpsVehicleId}`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
-                                vehicleId: siamGpsVehicleId,
                                 authorization: creds.Authorization
                             })
                         });
                         
                         if (vehicleResponse.ok) {
-                            const vehicleData = await vehicleResponse.json();
-                            // Transform the data to our format
-                            const transformedVehicle = {
-                                device_id: deviceConfig.id, // Keep internal ID (312767)
-                                name: deviceConfig.name,
-                                latitude: vehicleData.location?.coordinates?.[1] || vehicleData.latitude || vehicleData.lat || 0,
-                                longitude: vehicleData.location?.coordinates?.[0] || vehicleData.longitude || vehicleData.lng || 0,
-                                speed: vehicleData.speed || 0,
-                                status_name: vehicleData.vehicleStatus === 'RUNNING' ? 'Moving' : 'Stop',
-                                online: 1, // Assume online if we got data
-                                event_stamp: vehicleData.time || vehicleData.timestamp || vehicleData.dateTime || new Date().toISOString(),
-                                address: vehicleData.geoLocation?.sGeO || vehicleData.address || 'ไม่ระบุตำแหน่ง',
-                                fuel_liters: vehicleData.fuel || '-',
-                                ignition: vehicleData.vehicleStatus === 'RUNNING' ? 1 : 0,
-                                satellites: vehicleData.gpsFix ? 10 : 0
-                            };
-                            allVehicleData.push(transformedVehicle);
+                            const responseData = await vehicleResponse.json();
+                            
+                            // Handle the new API response format
+                            if (responseData.status === 200 && responseData.data && responseData.data.length > 0) {
+                                const vehicleData = responseData.data[0]; // Get the latest data point
+                                const vehicleInfo = responseData.vehicleInfo;
+                                
+                                // Extract coordinates
+                                let lat = 0, lng = 0;
+                                if (vehicleData.localtion?.coordinates) {
+                                    lat = vehicleData.localtion.coordinates[1];
+                                    lng = vehicleData.localtion.coordinates[0];
+                                } else if (vehicleData.location?.coordinates) {
+                                    lat = vehicleData.location.coordinates[1];
+                                    lng = vehicleData.location.coordinates[0];
+                                }
+                                
+                                // Transform the data to our format
+                                const transformedVehicle = {
+                                    device_id: deviceConfig.id, // Keep internal ID (312767)
+                                    name: deviceConfig.name,
+                                    latitude: lat,
+                                    longitude: lng,
+                                    speed: vehicleData.speed || 0,
+                                    status_name: vehicleData.vehicleStatus === 'RUNNING' ? 'Moving' : 'Stop',
+                                    online: 1, // Assume online if we got data
+                                    event_stamp: vehicleData.time || new Date().toISOString(),
+                                    address: vehicleData.geoLocation?.sGeo || 'ไม่ระบุตำแหน่ง',
+                                    fuel_liters: '-',
+                                    ignition: vehicleData.vehicleStatus === 'RUNNING' ? 1 : 0,
+                                    satellites: vehicleData.gpsFix ? 10 : 0,
+                                    // Additional Siam GPS specific data
+                                    mileage: vehicleData.mileage,
+                                    heading: vehicleData.heading,
+                                    battery: vehicleData.battery,
+                                    vehicleStatus: vehicleData.vehicleStatus,
+                                    plateNumber: vehicleInfo?._vehiPlateNo
+                                };
+                                allVehicleData.push(transformedVehicle);
+                            }
                         }
                     } catch (vehicleError) {
                         console.error(`Error fetching vehicle ${siamGpsVehicleId}:`, vehicleError);

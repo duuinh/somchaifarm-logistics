@@ -207,7 +207,7 @@
                 <div>
                     <div class="text-sm text-gray-600">พิกัด</div>
                     <div class="font-medium mt-1">
-                        {{ selectedVehicle.latitude?.toFixed(6) }}, {{ selectedVehicle.longitude?.toFixed(6) }}
+                        {{ parseFloat(selectedVehicle.latitude || 0).toFixed(6) }}, {{ parseFloat(selectedVehicle.longitude || 0).toFixed(6) }}
                     </div>
                 </div>
                 <div>
@@ -463,7 +463,6 @@ const fetchRealtimeData = async () => {
             }
         }
         
-        console.log('Combined vehicle data:', allVehicleData);
         return allVehicleData;
     } catch (error) {
         console.error('Error fetching realtime data:', error);
@@ -541,8 +540,8 @@ const appendToRouteHistory = async (newVehicleData: any[]) => {
         
         // Create a new GPS point in the same format as the API
         const newPoint = {
-            latitude: vehicle.latitude.toString(),
-            longitude: vehicle.longitude.toString(),
+            latitude: parseFloat(vehicle.latitude).toString(),
+            longitude: parseFloat(vehicle.longitude).toString(),
             speed: vehicle.speed || 0,
             event_stamp: vehicle.lastUpdate || new Date().toISOString(),
             direction: vehicle.direction || 0,
@@ -697,7 +696,7 @@ const updateMapWithRouteHistory = async () => {
                             เวลาสิ้นสุด: ${stop.endTime}<br>
                             ระยะเวลา: ${stop.duration} นาที<br>
                             ตำแหน่ง: ${stop.location}<br>
-                            พิกัด: ${stop.latitude.toFixed(6)}, ${stop.longitude.toFixed(6)}
+                            พิกัด: ${parseFloat(stop.latitude).toFixed(6)}, ${parseFloat(stop.longitude).toFixed(6)}
                         </div>
                     `)
                     .addTo(map.value);

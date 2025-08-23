@@ -70,6 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('api/siamgps')->group(function () {
         Route::post('route-history', [App\Http\Controllers\Api\SiamGpsController::class, 'getRouteHistory'])->name('api.siamgps.route-history');
         Route::post('realtime', [App\Http\Controllers\Api\SiamGpsController::class, 'getRealtimeData'])->name('api.siamgps.realtime');
+        Route::post('realtime/listByVehicleId/{vehicleId}', [App\Http\Controllers\Api\SiamGpsController::class, 'getRealtimeDataByVehicleId'])->name('api.siamgps.realtime.listByVehicleId');
     });
     
     // Daily Route History
