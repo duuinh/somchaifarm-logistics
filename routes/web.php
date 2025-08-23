@@ -27,7 +27,26 @@ Route::get('/', function () {
         'recent_delivery_notes' => DeliveryNote::with(['client', 'driver', 'vehicle'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
+            ->get(),
+        'vehicles' => Vehicle::active()
+            ->whereNotNull('gps_device_id')
+            ->orderBy('vehicle_type')
+            ->orderBy('license_plate')
             ->get()
+            ->map(function ($vehicle) {
+                return [
+                    'id' => $vehicle->id,
+                    'gps_device_id' => $vehicle->gps_device_id,
+                    'license_plate' => $vehicle->license_plate,
+                    'province' => $vehicle->province,
+                    'vehicle_type' => $vehicle->vehicle_type,
+                    'gps_provider' => $vehicle->gps_provider,
+                    'is_active' => $vehicle->is_active,
+                    'color' => $vehicle->color,
+                    'tracking_name' => $vehicle->tracking_name,
+                    'formatted_name' => $vehicle->formatted_name,
+                ];
+            })
     ]);
 })->middleware(['auth', 'verified'])->name('home');
 
@@ -64,6 +83,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('business-settings', [SettingController::class, 'index'])->name('business-settings.index');
     Route::put('business-settings', [SettingController::class, 'update'])->name('business-settings.update');
     Route::get('api/settings/{key}', [SettingController::class, 'getValue'])->name('settings.get');
+    
+    // Vehicle API
+    Route::prefix('api/vehicles')->group(function () {
+        Route::get('with-gps', [VehicleController::class, 'getVehiclesWithGps'])->name('api.vehicles.with-gps');
+    });
     
     // Siam GPS API Proxy
     Route::prefix('api/siamgps')->group(function () {

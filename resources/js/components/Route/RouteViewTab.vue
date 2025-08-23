@@ -8,7 +8,6 @@
             v-model:office-hour-start="officeHourStart"
             v-model:office-hour-end="officeHourEnd"
             :devices="devices"
-            :vehicle-colors="vehicleColors"
             :has-cached-data="hasCachedData"
             :cached-vehicle-count="cachedVehicleCount"
             :is-loading="isLoading"
@@ -93,7 +92,6 @@ interface Props {
     officeHourStart: number;
     officeHourEnd: number;
     devices: any[];
-    vehicleColors: string[];
     devicesByType: any[];
     hasCachedData: boolean;
     cachedVehicleCount: number;
@@ -104,7 +102,7 @@ interface Props {
     routeDataCollection: Record<number, any>;
     routeHistory: any[];
     routeVisibility: Record<number, boolean>;
-    getVehicleColor: (selectedIds: number[], deviceId: number) => string;
+    getVehicleColor: (deviceId: number) => string;
     getVehicleRouteHistory: (deviceId: number) => any[];
 }
 

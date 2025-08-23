@@ -4,7 +4,6 @@
         <VehicleSelector
             v-model="selectedDeviceIds"
             :devices="devices"
-            :vehicle-colors="vehicleColors"
         />
 
         <!-- Date Selection -->
@@ -117,7 +116,6 @@ interface Props {
     officeHourStart: number;
     officeHourEnd: number;
     devices: Vehicle[];
-    vehicleColors: string[];
     hasCachedData: boolean;
     cachedVehicleCount: number;
     isLoading: boolean;

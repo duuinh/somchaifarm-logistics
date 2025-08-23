@@ -50,6 +50,10 @@ class VehicleController extends Controller
             'province' => 'nullable|string|max:100',
             'vehicle_type' => 'nullable|string|max:100',
             'load_capacity' => 'nullable|numeric|min:0',
+            'gps_device_id' => 'nullable|integer',
+            'gps_provider' => 'nullable|string|in:andaman,siamgps',
+            'color' => 'nullable|string|max:7',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $vehicle = Vehicle::create($validated);
@@ -88,6 +92,10 @@ class VehicleController extends Controller
             'province' => 'nullable|string|max:100',
             'vehicle_type' => 'nullable|string|max:100',
             'load_capacity' => 'nullable|numeric|min:0',
+            'gps_device_id' => 'nullable|integer',
+            'gps_provider' => 'nullable|string|in:andaman,siamgps',
+            'color' => 'nullable|string|max:7',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $vehicle->update($validated);
@@ -110,5 +118,35 @@ class VehicleController extends Controller
 
         return redirect()->route('vehicles.index')
             ->with('success', 'รถถูกลบเรียบร้อยแล้ว');
+    }
+    
+    /**
+     * Get vehicles with GPS tracking for API
+     */
+    public function getVehiclesWithGps(Request $request)
+    {
+        $vehicles = Vehicle::active()
+            ->whereNotNull('gps_device_id')
+            ->orderBy('vehicle_type')
+            ->orderBy('license_plate')
+            ->get();
+        
+        // Format for tracking system
+        $formattedVehicles = $vehicles->map(function ($vehicle) {
+            return [
+                'id' => $vehicle->id,
+                'gps_device_id' => $vehicle->gps_device_id,
+                'license_plate' => $vehicle->license_plate,
+                'province' => $vehicle->province,
+                'vehicle_type' => $vehicle->vehicle_type,
+                'gps_provider' => $vehicle->gps_provider,
+                'is_active' => $vehicle->is_active,
+                'color' => $vehicle->color,
+                'tracking_name' => $vehicle->tracking_name,
+                'formatted_name' => $vehicle->formatted_name,
+            ];
+        });
+        
+        return response()->json($formattedVehicles);
     }
 }

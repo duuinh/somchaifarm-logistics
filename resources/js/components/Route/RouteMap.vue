@@ -99,19 +99,11 @@ const map = ref<any>(null);
 let routeMarkers: any[] = [];
 let routePolylines: Record<number, any> = {};
 
-// Vehicle colors for different routes
-const vehicleColors = [
-    '#FF0000', // Red
-    '#0000FF', // Blue
-    '#00AA00', // Green
-    '#FF6600', // Orange
-    '#9900FF', // Purple
-    '#FF00FF', // Magenta
-    '#00AAAA', // Cyan
-    '#AA5500', // Brown
-    '#FF3399', // Pink
-    '#666666'  // Gray
-];
+// Vehicle color helper function
+const getVehicleColor = (deviceId: number): string => {
+    const device = props.devices?.find(d => d.id === deviceId);
+    return device?.color || '#0000FF'; // Default blue color
+};
 
 // Marker visibility controls (office enabled by default, pickup/delivery hidden)
 const showOffice = ref(true);
@@ -171,7 +163,7 @@ const routeHistory = computed(() => {
         const dataToAnalyze = routeData?.list;
         if (!dataToAnalyze || dataToAnalyze.length === 0) return;
         
-        const vehicleName = props.devices.find(d => d.id === deviceId)?.name || `Vehicle ${deviceId}`;
+        const vehicleName = props.devices?.find(d => d.id === deviceId)?.name || `Vehicle ${deviceId}`;
         
         const rawStops = analyzeRouteStops(
             dataToAnalyze, 
@@ -518,7 +510,7 @@ const plotRouteOnMap = async () => {
         allRouteCoordinates.push(...routeCoordinates);
         
         // Get color for this vehicle
-        const color = vehicleColors[index % vehicleColors.length];
+        const color = getVehicleColor(deviceId);
         
         // Draw polyline for this vehicle only if visible
         if (routeCoordinates.length > 1) {

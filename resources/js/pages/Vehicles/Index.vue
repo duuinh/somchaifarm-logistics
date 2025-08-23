@@ -17,6 +17,10 @@ interface Vehicle {
     province: string;
     vehicle_type: string;
     load_capacity: number;
+    gps_device_id?: number;
+    gps_provider?: string;
+    color?: string;
+    is_active?: boolean;
 }
 
 interface PaginatedData {
@@ -118,15 +122,43 @@ const deleteVehicle = (id: number) => {
                                     <TableHead>จังหวัด</TableHead>
                                     <TableHead>ประเภทรถ</TableHead>
                                     <TableHead>ความจุ (ตัน)</TableHead>
+                                    <TableHead>GPS Tracking</TableHead>
+                                    <TableHead>สถานะ</TableHead>
                                     <TableHead class="text-right">การดำเนินการ</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 <TableRow v-for="vehicle in vehicles.data" :key="vehicle.id">
-                                    <TableCell class="font-medium">{{ vehicle.license_plate }}</TableCell>
+                                    <TableCell class="font-medium">
+                                        <div class="flex items-center gap-2">
+                                            <div 
+                                                v-if="vehicle.color"
+                                                class="w-3 h-3 rounded-full border border-gray-300"
+                                                :style="{ backgroundColor: vehicle.color }"
+                                            ></div>
+                                            {{ vehicle.license_plate }}
+                                        </div>
+                                    </TableCell>
                                     <TableCell>{{ vehicle.province || '-' }}</TableCell>
                                     <TableCell>{{ vehicle.vehicle_type || '-' }}</TableCell>
                                     <TableCell>{{ vehicle.load_capacity || '-' }}</TableCell>
+                                    <TableCell>
+                                        <div class="text-sm">
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                                                <span class="font-mono text-xs">{{ vehicle.gps_device_id }}</span>
+                                            </div>
+                                            <div class="text-xs text-muted-foreground capitalize">{{ vehicle.gps_provider }}</div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span v-if="vehicle.is_active !== false" class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                                            ใช้งาน
+                                        </span>
+                                        <span v-else class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
+                                            ไม่ใช้งาน
+                                        </span>
+                                    </TableCell>
                                     <TableCell class="text-right">
                                         <div class="flex justify-end gap-2">
                                             <Link :href="route('vehicles.show', vehicle.id)">

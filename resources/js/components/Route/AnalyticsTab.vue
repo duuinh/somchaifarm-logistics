@@ -1,9 +1,9 @@
 <template>
     <div class="space-y-6 p-6">
         <!-- Vehicle Selection Reminder -->
-        <div v-if="selectedDeviceIds.length === 0" class="text-center py-12">
-            <h3 class="text-lg font-medium text-gray-900 mb-2">กรุณาเลือกรถ</h3>
-            <p class="text-gray-500">เลือกรถอย่างน้อย 1 คันเพื่อดูข้อมูลวิเคราะห์</p>
+        <div v-if="effectiveSelectedIds.length === 0" class="text-center py-12">
+            <h3 class="text-lg font-medium text-gray-900 mb-2">ไม่มีรถในระบบ</h3>
+            <p class="text-gray-500">ไม่พบข้อมูลรถสำหรับการวิเคราะห์</p>
         </div>
         
         <!-- Analytics Content -->
@@ -66,9 +66,8 @@
                 <UtilizationChart
                     :loading="loadingUtilization"
                     :utilization-data="utilizationData"
-                    :selected-device-ids="selectedDeviceIds"
+                    :selected-device-ids="effectiveSelectedIds"
                     :devices="devices"
-                    :vehicle-colors="vehicleColors"
                     :selected-period="selectedPeriod"
                 />
                 
@@ -84,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import UtilizationChart from './UtilizationChart.vue';
 import VehicleTypeComparison from './VehicleTypeComparison.vue';
@@ -92,17 +91,23 @@ import VehicleTypeComparison from './VehicleTypeComparison.vue';
 interface Props {
     selectedDeviceIds: number[];
     devices: any[];
-    vehicleColors: string[];
     loadingUtilization: boolean;
     utilizationData: Record<string, any>;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
     'period-change': [days: number];
     'date-range-change': [startDate: string, endDate: string];
 }>();
+
+// Use all vehicles by default if none selected
+const effectiveSelectedIds = computed(() => {
+    return props.selectedDeviceIds.length > 0 
+        ? props.selectedDeviceIds 
+        : props.devices.map(d => d.id);
+});
 
 // Time control state
 const selectedPeriod = ref(7);

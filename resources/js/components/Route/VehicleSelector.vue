@@ -49,7 +49,7 @@
                                 :style="{ backgroundColor: getVehicleColor(vehicle.id) }"
                             ></div>
                             <label :for="`vehicle-${vehicle.id}`" class="text-xs text-gray-600 cursor-pointer truncate flex-1" :title="vehicle.name">
-                                {{ vehicle.name.replace(/^🚛\s*|^🚚\s*/, '').replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim() }}
+                                {{ vehicle.name }}
                             </label>
                         </div>
                     </div>
@@ -70,13 +70,12 @@ interface Vehicle {
     id: number;
     name: string;
     type: string;
-    category: string;
+    color?: string;
 }
 
 interface Props {
     modelValue: number[];
     devices: Vehicle[];
-    vehicleColors: string[];
 }
 
 const props = defineProps<Props>();
@@ -95,16 +94,13 @@ const devicesByType = computed(() => {
         return acc;
     }, {} as Record<string, typeof props.devices>);
     
-    const typeOrder = ['รถพ่วง', '10 ล้อ', '6 ล้อ', 'รถกระบะ'];
     const orderedGroups: Array<{ type: string; vehicles: typeof props.devices }> = [];
     
-    typeOrder.forEach(type => {
-        if (grouped[type]) {
-            orderedGroups.push({
-                type,
-                vehicles: grouped[type].sort((a, b) => a.name.localeCompare(b.name))
-            });
-        }
+    Object.keys(grouped).sort().reverse().forEach(type => {
+        orderedGroups.push({
+            type,
+            vehicles: grouped[type].sort((a, b) => a.name.localeCompare(b.name))
+        });
     });
     
     return orderedGroups;
@@ -112,11 +108,8 @@ const devicesByType = computed(() => {
 
 // Get vehicle color
 const getVehicleColor = (deviceId: number) => {
-    const index = props.modelValue.indexOf(deviceId);
-    if (index >= 0 && props.vehicleColors.length > 0) {
-        return props.vehicleColors[index % props.vehicleColors.length];
-    }
-    return '#0000FF'; // Default blue color
+    const vehicle = props.devices.find(d => d.id === deviceId);
+    return vehicle?.color || '#0000FF'; // Use vehicle's color or default blue
 };
 
 // Check if group is selected

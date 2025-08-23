@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CalendarDays, Truck } from 'lucide-vue-next';
-import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, nextTick, unref } from 'vue';
 import RouteViewTab from '@/components/Route/RouteViewTab.vue';
 import AnalyticsTab from '@/components/Route/AnalyticsTab.vue';
 import StopAnalysisTab from '@/components/Route/StopAnalysisTab.vue';
@@ -15,16 +15,27 @@ import { useCalendar } from '@/composables/route/useCalendar';
 import { useRouteHistory } from '@/composables/route/useRouteHistory';
 import { useMultiProviderAPI } from '@/composables/route/useMultiProviderAPI';
 
+// Get initial vehicles data from Inertia props
+const page = usePage();
+const initialVehicles = computed(() => page.props.vehicles as any[]);
+
 // Initialize vehicle configuration composable
 const {
     devices,
-    vehicleColors,
     devicesByType,
     officeHourStart,
     officeHourEnd,
     getVehicleColor,
-    getDefaultDate
+    getDefaultDate,
+    vehicleStore
 } = useVehicleConfig();
+
+// Initialize the vehicle store with server data on mount
+onMounted(async () => {
+    if (initialVehicles.value && initialVehicles.value.length > 0) {
+        await vehicleStore.initialize(initialVehicles.value);
+    }
+});
 
 // Make routeAnalysisRadius reactive
 const routeAnalysisRadius = ref(1000);
@@ -37,7 +48,7 @@ const selectedDate = ref('');
 const routeDataCollection = ref<Record<number, any>>({});
 const isLoadingRouteData = ref(false);
 
-// Initialize Route API with devices for multi-provider support
+// Initialize Route API - will get devices reactively
 const {
     isLoading,
     authorizationHeader,
@@ -52,7 +63,7 @@ const {
     initCache,
     cacheInitialized,
     cacheError
-} = useRouteAPI(devices);
+} = useRouteAPI([]);
 
 // Tab management
 const activeTab = ref('realtime');
@@ -60,8 +71,13 @@ const activeTab = ref('realtime');
 // API Settings state
 const siamGpsToken = ref(localStorage.getItem('siamgps-authorization') || '');
 
-// Initialize multi-provider API for credential management
-const { refreshCredentials } = useMultiProviderAPI(devices);
+// Initialize multi-provider API for credential management - defer until devices loaded
+let refreshCredentials: any = () => {};
+watch(devices, (newDevices) => {
+    if (newDevices && newDevices.length > 0) {
+        ({ refreshCredentials } = useMultiProviderAPI(newDevices));
+    }
+}, { immediate: true });
 
 // Analytics data
 const utilizationData = ref<Record<string, any>>({});
@@ -179,9 +195,11 @@ const loadUtilizationDataByDateRange = async (startDate: string, endDate: string
 
 // Load utilization data for analytics (uses all vehicles by default)
 const loadUtilizationDataForAnalytics = async (vehicleIds: number[], days: number = 7, startDate?: string, endDate?: string) => {
+    console.log(`Loading utilization data for ${days} days, vehicles:`, vehicleIds);
     loadingUtilization.value = true;
     try {
         const data = await fetchUtilizationData(vehicleIds, officeHourStart.value, officeHourEnd.value, days, startDate, endDate);
+        console.log(`Utilization data loaded:`, Object.keys(data).length, 'days', data);
         utilizationData.value = data;
     } finally {
         loadingUtilization.value = false;
@@ -192,7 +210,7 @@ const loadUtilizationDataForAnalytics = async (vehicleIds: number[], days: numbe
 watch(activeTab, (newTab) => {
     if (newTab === 'analytics' && Object.keys(utilizationData.value).length === 0) {
         // Load analytics for all vehicles by default
-        const allVehicleIds = devices.map(d => d.id);
+        const allVehicleIds = devices.value?.map(d => d.id) || [];
         loadUtilizationDataForAnalytics(allVehicleIds);
     }
     
@@ -231,7 +249,7 @@ watch(activeTab, (newTab) => {
     
     // When switching to stop-efficiency, auto-select all vehicles if none selected
     if (newTab === 'stop-efficiency' && selectedDeviceIds.value.length === 0) {
-        selectedDeviceIds.value = devices.map(d => d.id);
+        selectedDeviceIds.value = devices.value?.map(d => d.id) || [];
     }
 });
 
@@ -634,8 +652,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <!-- Realtime Monitoring Tab -->
                     <RealtimeMonitoringTab
                         v-if="activeTab === 'realtime'"
-                        :devices="devices"
-                        :vehicle-colors="vehicleColors"
                     />
                     
                     <!-- Route View Tab -->
@@ -648,7 +664,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                         v-model:office-hour-start="officeHourStart"
                         v-model:office-hour-end="officeHourEnd"
                         :devices="devices"
-                        :vehicle-colors="vehicleColors"
                         :devices-by-type="devicesByType"
                         :has-cached-data="hasCachedData"
                         :cached-vehicle-count="cachedVehicleCount"
@@ -670,13 +685,12 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <!-- Analytics Tab -->
                     <AnalyticsTab
                         v-else-if="activeTab === 'analytics'"
-                        :selected-device-ids="devices.map(d => d.id)"
+                        :selected-device-ids="devices.value?.map(d => d.id) || []"
                         :devices="devices"
-                        :vehicle-colors="vehicleColors"
                         :loading-utilization="loadingUtilization"
                         :utilization-data="utilizationData"
-                        @period-change="(days) => loadUtilizationDataForAnalytics(devices.map(d => d.id), days)"
-                        @date-range-change="(start, end) => loadUtilizationDataForAnalytics(devices.map(d => d.id), 7, start, end)"
+                        @period-change="(days) => loadUtilizationDataForAnalytics(unref(devices)?.map(d => d.id) || [], days)"
+                        @date-range-change="(start, end) => loadUtilizationDataForAnalytics(unref(devices)?.map(d => d.id) || [], 7, start, end)"
                     />
                     
                     <!-- Stop Analysis Tab -->
@@ -685,7 +699,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                         :selected-device-ids="selectedDeviceIds"
                         :selected-date="selectedDate"
                         :devices="devices"
-                        :vehicle-colors="vehicleColors"
                         :route-history="stopEfficiencyRouteHistory"
                         :route-analysis-radius="routeAnalysisRadius"
                         :get-vehicle-color="getVehicleColor"
@@ -732,7 +745,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             </div>
                             <div class="mt-3">
                                 <p class="text-xs text-gray-500">
-                                    ใช้สำหรับรถ: {{ devices.filter(d => (d.provider || 'andaman') === 'andaman').map(d => d.shortname).join(', ') }}
+                                    ใช้สำหรับรถ: {{ (devices.value || []).filter(d => (d.provider || 'andaman') === 'andaman').map(d => d.shortname || d.license_plate).join(', ') }}
                                 </p>
                             </div>
                         </div>
@@ -759,7 +772,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             </div>
                             <div class="mt-3">
                                 <p class="text-xs text-gray-500">
-                                    ใช้สำหรับรถ: {{ devices.filter(d => d.provider === 'siamgps').map(d => d.shortname).join(', ') }}
+                                    ใช้สำหรับรถ: {{ (devices.value || []).filter(d => d.provider === 'siamgps').map(d => d.shortname || d.license_plate).join(', ') }}
                                 </p>
                             </div>
                         </div>

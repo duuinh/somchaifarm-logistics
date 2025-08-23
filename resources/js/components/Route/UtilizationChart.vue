@@ -200,7 +200,6 @@ interface Props {
     utilizationData: Record<string, Record<number, number>>;
     selectedDeviceIds: number[];
     devices: Vehicle[];
-    vehicleColors: string[];
     selectedPeriod?: number;
 }
 
@@ -265,7 +264,7 @@ const vehicleTypeGroups = computed(() => {
 // Process chart data
 const chartData = computed(() => {
     const dates = Object.keys(props.utilizationData).sort();
-    const recentDates = dates.slice(-selectedPeriod.value);
+    const recentDates = selectedPeriod.value === 30 ? dates.slice(-30) : dates.slice(-selectedPeriod.value);
     
     return recentDates.map(date => ({
         date,
@@ -317,35 +316,19 @@ const getDataPoints = (vehicleId: number) => {
 
 // Get vehicle color
 const getVehicleColor = (deviceId: number) => {
-    const index = props.selectedDeviceIds.indexOf(deviceId);
-    if (index >= 0 && props.vehicleColors.length > 0) {
-        return props.vehicleColors[index % props.vehicleColors.length];
-    }
-    return '#0000FF'; // Default blue color
+    const device = props.devices.find(d => d.id === deviceId);
+    return device?.color || '#0000FF'; // Default blue color
 };
 
 // Get vehicle display name for tooltips - use full cleaned name for better readability
 const getVehicleDisplayName = (vehicle: Vehicle) => {
     // Use cleaned full name for better context in tooltips
-    return cleanVehicleName(vehicle.name);
+    return vehicle.name;
 };
 
 // Get vehicle tag name - use shortname for compact legend tags
 const getVehicleTagName = (vehicle: Vehicle) => {
-    if (vehicle.shortname) {
-        return vehicle.shortname;
-    }
-    
-    // Fallback to cleaned name if no shortname
-    return cleanVehicleName(vehicle.name);
-};
-
-// Clean vehicle name - remove only emojis but keep descriptive information
-const cleanVehicleName = (name: string) => {
-    return name
-        .replace(/^🚛\s*|^🚚\s*/, '') // Remove truck emojis
-        .replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '') // Remove all emojis
-        .trim(); // Remove extra whitespace
+    return vehicle.shortname || vehicle.name;
 };
 
 // Toggle vehicle visibility

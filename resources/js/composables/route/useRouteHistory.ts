@@ -1,10 +1,10 @@
-import { computed } from 'vue';
+import { computed, unref } from 'vue';
 import { useStopAnalysis } from './useStopAnalysis';
 
 export function useRouteHistory(
     selectedDeviceIds: any,
     routeDataCollection: any,
-    devices: any,
+    devices: any, // This should be the reactive devices array or computed
     routeAnalysisRadius: any
 ) {
     const { analyzeRouteStops, processStops } = useStopAnalysis();
@@ -29,7 +29,8 @@ export function useRouteHistory(
             const routeData = routeDataCollection.value[deviceId];
             const dataToAnalyze = routeData?.list;
             if (!dataToAnalyze || dataToAnalyze.length === 0) return;
-            const vehicleName = devices.find(d => d.id === deviceId)?.name || `Vehicle ${deviceId}`;
+            const devicesArray = unref(devices) || [];
+            const vehicleName = devicesArray.find(d => d.id === deviceId)?.name || `Vehicle ${deviceId}`;
             const rawStops = analyzeRouteStops(dataToAnalyze, routeAnalysisRadius.value, deviceId, vehicleName);
             const processedStops = processStops(rawStops, 5);
             allStops.push(...processedStops);

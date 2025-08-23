@@ -505,9 +505,8 @@ interface Props {
     selectedDeviceIds: number[];
     selectedDate: string;
     devices: Array<{ id: number; name: string; type: string }>;
-    vehicleColors: string[];
     routeHistory: any[];
-    getVehicleColor: (selectedIds: number[], deviceId: number) => string;
+    getVehicleColor: (deviceId: number) => string;
     routeAnalysisRadius?: number;
 }
 

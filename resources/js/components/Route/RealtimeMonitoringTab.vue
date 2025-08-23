@@ -216,21 +216,17 @@ import { useVehicleConfig } from '@/composables/route/useVehicleConfig';
 import { useRouteHistory } from '@/composables/route/useRouteHistory';
 import { useMultiProviderAPI } from '@/composables/route/useMultiProviderAPI';
 
-interface Props {
-    devices: Array<{ id: number; name: string; type: string; shortname: string; provider?: string; vehicleId?: number }>;
-    vehicleColors: string[];
-}
+// No props needed - get devices from vehicle store
+const props = defineProps<{}>();
 
-const props = defineProps<Props>();
+// Get devices from vehicle config/store
+const { devices, getVehicleColor, getDefaultDate } = useVehicleConfig();
 
 // Get API headers and route fetching functions
-const { authorizationHeader, tokenHeader, fetchRouteData } = useRouteAPI(props.devices);
-
-// Get vehicle config for default date
-const { getDefaultDate } = useVehicleConfig();
+const { authorizationHeader, tokenHeader, fetchRouteData } = useRouteAPI(devices.value);
 
 // Initialize multi-provider API
-const { fetchRealtimeDataForProvider } = useMultiProviderAPI(props.devices);
+const { fetchRealtimeDataForProvider } = useMultiProviderAPI(devices.value);
 
 // State
 const isRefreshing = ref(false);
@@ -257,7 +253,7 @@ const selectedDeviceIds = ref<number[]>([]);
 const { stopPoints, getVehicleRouteHistory } = useRouteHistory(
     selectedDeviceIds,
     routeHistoryData,
-    props.devices,
+    devices,
     routeAnalysisRadius
 );
 
@@ -290,7 +286,7 @@ const stoppedAtOfficeVehicles = computed(() => vehiclesData.value.filter(v => (v
 const filteredVehicles = computed(() => {
     // Group vehicles by type
     const grouped = vehiclesData.value.reduce((acc, vehicle) => {
-        const deviceInfo = props.devices.find(d => d.id === vehicle.id);
+        const deviceInfo = devices.value.find(d => d.id === vehicle.id);
         const vehicleType = deviceInfo?.type || 'อื่นๆ';
         
         if (!acc[vehicleType]) {
@@ -300,10 +296,8 @@ const filteredVehicles = computed(() => {
         return acc;
     }, {} as Record<string, any[]>);
     
-    // Define type order and return as array of groups
-    const typeOrder = ['รถกระบะ', 'รถพ่วง', '10 ล้อ', '6 ล้อ', 'อื่นๆ'];
-    
-    return typeOrder.map(type => ({
+    // Return groups sorted in reverse alphabetical order
+    return Object.keys(grouped).sort().reverse().map(type => ({
         type,
         vehicles: grouped[type] || []
     })).filter(group => group.vehicles.length > 0);
@@ -334,11 +328,7 @@ const formatTime = (timestamp: Date | string) => {
     return date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 };
 
-// Get vehicle color based on device position in the devices array
-const getVehicleColor = (vehicleId: number) => {
-    const deviceIndex = props.devices.findIndex(d => d.id === vehicleId);
-    return deviceIndex >= 0 ? props.vehicleColors[deviceIndex % props.vehicleColors.length] : props.vehicleColors[0];
-};
+// getVehicleColor is now provided by useVehicleConfig()
 
 
 const selectVehicle = (vehicle: any) => {
@@ -355,7 +345,7 @@ const fetchRealtimeData = async () => {
         console.log('Fetching realtime data from multiple providers...');
         
         // Group devices by provider
-        const devicesByProvider = props.devices.reduce((acc, device) => {
+        const devicesByProvider = devices.value.reduce((acc, device) => {
             const provider = device.provider || 'andaman';
             if (!acc[provider]) {
                 acc[provider] = [];
@@ -377,7 +367,7 @@ const fetchRealtimeData = async () => {
                 if (provider === 'andaman') {
                     // Transform Andaman data to our format
                     const transformedData = providerData.map((vehicle: any) => {
-                        const deviceConfig = props.devices.find(d => d.id === vehicle.device_id);
+                        const deviceConfig = devices.value.find(d => d.id === vehicle.device_id);
                         
                         let status = 'offline';
                         if (vehicle.online === 1) {
@@ -413,7 +403,7 @@ const fetchRealtimeData = async () => {
                 } else if (provider === 'siamgps') {
                     // Transform Siam GPS data (assuming it's already transformed by the provider)
                     const transformedData = providerData.map((vehicle: any) => {
-                        const deviceConfig = props.devices.find(d => d.id === vehicle.device_id);
+                        const deviceConfig = devices.value.find(d => d.id === vehicle.device_id);
                         
                         let status = 'offline';
                         if (vehicle.online === 1) {
@@ -465,7 +455,7 @@ const loadTodayRouteHistory = async () => {
     isLoadingRouteHistory.value = true;
     try {
         const today = getDefaultDate();
-        const allDeviceIds = props.devices.map(d => d.id);
+        const allDeviceIds = devices.value.map(d => d.id);
         console.log('Loading route history for today:', today, 'devices:', allDeviceIds);
         
         const routeData = await fetchRouteData(allDeviceIds, today, false);
@@ -630,9 +620,9 @@ const updateMapWithRouteHistory = async () => {
         const deviceId = parseInt(deviceIdStr);
         if (!routeData?.list || routeData.list.length === 0) return;
         
-        // Get vehicle color based on device ID position in devices array
-        const deviceIndex = props.devices.findIndex(d => d.id === deviceId);
-        const color = deviceIndex >= 0 ? props.vehicleColors[deviceIndex % props.vehicleColors.length] : props.vehicleColors[0];
+        // Get vehicle color from device
+        const device = devices.value.find(d => d.id === deviceId);
+        const color = device?.color || '#0000FF';
         
         // Create polyline from route points
         const routePoints = routeData.list.map((point: any) => [
@@ -679,7 +669,7 @@ const updateMapWithRouteHistory = async () => {
                     .bindPopup(`
                         <div style="font-size: 12px;">
                             <strong>จุดหยุด #${stopIndex + 1}</strong><br>
-                            รถ: ${props.devices.find(d => d.id === deviceId)?.shortname || 'ไม่ระบุ'}<br>
+                            รถ: ${devices.value.find(d => d.id === deviceId)?.shortname || 'ไม่ระบุ'}<br>
                             เวลาเริ่ม: ${stop.startTime}<br>
                             เวลาสิ้นสุด: ${stop.endTime}<br>
                             ระยะเวลา: ${stop.duration} นาที<br>
@@ -761,7 +751,7 @@ const updateMapMarkers = async () => {
         if (vehicleCount === 1) {
             // Single vehicle - use original styling
             const vehicle = vehicles[0];
-            const deviceInfo = props.devices.find(d => d.id === vehicle.id);
+            const deviceInfo = devices.value.find(d => d.id === vehicle.id);
             const vehicleType = deviceInfo?.type || 'unknown';
             const atOffice = isAtOffice(vehicle);
             
