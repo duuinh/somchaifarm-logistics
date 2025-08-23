@@ -209,8 +209,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, unref } from 'vue';
-import { officeCoordinates, pickupLocations, deliveryLocations } from '@/composables/useRouteFiltering';
+import { ref, computed, onMounted, onUnmounted, unref, watch } from 'vue';
+import { officeCoordinates, pickupLocations, deliveryLocations, LOCATION_RADIUS } from '@/composables/useRouteFiltering';
 import { useRouteAPI } from '@/composables/route/useRouteAPI';
 import { useVehicleConfig } from '@/composables/route/useVehicleConfig';
 import { useRouteHistory } from '@/composables/route/useRouteHistory';
@@ -220,7 +220,8 @@ import { useMultiProviderAPI } from '@/composables/route/useMultiProviderAPI';
 const props = defineProps<{}>();
 
 // Get devices from vehicle config/store
-const { devices, getVehicleColor, getDefaultDate } = useVehicleConfig();
+const { devices, getVehicleColor, getDefaultDate, vehicleStore } = useVehicleConfig();
+
 
 // Get API headers and route fetching functions
 const { authorizationHeader, tokenHeader, fetchRouteData } = useRouteAPI(devices.value);
@@ -259,14 +260,14 @@ const { stopPoints, getVehicleRouteHistory } = useRouteHistory(
 
 // Helper function to check if vehicle is at office
 const isAtOffice = (vehicle: any) => {
-    if (!vehicle.latitude || !vehicle.longitude) return false;
+    if (!vehicle.latitude || !vehicle.longitude || !officeCoordinates.value) return false;
     
     // Calculate distance from office (in meters)
     const R = 6371e3; // Earth's radius in meters
-    const φ1 = officeCoordinates.lat * Math.PI/180;
+    const φ1 = officeCoordinates.value.lat * Math.PI/180;
     const φ2 = vehicle.latitude * Math.PI/180;
-    const Δφ = (vehicle.latitude - officeCoordinates.lat) * Math.PI/180;
-    const Δλ = (vehicle.longitude - officeCoordinates.lng) * Math.PI/180;
+    const Δφ = (vehicle.latitude - officeCoordinates.value.lat) * Math.PI/180;
+    const Δλ = (vehicle.longitude - officeCoordinates.value.lng) * Math.PI/180;
 
     const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
               Math.cos(φ1) * Math.cos(φ2) *
@@ -274,7 +275,7 @@ const isAtOffice = (vehicle: any) => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     const distance = R * c;
     
-    return distance <= 200; // Within 200 meters of office
+    return distance <= LOCATION_RADIUS;
 };
 
 // Computed
@@ -288,6 +289,7 @@ const stoppedAtOfficeVehicles = computed(() => {
 });
 
 const filteredVehicles = computed(() => {
+    console.log('Computing filteredVehicles with', vehiclesData.value.length, 'vehicles');
     // Group vehicles by type
     const grouped = vehiclesData.value.reduce((acc, vehicle) => {
         const deviceInfo = devices.value.find(d => d.id === vehicle.id);
@@ -347,6 +349,7 @@ const selectVehicle = (vehicle: any) => {
 const fetchRealtimeData = async () => {
     try {
         console.log('Fetching realtime data from multiple providers...');
+        console.log('Available devices:', devices.value);
         
         // Group devices by provider
         const devicesByProvider = devices.value.reduce((acc, device) => {
@@ -582,13 +585,17 @@ const refreshData = async () => {
 
 // Initialize map
 const initializeRealtimeMap = async () => {
-    if (!realtimeMapContainer.value) return;
+    if (!realtimeMapContainer.value) {
+        console.log('Map container not available');
+        return;
+    }
+    console.log('Initializing realtime map...');
     
     const L = await import('leaflet');
     
     // Initialize map
     map.value = L.map(realtimeMapContainer.value, {
-        center: [officeCoordinates.lat, officeCoordinates.lng],
+        center: [officeCoordinates.value.lat, officeCoordinates.value.lng],
         zoom: 10
     });
     
@@ -708,7 +715,7 @@ const updateMapMarkers = async () => {
     });
     vehicleMarkers.value = {};
     
-    // Group vehicles by location (within 100 meters of each other)
+    // Group vehicles by location (within 200 meters of each other)
     const locationGroups: Record<string, any[]> = {};
     
     vehiclesData.value.forEach(vehicle => {
@@ -735,7 +742,7 @@ const updateMapMarkers = async () => {
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             const distance = R * c;
             
-            if (distance <= 100) { // Within 100 meters
+            if (distance <= LOCATION_RADIUS) { // Within location radius
                 groupKey = key;
                 break;
             }
@@ -902,7 +909,7 @@ const autoFitMap = async () => {
     }
     
     // Always include office in bounds
-    bounds.extend([officeCoordinates.lat, officeCoordinates.lng]);
+    bounds.extend([officeCoordinates.value.lat, officeCoordinates.value.lng]);
     
     // Fit map to bounds with padding
     if (bounds.isValid()) {
@@ -912,11 +919,25 @@ const autoFitMap = async () => {
     }
 };
 
+// Wait for devices to be available before fetching data
+watch(devices, async (newDevices) => {
+    if (newDevices.length > 0) {
+        console.log('Devices now available, loading route history and realtime data...');
+        try {
+            await loadTodayRouteHistory();
+            const realtimeData = await fetchRealtimeData();
+            vehiclesData.value = realtimeData;
+            lastUpdateTime.value = new Date().toLocaleTimeString('th-TH');
+            await updateMapMarkers();
+        } catch (error) {
+            console.error('Error in devices watcher:', error);
+        }
+    }
+}, { immediate: true });
+
 // Lifecycle
 onMounted(async () => {
     await initializeRealtimeMap();
-    await loadTodayRouteHistory(); // Load route history first
-    await refreshData(); // Then load current positions
     
     // Set up auto-refresh every 30 seconds (only for realtime data, not route history)
     refreshInterval.value = setInterval(() => {

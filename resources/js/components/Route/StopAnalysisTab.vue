@@ -708,8 +708,8 @@ const isOfficeStop = (stop: any): boolean => {
     const distance = calculateDistance(
         stop.latitude,
         stop.longitude,
-        officeCoordinates.lat,
-        officeCoordinates.lng
+        officeCoordinates.value.lat,
+        officeCoordinates.value.lng
     );
     return distance <= 100; // 100 meters radius around office
 };
@@ -723,7 +723,7 @@ const isPickupStop = (stop: any): boolean => {
             return true;
         }
         // Check against known pickup location names
-        for (const pickup of pickupLocations) {
+        for (const pickup of pickupLocations.value) {
             if (stop.location.includes(pickup.name) || pickup.name.includes(stop.location)) {
                 return true;
             }
@@ -731,7 +731,7 @@ const isPickupStop = (stop: any): boolean => {
     }
     
     // Check by coordinates against known pickup locations
-    for (const pickup of pickupLocations) {
+    for (const pickup of pickupLocations.value) {
         const distance = calculateDistance(
             stop.latitude,
             stop.longitude,
@@ -757,7 +757,7 @@ const isDeliveryStop = (stop: any): boolean => {
             }
         }
         // Check against known delivery location names
-        for (const delivery of deliveryLocations) {
+        for (const delivery of deliveryLocations.value) {
             if (stop.location.includes(delivery.name) || delivery.name.includes(stop.location)) {
                 return true;
             }
@@ -765,7 +765,7 @@ const isDeliveryStop = (stop: any): boolean => {
     }
     
     // Check by coordinates against known delivery locations
-    for (const delivery of deliveryLocations) {
+    for (const delivery of deliveryLocations.value) {
         const distance = calculateDistance(
             stop.latitude,
             stop.longitude,
@@ -1333,7 +1333,7 @@ const initializeMap = async () => {
     }).addTo(durationMap.value);
     
     // Add office marker
-    const officeMarker = L.circleMarker([officeCoordinates.lat, officeCoordinates.lng], {
+    const officeMarker = L.circleMarker([officeCoordinates.value.lat, officeCoordinates.value.lng], {
         radius: 8,
         fillColor: '#8B5CF6',
         color: '#FFFFFF',
@@ -1345,7 +1345,7 @@ const initializeMap = async () => {
     officeMarker.bindPopup(`
         <div style="font-size: 12px;">
             <strong>สำนักงานสมชายฟาร์ม</strong><br>
-            พิกัด: ${officeCoordinates.lat.toFixed(6)}, ${officeCoordinates.lng.toFixed(6)}
+            พิกัด: ${officeCoordinates.value.lat.toFixed(6)}, ${officeCoordinates.value.lng.toFixed(6)}
         </div>
     `);
     

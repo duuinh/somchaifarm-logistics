@@ -359,7 +359,7 @@ const initializeMap = async () => {
         }
         
         map.value = L.map(container, {
-            center: [officeCoordinates.lat, officeCoordinates.lng],
+            center: [officeCoordinates.value.lat, officeCoordinates.value.lng],
             zoom: 13,
             zoomAnimation: false,
             fadeAnimation: false,
@@ -382,7 +382,7 @@ const initializeMap = async () => {
             shadowSize: [41, 41]
         });
         
-        officeMarker = L.marker([officeCoordinates.lat, officeCoordinates.lng], { 
+        officeMarker = L.marker([officeCoordinates.value.lat, officeCoordinates.value.lng], { 
             icon: officeIcon,
             title: 'สำนักงาน'
         })
@@ -394,7 +394,7 @@ const initializeMap = async () => {
         }
         
         // Add pickup location markers
-        pickupLocations.forEach((location, index) => {
+        pickupLocations.value.forEach((location, index) => {
             const pickupIcon = L.icon({
                 iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -419,7 +419,7 @@ const initializeMap = async () => {
         });
         
         // Add delivery location markers
-        deliveryLocations.forEach((location, index) => {
+        deliveryLocations.value.forEach((location, index) => {
             const deliveryIcon = L.icon({
                 iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',

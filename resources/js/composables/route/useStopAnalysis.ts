@@ -16,9 +16,9 @@ interface StopPoint {
 // Helper function to find the closest stop point label
 export const findClosestStopPoint = (latitude: number, longitude: number, radius: number) => {
     const allLocations = [
-        ...pickupLocations,
-        ...deliveryLocations,
-        { ...officeCoordinates, name: 'สำนักงาน' }
+        ...pickupLocations.value,
+        ...deliveryLocations.value,
+        { ...officeCoordinates.value, name: 'สำนักงาน' }
     ];
     
     let closestLocation = null;

@@ -97,7 +97,10 @@ export function useMultiProviderAPI(devices: any[] = []) {
             // Prepare credentials
             let creds = {};
             if (config.requiresAuth && providerCredentials.value[provider]) {
-                creds = { ...providerCredentials.value[provider] };
+                const providerCreds = providerCredentials.value[provider];
+                if (providerCreds && typeof providerCreds === 'object') {
+                    creds = { ...providerCreds };
+                }
                 
                 // For Siam GPS, ensure Authorization header has Bearer prefix
                 if (provider === 'siamgps' && creds.Authorization && !creds.Authorization.startsWith('Bearer ')) {
@@ -231,7 +234,10 @@ export function useMultiProviderAPI(devices: any[] = []) {
             // Prepare credentials
             let creds = {};
             if (config.requiresAuth && providerCredentials.value[provider]) {
-                creds = { ...providerCredentials.value[provider] };
+                const providerCreds = providerCredentials.value[provider];
+                if (providerCreds && typeof providerCreds === 'object') {
+                    creds = { ...providerCreds };
+                }
                 
                 // For Siam GPS, ensure Authorization header has Bearer prefix
                 if (provider === 'siamgps' && creds.Authorization && !creds.Authorization.startsWith('Bearer ')) {

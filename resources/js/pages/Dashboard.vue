@@ -11,6 +11,7 @@ import StopAnalysisTab from '@/components/Route/StopAnalysisTab.vue';
 import RealtimeMonitoringTab from '@/components/Route/RealtimeMonitoringTab.vue';
 import { useRouteAPI } from '@/composables/route/useRouteAPI';
 import { useVehicleConfig } from '@/composables/route/useVehicleConfig';
+import { LOCATION_RADIUS } from '@/composables/useRouteFiltering';
 import { useCalendar } from '@/composables/route/useCalendar';
 import { useRouteHistory } from '@/composables/route/useRouteHistory';
 import { useMultiProviderAPI } from '@/composables/route/useMultiProviderAPI';
@@ -38,7 +39,7 @@ onMounted(async () => {
 });
 
 // Make routeAnalysisRadius reactive
-const routeAnalysisRadius = ref(1000);
+const routeAnalysisRadius = ref(LOCATION_RADIUS);
 
 // Form data
 const selectedDeviceIds = ref<number[]>([]);
