@@ -63,7 +63,7 @@
                                     :device-id="vehicle.id"
                                     :device-name="vehicle.name"
                                     :vehicle-type="vehicle.type"
-                                    :vehicle-color="getVehicleColor(selectedDeviceIds, vehicle.id)"
+                                    :vehicle-color="vehicle.color"
                                     :route-analysis-radius="routeAnalysisRadius"
                                     :office-hour-start="officeHourStart"
                                     :office-hour-end="officeHourEnd"
