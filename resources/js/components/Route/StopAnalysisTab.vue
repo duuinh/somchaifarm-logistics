@@ -492,7 +492,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, nextTick } from 'vue';
-import { officeCoordinates, calculateDistance, pickupLocations, deliveryLocations, LOCATION_RADIUS } from '@/composables/useRouteFiltering';
+import { officeCoordinates, officeLocations, calculateDistance, pickupLocations, deliveryLocations, LOCATION_RADIUS } from '@/composables/useRouteFiltering';
 import { useStopAnalysis } from '@/composables/route/useStopAnalysis';
 import { Button } from '@/components/ui/button';
 
@@ -695,11 +695,9 @@ const displayDateRange = computed(() => {
 
 // Helper function to check if stop is at office
 const isOfficeStop = (stop: any): boolean => {
-    // Check by location name
-    if (stop.location && (
-        stop.location.includes('สำนักงาน') || 
-        stop.location.includes('Office') ||
-        stop.location.includes('สมชายฟาร์ม')
+    // Check by location name against database office locations
+    if (stop.location && officeLocations.value.some(office => 
+        stop.location.includes(office.name)
     )) {
         return true;
     }
@@ -1244,10 +1242,10 @@ const getStopDurationClass = (duration: number): string => {
 };
 
 const getLocationTypeClass = (stop: any): string => {
-    const type = getStopLocationType(stop);
-    if (type === 'สำนักงาน') return 'bg-red-100 text-red-800';
-    if (type === 'จุดรับสินค้า') return 'bg-blue-100 text-blue-800';
-    if (type === 'จุดส่งสินค้า') return 'bg-green-100 text-green-800';
+    // Check if it's an office (any office location)
+    if (isOfficeStop(stop)) return 'bg-red-100 text-red-800';
+    if (isPickupStop(stop)) return 'bg-blue-100 text-blue-800';
+    if (isDeliveryStop(stop)) return 'bg-green-100 text-green-800';
     return 'bg-gray-100 text-gray-800'; // จุดอื่นๆ
 };
 

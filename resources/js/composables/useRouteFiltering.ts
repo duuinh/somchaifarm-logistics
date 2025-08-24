@@ -34,6 +34,16 @@ export const deliveryLocations = computed(() =>
         }))
 );
 
+export const officeLocations = computed(() => 
+    locations.value
+        .filter(loc => loc.type === 'office')
+        .map(loc => ({
+            lat: parseFloat(loc.latitude),
+            lng: parseFloat(loc.longitude),
+            name: loc.name
+        }))
+);
+
 export const serviceLocations = computed(() => 
     locations.value
         .filter(loc => loc.type === 'service')

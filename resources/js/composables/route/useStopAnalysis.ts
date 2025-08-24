@@ -1,4 +1,4 @@
-import { officeCoordinates, pickupLocations, deliveryLocations, calculateDistance } from '@/composables/useRouteFiltering';
+import { officeLocations, pickupLocations, deliveryLocations, calculateDistance } from '@/composables/useRouteFiltering';
 
 interface StopPoint {
     startTime: string;
@@ -18,7 +18,7 @@ export const findClosestStopPoint = (latitude: number, longitude: number, radius
     const allLocations = [
         ...pickupLocations.value,
         ...deliveryLocations.value,
-        { ...officeCoordinates.value, name: 'สำนักงาน' }
+        ...officeLocations.value
     ];
     
     let closestLocation = null;
@@ -172,8 +172,14 @@ export const processStops = (stops: StopPoint[], minDuration: number = 5, radius
             // Use the better location name (prefer known locations > addresses > generic)
             const prevIsGeneric = prevStop.location.startsWith('จุดที่');
             const currentIsGeneric = currentStop.location.startsWith('จุดที่');
-            const prevIsKnown = ['สำนักงาน', 'จุดรับสินค้า', 'จุดส่งสินค้า'].some(type => prevStop.location.includes(type));
-            const currentIsKnown = ['สำนักงาน', 'จุดรับสินค้า', 'จุดส่งสินค้า'].some(type => currentStop.location.includes(type));
+            // Check if stops are at known locations (from database)
+            const allKnownLocations = [
+                ...pickupLocations.value.map(l => l.name),
+                ...deliveryLocations.value.map(l => l.name),
+                ...officeLocations.value.map(l => l.name)
+            ];
+            const prevIsKnown = allKnownLocations.some(locationName => prevStop.location.includes(locationName));
+            const currentIsKnown = allKnownLocations.some(locationName => currentStop.location.includes(locationName));
             
             // Priority: Known locations > Addresses > Generic names
             if (currentIsKnown && !prevIsKnown) {
