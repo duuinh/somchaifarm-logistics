@@ -4,7 +4,7 @@ import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, LayoutGrid, FileText, Users, Package, Truck, IdCard, Settings, CalendarDays, MapPin } from 'lucide-vue-next';
+import { BookOpen, LayoutGrid, Users, Package, Truck, IdCard, Settings, CalendarDays, MapPin } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import {
     Sidebar,
@@ -21,11 +21,6 @@ const mainNavItems: NavItem[] = [
         title: 'แดชบอร์ด',
         href: '/dashboard',
         icon: LayoutGrid,
-    },
-    {
-        title: 'ใบส่งของ',
-        href: '/delivery-notes',
-        icon: FileText,
     },
     {
         title: 'จัดการลูกค้า',

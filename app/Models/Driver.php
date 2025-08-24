@@ -13,8 +13,4 @@ class Driver extends Model
         'id_card_number',
     ];
 
-    public function deliveryNotes(): HasMany
-    {
-        return $this->hasMany(DeliveryNote::class);
-    }
 }

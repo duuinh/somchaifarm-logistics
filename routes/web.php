@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\ClientController;
-use App\Http\Controllers\DeliveryNoteController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\LocationController;
@@ -10,7 +9,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
 use App\Models\Client;
 use App\Models\Location;
-use App\Models\DeliveryNote;
 use App\Models\Item;
 use App\Models\Driver;
 use App\Models\Vehicle;
@@ -20,16 +18,11 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return Inertia::render('Dashboard', [
         'stats' => [
-            'delivery_notes_count' => DeliveryNote::count(),
             'clients_count' => Client::count(),
             'items_count' => Item::count(),
             'drivers_count' => Driver::count(),
             'vehicles_count' => Vehicle::count(),
         ],
-        'recent_delivery_notes' => DeliveryNote::with(['client', 'driver', 'vehicle'])
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get(),
 'vehicles' => Vehicle::active()
             ->whereNotNull('gps_device_id')
             ->orderBy('vehicle_type')
@@ -57,16 +50,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('Dashboard', [
             'stats' => [
-                'delivery_notes_count' => DeliveryNote::count(),
                 'clients_count' => Client::count(),
                 'items_count' => Item::count(),
                 'drivers_count' => Driver::count(),
                 'vehicles_count' => Vehicle::count(),
             ],
-            'recent_delivery_notes' => DeliveryNote::with(['client', 'driver', 'vehicle'])
-                ->orderBy('created_at', 'desc')
-                ->limit(5)
-                ->get(),
             'vehicles' => Vehicle::active()
                 ->whereNotNull('gps_device_id')
                 ->orderBy('vehicle_type')
@@ -97,11 +85,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('vehicles', VehicleController::class);
     Route::resource('locations', LocationController::class);
     Route::resource('users', UserController::class);
-    
-    // Delivery Notes routes
-    Route::resource('delivery-notes', DeliveryNoteController::class);
-    Route::get('delivery-notes/{delivery_note}/print', [DeliveryNoteController::class, 'print'])
-        ->name('delivery-notes.print');
         
     // Business Settings routes
     Route::get('business-settings', [SettingController::class, 'index'])->name('business-settings.index');

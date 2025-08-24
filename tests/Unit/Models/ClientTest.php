@@ -3,7 +3,6 @@
 namespace Tests\Unit\Models;
 
 use App\Models\Client;
-use App\Models\DeliveryNote;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -37,13 +36,6 @@ class ClientTest extends TestCase
         $this->assertEquals($fillable, $client->getFillable());
     }
 
-    /** @test */
-    public function it_can_have_delivery_notes()
-    {
-        $client = Client::factory()->create();
-        
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $client->deliveryNotes);
-    }
 
     /** @test */
     public function it_validates_customer_type()

@@ -15,8 +15,4 @@ class Client extends Model
         'phone',
     ];
 
-    public function deliveryNotes(): HasMany
-    {
-        return $this->hasMany(DeliveryNote::class);
-    }
 }

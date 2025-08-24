@@ -124,27 +124,6 @@ class ClientControllerTest extends TestCase
         $this->assertDatabaseMissing('clients', ['id' => $client->id]);
     }
 
-    /** @test */
-    public function cannot_delete_client_with_delivery_notes()
-    {
-        $client = Client::create([
-            'name' => 'Client with Orders',
-            'customer_type' => 'regular',
-        ]);
-
-        // Create a delivery note for this client
-        $deliveryNote = \App\Models\DeliveryNote::create([
-            'client_id' => $client->id,
-            'created_by' => $this->user->id,
-            'delivery_date' => now(),
-        ]);
-
-        $response = $this->actingAs($this->user)
-            ->delete("/clients/{$client->id}");
-
-        $response->assertSessionHas('error');
-        $this->assertDatabaseHas('clients', ['id' => $client->id]);
-    }
 
     /** @test */
     public function can_view_client_details()

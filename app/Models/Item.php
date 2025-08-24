@@ -24,8 +24,4 @@ class Item extends Model
         'kg_per_bag_conversion' => 'float',
     ];
 
-    public function deliveryNoteItems(): HasMany
-    {
-        return $this->hasMany(DeliveryNoteItem::class);
-    }
 }

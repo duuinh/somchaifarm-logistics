@@ -7,24 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Pencil } from 'lucide-vue-next';
 
-interface DeliveryNoteItem {
-    id: number;
-    delivery_note_id: number;
-    quantity_kg: number;
-    quantity_bags: number;
-    price_per_kg: number;
-    price_per_bag: number;
-    total_amount: number;
-    delivery_note: {
-        id: number;
-        delivery_date: string;
-        client: {
-            id: number;
-            name: string;
-        };
-    };
-}
-
 interface Item {
     id: number;
     name: string;
@@ -33,7 +15,6 @@ interface Item {
     credit_price_per_kg: number;
     credit_price_per_bag: number;
     kg_per_bag_conversion: number;
-    delivery_note_items: DeliveryNoteItem[];
 }
 
 interface Props {
@@ -143,51 +124,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </CardContent>
                 </Card>
 
-                <!-- Delivery Notes History -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle>ประวัติการส่งสินค้า</CardTitle>
-                        <CardDescription>
-                            ใบส่งของที่ใช้สินค้านี้ทั้งหมด {{ item.delivery_note_items?.length || 0 }} รายการ
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div v-if="item.delivery_note_items?.length > 0" class="space-y-4">
-                            <div
-                                v-for="deliveryItem in item.delivery_note_items"
-                                :key="deliveryItem.id"
-                                class="flex items-center justify-between p-4 border rounded-lg"
-                            >
-                                <div>
-                                    <p class="font-medium">ใบส่งของ #{{ deliveryItem.delivery_note?.id || 'N/A' }}</p>
-                                    <p class="text-sm text-muted-foreground">
-                                        ลูกค้า: {{ deliveryItem.delivery_note?.client?.name || 'N/A' }}
-                                    </p>
-                                    <p class="text-sm text-muted-foreground">
-                                        วันที่: {{ deliveryItem.delivery_note?.delivery_date ? formatDate(deliveryItem.delivery_note.delivery_date) : 'N/A' }}
-                                    </p>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-sm space-y-1">
-                                        <div v-if="deliveryItem.quantity_kg">
-                                            {{ deliveryItem.quantity_kg }} กก. × {{ deliveryItem.price_per_kg?.toLocaleString() }} บาท
-                                        </div>
-                                        <div v-if="deliveryItem.quantity_bags">
-                                            {{ deliveryItem.quantity_bags }} กระสอบ × {{ deliveryItem.price_per_bag?.toLocaleString() }} บาท
-                                        </div>
-                                        <p class="font-medium">รวม {{ deliveryItem.total_amount?.toLocaleString() }} บาท</p>
-                                    </div>
-                                    <Link :href="route('delivery-notes.show', deliveryItem.delivery_note.id)">
-                                        <Button variant="ghost" size="sm">ดูรายละเอียด</Button>
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-                        <div v-else class="text-center py-8">
-                            <p class="text-muted-foreground">ยังไม่มีการใช้สินค้านี้ในใบส่งของ</p>
-                        </div>
-                    </CardContent>
-                </Card>
             </div>
         </div>
     </AppLayout>

@@ -6,23 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Pencil } from 'lucide-vue-next';
 
-interface DeliveryNote {
-    id: number;
-    delivery_date: string;
-    total_amount: number;
-    client: {
-        id: number;
-        name: string;
-    };
-}
-
 interface Vehicle {
     id: number;
     license_plate: string;
     province: string;
     vehicle_type: string;
     load_capacity: number;
-    delivery_notes: DeliveryNote[];
 }
 
 interface Props {
@@ -106,43 +95,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </CardContent>
                 </Card>
 
-                <!-- Delivery Notes History -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle>ประวัติการส่งของ</CardTitle>
-                        <CardDescription>
-                            ใบส่งของที่ใช้รถคันนี้ทั้งหมด {{ vehicle.delivery_notes?.length || 0 }} รายการ
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div v-if="vehicle.delivery_notes?.length > 0" class="space-y-4">
-                            <div
-                                v-for="note in vehicle.delivery_notes"
-                                :key="note.id"
-                                class="flex items-center justify-between p-4 border rounded-lg"
-                            >
-                                <div>
-                                    <p class="font-medium">ใบส่งของ #{{ note.id }}</p>
-                                    <p class="text-sm text-muted-foreground">
-                                        ลูกค้า: {{ note.client.name }}
-                                    </p>
-                                    <p class="text-sm text-muted-foreground">
-                                        วันที่: {{ formatDate(note.delivery_date) }}
-                                    </p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-medium">{{ note.total_amount?.toLocaleString() }} บาท</p>
-                                    <Link :href="route('delivery-notes.show', note.id)">
-                                        <Button variant="ghost" size="sm">ดูรายละเอียด</Button>
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-                        <div v-else class="text-center py-8">
-                            <p class="text-muted-foreground">ยังไม่มีการใช้รถคันนี้ในใบส่งของ</p>
-                        </div>
-                    </CardContent>
-                </Card>
             </div>
         </div>
     </AppLayout>

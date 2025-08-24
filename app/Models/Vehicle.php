@@ -24,10 +24,6 @@ class Vehicle extends Model
         'is_active' => 'boolean',
     ];
 
-    public function deliveryNotes(): HasMany
-    {
-        return $this->hasMany(DeliveryNote::class);
-    }
     
     /**
      * Scope to get only vehicles with GPS tracking

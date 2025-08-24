@@ -54,10 +54,6 @@ class User extends Authenticatable
         ];
     }
 
-    public function deliveryNotes(): HasMany
-    {
-        return $this->hasMany(DeliveryNote::class, 'created_by');
-    }
 
     public function createdBy(): BelongsTo
     {
