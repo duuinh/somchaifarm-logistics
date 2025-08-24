@@ -112,7 +112,7 @@ const getTypeColor = (type: string) => {
                 <CardHeader>
                     <div class="flex items-center justify-between">
                         <div>
-                            <CardTitle>จัดการจุดสำคัญ</CardTitle>
+                            <CardTitle>จัดการสถานที่</CardTitle>
                             <CardDescription>รายชื่อสถานที่และจุดสำคัญทั้งหมดในระบบ</CardDescription>
                         </div>
                         <Link :href="route('locations.create')">
