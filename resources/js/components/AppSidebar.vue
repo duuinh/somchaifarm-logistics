@@ -4,7 +4,7 @@ import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, LayoutGrid, Users, Package, Truck, IdCard, Settings, CalendarDays, MapPin } from 'lucide-vue-next';
+import { BookOpen, LayoutGrid, Users, Truck, MapPin } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import {
     Sidebar,
@@ -23,21 +23,6 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'จัดการลูกค้า',
-        href: '/clients',
-        icon: Users,
-    },
-    {
-        title: 'จัดการสินค้า',
-        href: '/items',
-        icon: Package,
-    },
-    {
-        title: 'จัดการคนขับ',
-        href: '/drivers',
-        icon: IdCard,
-    },
-    {
         title: 'จัดการรถ',
         href: '/vehicles',
         icon: Truck,
@@ -50,11 +35,6 @@ const mainNavItems: NavItem[] = [
 ];
 
 const footerNavItems: NavItem[] = [
-    {
-        title: 'การตั้งค่าธุรกิจ',
-        href: '/business-settings',
-        icon: Settings,
-    },
     {
         title: 'จัดการยูเซอร์',
         href: '/users',

@@ -208,33 +208,6 @@ const getStatusBadge = (status: string, emailVerified: string | undefined) => {
                         </CardContent>
                     </Card>
                 </div>
-
-                <!-- Additional Information -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle>ข้อมูลเพิ่มเติม</CardTitle>
-                        <CardDescription>สถิติและการใช้งานของผู้ใช้</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="text-center p-4 rounded-lg bg-blue-50">
-                                <div class="text-2xl font-bold text-blue-600">-</div>
-                                <div class="text-sm text-muted-foreground">ใบส่งของที่สร้าง</div>
-                            </div>
-                            <div class="text-center p-4 rounded-lg bg-green-50">
-                                <div class="text-2xl font-bold text-green-600">-</div>
-                                <div class="text-sm text-muted-foreground">ลูกค้าที่จัดการ</div>
-                            </div>
-                            <div class="text-center p-4 rounded-lg bg-purple-50">
-                                <div class="text-2xl font-bold text-purple-600">-</div>
-                                <div class="text-sm text-muted-foreground">วันที่ใช้งาน</div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-muted-foreground mt-4 text-center">
-                            * สถิติการใช้งานจะอัปเดตเมื่อมีการพัฒนาฟีเจอร์เพิ่มเติม
-                        </p>
-                    </CardContent>
-                </Card>
             </div>
         </div>
     </AppLayout>

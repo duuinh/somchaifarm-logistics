@@ -37,10 +37,6 @@ class DatabaseSeeder extends Seeder
 
         // Seed sample data
         $this->call([
-            SettingSeeder::class,
-            ClientSeeder::class,
-            ItemSeeder::class,
-            DriverSeeder::class,
             VehicleSeeder::class,
         ]);
     }
