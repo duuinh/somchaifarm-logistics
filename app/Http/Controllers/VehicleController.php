@@ -68,7 +68,7 @@ class VehicleController extends Controller
     public function show(Vehicle $vehicle)
     {
         return Inertia::render('Vehicles/Show', [
-            'vehicle' => $vehicle->load('deliveryNotes')
+            'vehicle' => $vehicle
         ]);
     }
 
@@ -109,11 +109,6 @@ class VehicleController extends Controller
      */
     public function destroy(Vehicle $vehicle)
     {
-        // Check if vehicle has delivery notes
-        if ($vehicle->deliveryNotes()->exists()) {
-            return back()->with('error', 'ไม่สามารถลบรถที่มีใบส่งของอยู่');
-        }
-
         $vehicle->delete();
 
         return redirect()->route('vehicles.index')
