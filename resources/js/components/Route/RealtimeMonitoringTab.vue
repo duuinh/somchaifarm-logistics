@@ -644,7 +644,7 @@ const updateMapWithRouteHistory = async () => {
             ])
             .filter(([lat, lng]) => !isNaN(lat) && !isNaN(lng));
         
-        if (routePoints.length > 1 && showRouteHistory.value) {
+        if (routePoints.length > 1 && showRouteHistory.value && map.value && map.value.getPane('overlayPane')) {
             const polyline = L.polyline(routePoints, {
                 color: color,
                 weight: 3,
@@ -690,8 +690,11 @@ const updateMapWithRouteHistory = async () => {
                             ตำแหน่ง: ${stop.location}<br>
                             พิกัด: ${parseFloat(stop.latitude).toFixed(6)}, ${parseFloat(stop.longitude).toFixed(6)}
                         </div>
-                    `)
-                    .addTo(map.value);
+                    `);
+                    
+                    if (map.value && map.value.getPane('overlayPane')) {
+                        stopMarker.addTo(map.value);
+                    }
                     
                     stopMarkers.value[deviceId].push(stopMarker);
                 });
@@ -835,7 +838,7 @@ const updateMapMarkers = async () => {
                 });
             }
             
-            if (map.value && map.value.getContainer()) {
+            if (map.value && map.value.getContainer() && map.value.getPane('overlayPane')) {
                 marker.addTo(map.value);
                 vehicleMarkers.value[vehicle.id] = marker;
             }
@@ -874,7 +877,7 @@ const updateMapMarkers = async () => {
                 title: `${displayCount} คัน`
             });
             
-            if (map.value && map.value.getContainer()) {
+            if (map.value && map.value.getContainer() && map.value.getPane('overlayPane')) {
                 marker.addTo(map.value);
                 // Store marker for the first vehicle (for cleanup)
                 vehicleMarkers.value[vehicles[0].id] = marker;
@@ -933,7 +936,7 @@ watch(devices, async (newDevices) => {
             lastUpdateTime.value = new Date().toLocaleTimeString('th-TH');
             
             // Only update map if it's properly initialized
-            if (map.value && map.value.getContainer()) {
+            if (map.value && map.value.getContainer() && map.value.getPane('overlayPane')) {
                 await updateMapMarkers();
             }
         } catch (error) {
