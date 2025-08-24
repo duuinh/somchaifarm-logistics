@@ -3,7 +3,7 @@
         <CardHeader>
             <div>
                 <CardTitle class="text-base">อัตราการใช้งานรถ</CardTitle>
-                <CardDescription class="text-xs">เปอร์เซ็นต์การเคลื่อนที่ในเวลาทำงาน (หักเวลาพักกลางวัน)</CardDescription>
+                <CardDescription class="text-xs">อัตราการวิ่งงานต่อวัน</CardDescription>
             </div>
         </CardHeader>
         <CardContent>
@@ -13,20 +13,20 @@
             </div>
             
             <div v-else-if="chartData.length > 0" class="space-y-4">
-                <!-- Line Chart Container -->
-                <div class="relative" style="height: 320px;">
-                    <svg class="w-full h-full" viewBox="0 0 800 320" preserveAspectRatio="none">
+                <!-- Simple SVG Line Chart (matching height) -->
+                <div class="relative h-60 bg-white">
+                    <svg class="w-full h-full" viewBox="0 0 800 240" preserveAspectRatio="xMidYMid meet">
                         <!-- Grid lines -->
                         <g class="grid">
                             <!-- Horizontal grid lines -->
                             <line v-for="i in 5" :key="`h-grid-${i}`"
-                                :x1="60" :y1="30 + (i * 50)"
-                                :x2="780" :y2="30 + (i * 50)"
+                                :x1="60" :y1="40 + (i * 32)"
+                                :x2="740" :y2="40 + (i * 32)"
                                 stroke="#e5e7eb" stroke-width="1"
                             />
                             <!-- Y-axis labels -->
                             <text v-for="i in 6" :key="`y-label-${i}`"
-                                :x="50" :y="285 - (i * 50)"
+                                :x="50" :y="205 - (i * 32)"
                                 text-anchor="end"
                                 class="text-xs fill-gray-600 font-medium"
                                 font-family="Inter, system-ui, sans-serif"
@@ -36,9 +36,9 @@
                         </g>
                         
                         <!-- Data lines -->
-                        <g v-for="(vehicle, vIndex) in visibleVehicles" :key="vehicle.id">
+                        <g v-for="vehicle in visibleVehicles" :key="vehicle.id">
                             <polyline
-                                :points="getLinePoints(vehicle.id)"
+                                :points="getSimpleLinePoints(vehicle.id)"
                                 fill="none"
                                 :stroke="getVehicleColor(vehicle.id)"
                                 stroke-width="2"
@@ -46,15 +46,15 @@
                                 :opacity="hiddenVehicles.includes(vehicle.id) ? 0.3 : 1"
                             />
                             <!-- Data points -->
-                            <circle v-for="(point, pIndex) in getDataPoints(vehicle.id)" 
+                            <circle v-for="(point, pIndex) in getSimpleDataPoints(vehicle.id)" 
                                 :key="`point-${vehicle.id}-${pIndex}`"
                                 :cx="point.x"
                                 :cy="point.y"
-                                r="3"
+                                r="4"
                                 :fill="getVehicleColor(vehicle.id)"
                                 :opacity="hiddenVehicles.includes(vehicle.id) ? 0.3 : 1"
-                                class="cursor-pointer"
-                                @mouseenter="showTooltip($event, point)"
+                                class="cursor-pointer hover:r-6"
+                                @mouseenter="showSimpleTooltip($event, point, vehicle)"
                                 @mouseleave="hideTooltip"
                             />
                         </g>
@@ -63,8 +63,8 @@
                         <g>
                             <text v-for="(label, index) in xAxisLabels" 
                                 :key="`x-label-${index}`"
-                                :x="60 + (index * ((720) / (xAxisLabels.length - 1)))"
-                                y="310"
+                                :x="60 + (index * ((680) / (xAxisLabels.length - 1)))"
+                                y="230"
                                 text-anchor="middle"
                                 class="text-xs fill-gray-600 font-medium"
                                 font-family="Inter, system-ui, sans-serif"
@@ -77,14 +77,14 @@
                     <!-- Tooltip -->
                     <div v-if="tooltip.show" 
                         :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
-                        class="absolute z-10 bg-gray-900 text-white text-xs rounded px-2 py-1 pointer-events-none whitespace-nowrap"
+                        class="fixed z-10 bg-gray-900 text-white text-xs rounded px-2 py-1 pointer-events-none whitespace-nowrap transform -translate-x-1/2"
                     >
                         {{ tooltip.content }}
                     </div>
                 </div>
                 
                 <!-- Vehicle Type Filters and Analysis -->
-                <div class="space-y-4 pt-4 border-t">
+                <div v-if="showLegend !== false" class="space-y-4 pt-4 border-t">
                     <!-- Type Filter Buttons -->
                     <div class="flex flex-wrap gap-2">
                         <span class="text-xs font-medium text-gray-600 self-center">กรองตามประเภท:</span>
@@ -201,13 +201,17 @@ interface Props {
     selectedDeviceIds: number[];
     devices: Vehicle[];
     selectedPeriod?: number;
+    getVehicleColor?: (deviceId: number) => string;
+    showLegend?: boolean;
+    hiddenVehicles?: number[];
+    hiddenVehicleTypes?: string[];
 }
 
 const props = defineProps<Props>();
 
-// State
-const hiddenVehicles = ref<number[]>([]);
-const hiddenVehicleTypes = ref<string[]>([]);
+// Use external filter state if provided, otherwise use local state
+const hiddenVehicles = computed(() => props.hiddenVehicles || []);
+const hiddenVehicleTypes = computed(() => props.hiddenVehicleTypes || []);
 const tooltip = ref({
     show: false,
     x: 0,
@@ -291,7 +295,7 @@ const getLinePoints = (vehicleId: number) => {
     const points = chartData.value.map((data, index) => {
         const x = 60 + (index * (720 / (chartData.value.length - 1 || 1)));
         const value = Math.min(Math.max(data.values[vehicleId] || 0, 0), 100); // Clamp between 0-100%
-        const y = 280 - (value * 2.5); // Scale to 30-280 pixels for 0-100%
+        const y = 340 - (value * 3); // Scale to 40-340 pixels for 0-100%
         return `${x},${y}`;
     });
     return points.join(' ');
@@ -303,7 +307,7 @@ const getDataPoints = (vehicleId: number) => {
         const x = 60 + (index * (720 / (chartData.value.length - 1 || 1)));
         const rawValue = data.values[vehicleId] || 0;
         const value = Math.min(Math.max(rawValue, 0), 100); // Clamp between 0-100%
-        const y = 280 - (value * 2.5); // Scale to 30-280 pixels for 0-100%
+        const y = 340 - (value * 3); // Scale to 40-340 pixels for 0-100%
         return {
             x,
             y,
@@ -316,6 +320,9 @@ const getDataPoints = (vehicleId: number) => {
 
 // Get vehicle color
 const getVehicleColor = (deviceId: number) => {
+    if (props.getVehicleColor) {
+        return props.getVehicleColor(deviceId);
+    }
     const device = props.devices.find(d => d.id === deviceId);
     return device?.color || '#0000FF'; // Default blue color
 };
@@ -366,6 +373,143 @@ const showTooltip = (event: MouseEvent, point: any) => {
 
 const hideTooltip = () => {
     tooltip.value.show = false;
+};
+
+// New tooltip handler for HTML bars
+const showBarTooltip = (event: MouseEvent, vehicle: Vehicle, data: any) => {
+    const utilization = data.values[vehicle.id] || 0;
+    const date = new Date(data.date + 'T00:00:00');
+    
+    tooltip.value = {
+        show: true,
+        x: event.clientX,
+        y: event.clientY - 40,
+        content: `${getVehicleDisplayName(vehicle)}: ${utilization}% (${date.toLocaleDateString('th-TH')})`
+    };
+};
+
+// Format date labels for HTML chart
+const formatDateLabel = (date: string) => {
+    const d = new Date(date + 'T00:00:00');
+    return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+};
+
+// HTML chart functions
+const getHtmlLinePoints = (vehicleId: number) => {
+    const points = chartData.value.map((data, index) => {
+        const x = (index * (100 / (chartData.value.length - 1 || 1)));
+        const value = Math.min(Math.max(data.values[vehicleId] || 0, 0), 100);
+        const y = 100 - value;
+        return `${x},${y}`;
+    });
+    return points.join(' ');
+};
+
+const getHtmlDataPoints = (vehicleId: number) => {
+    return chartData.value.map((data, index) => {
+        const x = (index * (100 / (chartData.value.length - 1 || 1)));
+        const rawValue = data.values[vehicleId] || 0;
+        const value = Math.min(Math.max(rawValue, 0), 100);
+        const y = 100 - value;
+        return {
+            x: x,
+            y: y,
+            value,
+            date: data.date,
+            vehicleId
+        };
+    });
+};
+
+const showHtmlTooltip = (event: MouseEvent, point: any, vehicle: Vehicle) => {
+    const date = new Date(point.date + 'T00:00:00');
+    
+    tooltip.value = {
+        show: true,
+        x: event.clientX,
+        y: event.clientY - 40,
+        content: `${getVehicleDisplayName(vehicle)}: ${point.value}% (${date.toLocaleDateString('th-TH')})`
+    };
+};
+
+// Shadcn-vue chart data transformation
+const chartDataForShadcn = computed(() => {
+    return chartData.value.map(data => {
+        const result: any = {
+            date: formatDateLabel(data.date)
+        };
+        
+        // Add each vehicle's data as a separate field
+        visibleVehicles.value.forEach(vehicle => {
+            const vehicleName = getVehicleTagName(vehicle);
+            result[vehicleName] = data.values[vehicle.id] || 0;
+        });
+        
+        return result;
+    });
+});
+
+// Vehicle categories for chart
+const vehicleCategories = computed(() => {
+    return visibleVehicles.value.map(vehicle => getVehicleTagName(vehicle));
+});
+
+// Vehicle colors for chart
+const vehicleColors = computed(() => {
+    return visibleVehicles.value.map(vehicle => getVehicleColor(vehicle.id));
+});
+
+// Chart configuration for shadcn-vue
+const chartConfig = computed(() => {
+    const config: any = {};
+    
+    visibleVehicles.value.forEach(vehicle => {
+        const vehicleName = getVehicleTagName(vehicle);
+        config[vehicleName] = {
+            label: getVehicleDisplayName(vehicle),
+            color: getVehicleColor(vehicle.id)
+        };
+    });
+    
+    return config;
+});
+
+// Simple line chart functions for h-60 (240px viewBox)
+const getSimpleLinePoints = (vehicleId: number) => {
+    const points = chartData.value.map((data, index) => {
+        const x = 60 + (index * (680 / (chartData.value.length - 1 || 1)));
+        const value = Math.min(Math.max(data.values[vehicleId] || 0, 0), 100);
+        const y = 200 - (value * 1.6); // Scale to 40-200 pixels for 0-100%
+        return `${x},${y}`;
+    });
+    return points.join(' ');
+};
+
+const getSimpleDataPoints = (vehicleId: number) => {
+    return chartData.value.map((data, index) => {
+        const x = 60 + (index * (680 / (chartData.value.length - 1 || 1)));
+        const rawValue = data.values[vehicleId] || 0;
+        const value = Math.min(Math.max(rawValue, 0), 100);
+        const y = 200 - (value * 1.6); // Scale to 40-200 pixels for 0-100%
+        return {
+            x,
+            y,
+            value,
+            date: data.date,
+            vehicleId
+        };
+    });
+};
+
+const showSimpleTooltip = (event: MouseEvent, point: any, vehicle: Vehicle) => {
+    const date = new Date(point.date + 'T00:00:00');
+    
+    tooltip.value = {
+        show: true,
+        x: event.clientX,
+        y: event.clientY - 40,
+        content: `${getVehicleDisplayName(vehicle)}: ${point.value}% (${date.toLocaleDateString('th-TH')})`
+    };
 };
 
 // Statistics

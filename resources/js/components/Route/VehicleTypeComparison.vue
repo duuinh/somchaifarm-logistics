@@ -1,8 +1,8 @@
 <template>
     <Card>
         <CardHeader>
-            <CardTitle class="text-base">การเปรียบเทียบประเภทรถ</CardTitle>
-            <CardDescription class="text-xs">เปรียบเทียบประสิทธิภาพแต่ละประเภท</CardDescription>
+            <CardTitle class="text-base">เปรียบเทียบตามประเภท</CardTitle>
+            <CardDescription class="text-xs">อัตราการใช้งานแยกตามประเภท</CardDescription>
         </CardHeader>
         <CardContent>
             <div v-if="loading" class="flex items-center justify-center py-8">
@@ -11,113 +11,108 @@
             </div>
             
             <div v-else-if="typeComparisonData.length > 0" class="space-y-4">
-                <!-- Bar Chart Comparison -->
-                <div class="relative" style="height: 300px;">
-                    <svg class="w-full h-full" viewBox="0 0 800 300" preserveAspectRatio="none">
-                        <!-- Grid lines -->
-                        <g class="grid">
-                            <!-- Horizontal grid lines -->
-                            <line v-for="i in 5" :key="`h-grid-${i}`"
-                                :x1="80" :y1="30 + (i * 50)"
-                                :x2="750" :y2="30 + (i * 50)"
-                                stroke="#e5e7eb" stroke-width="1"
-                            />
-                            <!-- Y-axis labels -->
-                            <text v-for="i in 6" :key="`y-label-${i}`"
-                                :x="70" :y="285 - (i * 50)"
-                                text-anchor="end"
-                                class="text-xs fill-gray-600 font-medium"
-                                font-family="Inter, system-ui, sans-serif"
-                            >
-                                {{ (i * 20) }}%
-                            </text>
-                        </g>
-                        
-                        <!-- Bars -->
-                        <g>
-                            <rect v-for="(type, index) in typeComparisonData" 
-                                :key="type.name"
-                                :x="getBarX(index)"
-                                :y="280 - (type.avgUtilization * 2.5)"
-                                :width="getBarWidth()"
-                                :height="type.avgUtilization * 2.5"
-                                :fill="getTypeColor(type.avgUtilization)"
-                                :opacity="0.8"
-                                class="cursor-pointer"
-                                @mouseenter="showTypeTooltip($event, type, index)"
-                                @mouseleave="hideTooltip"
-                            />
-                            
-                            <!-- Bar value labels -->
-                            <text v-for="(type, index) in typeComparisonData"
-                                :key="`value-${type.name}`"
-                                :x="getBarCenterX(index)"
-                                :y="275 - (type.avgUtilization * 2.5)"
-                                text-anchor="middle"
-                                class="text-xs font-semibold fill-white"
-                                font-family="Inter, system-ui, sans-serif"
-                            >
-                                {{ type.avgUtilization }}%
-                            </text>
-                        </g>
-                        
-                        <!-- X-axis labels -->
-                        <g>
-                            <text v-for="(type, index) in typeComparisonData"
-                                :key="`x-label-${type.name}`"
-                                :x="getBarCenterX(index)"
-                                y="295"
-                                text-anchor="middle"
-                                class="text-xs fill-gray-700 font-medium"
-                                font-family="Inter, system-ui, sans-serif"
-                            >
-                                {{ type.name }}
-                            </text>
-                        </g>
-                    </svg>
+                <!-- Simple bar chart (matching StopAnalysisTab style) -->
+                <div class="w-full h-full flex flex-col justify-center">
+                    <div class="relative flex items-end justify-center h-60 gap-3 px-4">
+                        <!-- Reference lines with gray colors -->
+                        <!-- 20% reference line -->
+                        <div class="absolute left-4 right-4 h-px opacity-40" style="bottom: 64px; background-color: #9ca3af;"></div>
+                        <div class="absolute right-2 text-xs" style="bottom: 64px; color: #9ca3af;">20%</div>
+                        <!-- 40% reference line -->
+                        <div class="absolute left-4 right-4 h-px opacity-40" style="bottom: 104px; background-color: #9ca3af;"></div>
+                        <div class="absolute right-2 text-xs" style="bottom: 104px; color: #9ca3af;">40%</div>
+                        <!-- 60% reference line -->
+                        <div class="absolute left-4 right-4 h-px opacity-40" style="bottom: 144px; background-color: #9ca3af;"></div>
+                        <div class="absolute right-2 text-xs" style="bottom: 144px; color: #9ca3af;">60%</div>
+                        <!-- 80% reference line -->
+                        <div class="absolute left-4 right-4 h-px opacity-40" style="bottom: 184px; background-color: #9ca3af;"></div>
+                        <div class="absolute right-2 text-xs" style="bottom: 184px; color: #9ca3af;">80%</div>
+                        <!-- 100% reference line -->
+                        <div class="absolute left-4 right-4 h-px opacity-50" style="bottom: 224px; background-color: #9ca3af;"></div>
+                        <div class="absolute right-2 text-xs" style="bottom: 224px; color: #9ca3af;">100%</div>
+                        <div 
+                            v-for="(type, index) in typeComparisonData" 
+                            :key="index"
+                            class="flex flex-col items-center flex-1"
+                        >
+                            <div class="relative w-full flex flex-col items-center">
+                                <!-- Bar -->
+                                <div 
+                                    class="w-full rounded-t transition-all duration-300 cursor-pointer"
+                                    :class="`hover:brightness-110`"
+                                    :style="{ 
+                                        height: type.avgUtilization > 0 ? Math.max((type.avgUtilization / 100 * 200), 12) + 'px' : '6px',
+                                        backgroundColor: getTypeColor(type.avgUtilization)
+                                    }"
+                                    @mouseenter="showSimpleTooltip($event, type)"
+                                    @mouseleave="hideTooltip"
+                                >
+                                    <!-- Count label on top of bar -->
+                                    <div class="text-xs text-white font-semibold text-center py-1">
+                                        {{ type.avgUtilization > 0 ? type.avgUtilization + '%' : '' }}
+                                    </div>
+                                </div>
+                                <!-- Label below bar -->
+                                <div class="text-xs mt-2 text-gray-600 text-center">{{ type.name }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500 text-center mt-4">
+                        อัตราการใช้งานเฉลี่ยแยกตามประเภท
+                    </div>
                     
                     <!-- Tooltip -->
                     <div v-if="tooltip.show" 
                         :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
-                        class="absolute z-10 bg-gray-900 text-white text-xs rounded px-3 py-2 pointer-events-none whitespace-nowrap"
+                        class="fixed z-10 bg-gray-900 text-white text-xs rounded px-2 py-1 pointer-events-none whitespace-nowrap transform -translate-x-1/2"
                     >
                         <div class="font-semibold">{{ tooltip.typeName }}</div>
-                        <div>เฉลี่ย: {{ tooltip.avgUtilization }}%</div>
-                        <div>จำนวน: {{ tooltip.vehicleCount }} คัน</div>
-                        <div class="text-xs opacity-75">{{ tooltip.status }}</div>
+                        <div>อัตราการใช้งาน: {{ tooltip.avgUtilization }}%</div>
+                        <div>จำนวนรถ: {{ tooltip.vehicleCount }} คัน</div>
+                        <div>สถานะ: {{ tooltip.status }}</div>
                     </div>
                 </div>
                 
-                <!-- Type Statistics Table -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 pt-4">
-                    <div v-for="type in typeComparisonData" 
-                        :key="type.name"
-                        class="p-4 border rounded-lg"
-                        :class="getTypeCardClass(type.avgUtilization)"
-                    >
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="font-medium">{{ type.name }}</div>
-                            <div class="text-2xl font-bold" :style="{ color: getTypeColor(type.avgUtilization) }">
-                                {{ type.avgUtilization }}%
+                <!-- Type Analysis Cards (matching UtilizationChart style) -->
+                <div v-if="showLegend !== false" class="space-y-4 pt-4 border-t">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                        <div v-for="type in typeComparisonData" 
+                            :key="type.name"
+                            class="border rounded-lg transition-all bg-white hover:shadow-sm"
+                        >
+                            <!-- Type Header -->
+                            <div class="p-3 border-b bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div 
+                                            class="w-3 h-3 rounded"
+                                            :style="{ backgroundColor: type.vehicleColor }"
+                                        ></div>
+                                        <span class="text-sm font-medium">{{ type.name }}</span>
+                                    </div>
+                                    <span class="text-lg font-bold" :style="{ color: type.vehicleColor }">
+                                        {{ type.avgUtilization }}%
+                                    </span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    {{ type.vehicleCount }} คัน • สูงสุด {{ type.maxUtilization }}% • ต่ำสุด {{ type.minUtilization }}%
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
-                                <span>จำนวนรถ:</span>
-                                <span class="font-medium">{{ type.vehicleCount }} คัน</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>สูงสุด:</span>
-                                <span class="font-medium">{{ type.maxUtilization }}%</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>ต่ำสุด:</span>
-                                <span class="font-medium">{{ type.minUtilization }}%</span>
-                            </div>
-                            <div class="pt-2 border-t">
-                                <div class="text-xs" :style="{ color: getTypeColor(type.avgUtilization) }">
-                                    {{ getTypeStatus(type.avgUtilization) }}
+                            
+                            <!-- Individual Vehicles -->
+                            <div class="p-2">
+                                <div class="flex flex-wrap gap-1">
+                                    <div v-for="vehicle in type.vehicles" 
+                                         :key="vehicle.id"
+                                         class="flex items-center gap-1 text-xs px-2 py-1 rounded border bg-white border-gray-200"
+                                         :title="vehicle.name"
+                                    >
+                                        <div 
+                                            class="w-2 h-2 rounded"
+                                            :style="{ backgroundColor: props.getVehicleColor ? props.getVehicleColor(vehicle.id) : type.vehicleColor }"
+                                        ></div>
+                                        <span>{{ vehicle.shortname || vehicle.name }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -148,6 +143,8 @@ interface Props {
     loading: boolean;
     utilizationData: Record<string, Record<number, number>>;
     devices: Vehicle[];
+    getVehicleColor?: (deviceId: number) => string;
+    showLegend?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -190,12 +187,20 @@ const typeComparisonData = computed(() => {
         const minUtilization = values.length > 0 ? Math.min(...values) : 0;
         const vehicleCount = props.devices.filter(d => d.type === typeName).length;
         
+        // Get representative vehicle color for this type
+        const typeVehicles = props.devices.filter(d => d.type === typeName);
+        const vehicleColor = typeVehicles.length > 0 && props.getVehicleColor 
+            ? props.getVehicleColor(typeVehicles[0].id) 
+            : getTypeColor(avgUtilization);
+        
         return {
             name: typeName,
             avgUtilization,
             maxUtilization,
             minUtilization,
-            vehicleCount
+            vehicleCount,
+            vehicleColor,
+            vehicles: typeVehicles
         };
     }).sort((a, b) => b.avgUtilization - a.avgUtilization); // Sort by utilization desc
 });
@@ -226,30 +231,18 @@ const getTypeCardClass = (utilization: number) => {
     return 'bg-red-50 border-red-200';
 };
 
-// Calculate bar dimensions based on number of types
-const getBarWidth = () => {
-    const chartWidth = 670; // Available width (750 - 80)
-    const totalTypes = typeComparisonData.value.length || 4;
-    const spacing = 20; // Space between bars
-    return Math.max(60, (chartWidth - (spacing * (totalTypes + 1))) / totalTypes);
-};
 
-const getBarX = (index: number) => {
-    const barWidth = getBarWidth();
-    const spacing = 20;
-    return 80 + spacing + (index * (barWidth + spacing));
-};
+// Calculate max utilization for scaling bars (fixed to 100% scale)
+const maxUtilization = computed(() => {
+    return 100; // Always scale to 100% for consistent visualization
+});
 
-const getBarCenterX = (index: number) => {
-    return getBarX(index) + (getBarWidth() / 2);
-};
-
-// Tooltip handlers
-const showTypeTooltip = (event: MouseEvent, type: any, index: number) => {
+// Updated tooltip handlers to match StopAnalysisTab style
+const showSimpleTooltip = (event: MouseEvent, type: any) => {
     tooltip.value = {
         show: true,
-        x: getBarCenterX(index),
-        y: 280 - (type.avgUtilization * 2.5) - 10,
+        x: event.clientX,
+        y: event.clientY - 40,
         typeName: type.name,
         avgUtilization: type.avgUtilization,
         vehicleCount: type.vehicleCount,
@@ -262,13 +255,3 @@ const hideTooltip = () => {
 };
 </script>
 
-<style scoped>
-svg {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-}
-
-svg text {
-    font-weight: 500;
-    letter-spacing: 0.025em;
-}
-</style>

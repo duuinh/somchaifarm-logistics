@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { CalendarDays, Truck } from 'lucide-vue-next';
 import { ref, computed, watch, onMounted, nextTick, unref } from 'vue';
 import RouteViewTab from '@/components/Route/RouteViewTab.vue';
-import AnalyticsTab from '@/components/Route/AnalyticsTab.vue';
+import UsageStatisticsTab from '@/components/Route/UsageStatisticsTab.vue';
 import StopAnalysisTab from '@/components/Route/StopAnalysisTab.vue';
 import RealtimeMonitoringTab from '@/components/Route/RealtimeMonitoringTab.vue';
 import { useRouteAPI } from '@/composables/route/useRouteAPI';
@@ -622,7 +622,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm'
                             ]"
                         >
-                            ภาพรวมการใช้รถ
+                            สถิติการใช้งาน
                         </button>
                         <button
                             @click="activeTab = 'stop-efficiency'"
@@ -683,13 +683,14 @@ const breadcrumbs: BreadcrumbItem[] = [
                         @show-stop-popup="handleShowStopPopup"
                     />
                     
-                    <!-- Analytics Tab -->
-                    <AnalyticsTab
+                    <!-- Usage Statistics Tab -->
+                    <UsageStatisticsTab
                         v-else-if="activeTab === 'analytics'"
                         :selected-device-ids="devices.value?.map(d => d.id) || []"
                         :devices="devices"
                         :loading-utilization="loadingUtilization"
                         :utilization-data="utilizationData"
+                        :get-vehicle-color="getVehicleColor"
                         @period-change="(days) => loadUtilizationDataForAnalytics(unref(devices)?.map(d => d.id) || [], days)"
                         @date-range-change="(start, end) => loadUtilizationDataForAnalytics(unref(devices)?.map(d => d.id) || [], 7, start, end)"
                     />
